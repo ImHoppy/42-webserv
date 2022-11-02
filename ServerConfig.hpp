@@ -30,13 +30,12 @@ class ServerConfig {
 	void	setMaxBodySize(int32_t maxBodySize);
 	void	addErrorPage(int code, const std::string &page);
 
-
 	int32_t			getHost() const;
 	int16_t			getPort() const;
 	LocationConfig	getLocation(const std::string &path) const;
 	map_locs		getLocations() const;
 	int32_t			getMaxBodySize() const;
 	std::map<int, std::string>	getErrorPages() const;
-	
+
 	
 };
