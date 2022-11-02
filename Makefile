@@ -7,7 +7,10 @@ ifeq ($(DEBUG), 1)
 	CFLAGS		+= -g3 -DDEBUG_LOG=1
 endif
 
-SRCS		=	 main.cpp Path.cpp
+SRCS		=	 main.cpp Path.cpp GeneralConfig.cpp ServerConfig.cpp \
+				LocationConfig.cpp
+# Request.cpp Response.cpp \
+# Utils.cpp Server.cpp
 
 OBJS		=	$(SRCS:.cpp=.o)
 DEPS		=	$(OBJS:.o=.d)
