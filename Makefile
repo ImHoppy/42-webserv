@@ -7,7 +7,7 @@ ifeq ($(DEBUG), 1)
 	CFLAGS		+= -g3 -DDEBUG_LOG=1
 endif
 
-SRCS		=	 main.cpp
+SRCS		=	 main.cpp Path.cpp
 
 OBJS		=	$(SRCS:.cpp=.o)
 DEPS		=	$(OBJS:.o=.d)
@@ -25,7 +25,7 @@ BOLD=\033[1m
 RESET=\033[0m
 
 define compil
-	@printf "$(RED)[%i/%i] (%i%%)\t$(BLUE)$(2)$(BOLD)$(3)$(RESET)" $(I) $(MAX_I) `expr $(I) \* 100 / $(MAX_I)`
+	@printf "$(RED)[%i/%i] (%i%%)\t$(BLUE)$(2)$(BOLD)$(3)$(RESET) " $(I) $(MAX_I) `expr $(I) \* 100 / $(MAX_I)`
 	@$(1)
 	@printf "\r%s\n" '$(1)'
 	$(eval I = $(shell echo $$(($(I)+1))))
