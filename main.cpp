@@ -33,7 +33,11 @@ int main(int ac, char **av)
 	std::cout << std::endl;
 
 	std::string path(".");
-	Path::listFiles(path);
+	std::vector<std::string> listFiles = Path::listFiles(path);
+	std::cout << "listFiles: " << std::endl;
+	for (std::vector<std::string>::iterator it = listFiles.begin(); it != listFiles.end(); it++)
+		std::cout << *it << " ";
+	std::cout << std::endl << listFiles.size() << std::endl;
 	
 }
 
