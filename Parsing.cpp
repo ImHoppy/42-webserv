@@ -56,37 +56,14 @@ void	parseConf(std::string const & path )
 		std::cerr << "File could not be open." << std::endl;
 		return ;
 	}
-	std::bitset<3>	levelBracket;
 	std::string line;
-	std::vector<std::string> split;
 	int32_t	lineNumber = 0;
-	std::string delim("=");
 	int	deep = 0;
 	while (std::getline(ifs, line))
 	{
 		lineNumber++;
 		line = trim(line);
 
-/*
-		split.clear();
-		unsigned int start = 0U;
-		std::size_t end = line.find(delim);
-		while (end != std::string::npos)
-		{
-			
-			std::string	str = line.substr(start, end - start);
-			split.push_back(trim(str));
-			start = end + delim.length();
-			end = line.find(delim, start);
-		}
-		std::string	str = line.substr(start, end - start);
-		split.push_back(trim(str));
-		if (split.size() != 2 && (split.size() == 1 && (split[0] != "{" && split[0] != "}")))
-			throw std::runtime_error( "Split != 2\tLine: " + IntToStr(lineNumber));
-		if (split.size() == 2 && split.at(1) == "")
-			throw std::runtime_error( "Key is empty\tLine: " + IntToStr(lineNumber));
-		std::cout << split.at(0) << " = " << (split.size() == 1 ? std::string("EOL") : split.at(1)) << std::endl;
-		*/
 		std::string	key;
 		std::string	value;
 		{
