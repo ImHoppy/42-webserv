@@ -41,6 +41,16 @@ inline std::string& trim(std::string& s, const char* t = ws)
 }
 
 
+static int	count_char(std::string const & s, char c)
+{
+	int	count = 0;
+	std::string::const_iterator it;
+
+	for (it = s.begin(); it < s.end(); it++)
+		if (*it == c)
+			++count;
+	return count;
+}
 
 std::string & trim_quote(std::string & s, int lineNumber = -1)
 {
@@ -60,17 +70,6 @@ std::string & trim_quote(std::string & s, int lineNumber = -1)
 	|| (s.at(0) == '\'' || s[s.size()-1] == '\''))
 		throw ParsingError("Unfinished quote", lineNumber);
 	return (s);
-}
-
-static int	count_char(std::string const & s, char c)
-{
-	int	count = 0;
-	std::string::const_iterator it;
-
-	for (it = s.begin(); it < s.end(); it++)
-		if (*it == c)
-			++count;
-	return count;
 }
 
 std::string	IntToStr(int32_t	i)
@@ -228,8 +227,9 @@ void	parseConf(std::string const & path )
 		}
 		else
 			check_key(key, parents.back(), lineNumber);
+		
 	}
-	if (depth != 0)
+	if (depth != 0 || parents.back() != "head")
 		throw ParsingError("Bracket not closed");
 	ifs.close();
 
