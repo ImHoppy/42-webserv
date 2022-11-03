@@ -20,7 +20,7 @@ class LocationConfig {
 	CGI				_CGI;
 	std::string		_redirUrl;
 	std::string		_indexFile;
-	Path			_root;
+	Path			_alias;
 	std::bitset<3>	_methods;
 
 	
@@ -31,11 +31,11 @@ class LocationConfig {
 	~LocationConfig();
 
 	void	setDirList(bool dirList);
-	void	setRoot(const Path &root);
+	void	setAlias(const Path &alias);
 	void	setMethods(const std::bitset<3> &methods);
 	void	setMethod(http_methods method, bool value);
 	
-	Path			getRoot() const;
+	Path			getAlias() const;
 	std::bitset<3>	getMethods() const;
 	bool			getMethod(http_methods method) const;
 	std::string 	getIndexFile() const;

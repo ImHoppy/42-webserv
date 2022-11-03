@@ -1,6 +1,6 @@
 #include "LocationConfig.hpp"
 
-LocationConfig::LocationConfig() : _dirList(false), _root(), _methods() {}
+LocationConfig::LocationConfig() : _dirList(false), _alias(), _methods() {}
 LocationConfig::LocationConfig(const LocationConfig &other)
 {
 	*this = other;
@@ -11,7 +11,7 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &other)
 	{
 		_dirList = other._dirList;
 		_redir = other._redir;
-		_root = other._root;
+		_alias = other._alias;
 		_methods = other._methods;
 	}
 	return *this;
@@ -22,9 +22,9 @@ void	LocationConfig::setDirList(bool dirList)
 {
 	_dirList = dirList;
 }
-void	LocationConfig::setRoot(const Path &root)
+void	LocationConfig::setAlias(const Path &alias)
 {
-	_root = root;
+	_alias = alias;
 }
 void	LocationConfig::setMethods(const std::bitset<3> &methods)
 {
@@ -35,9 +35,9 @@ void	LocationConfig::setMethod(http_methods method, bool value)
 	_methods.set(method, value);
 }
 
-Path			LocationConfig::getRoot() const
+Path			LocationConfig::getAlias() const
 {
-	return _root;
+	return _alias;
 }
 std::bitset<3>	LocationConfig::getMethods() const
 {
