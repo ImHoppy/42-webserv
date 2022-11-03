@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include "LocationConfig.hpp"
+#include <stdint.h>
 
 class ServerConfig {
 	private:

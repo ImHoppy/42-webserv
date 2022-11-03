@@ -22,7 +22,7 @@ void	LocationConfig::setDirList(bool dirList)
 {
 	_dirList = dirList;
 }
-void	LocationConfig::setAlias(const Path &alias)
+void	LocationConfig::setAlias(const std::string &alias)
 {
 	_alias = alias;
 }
@@ -35,7 +35,7 @@ void	LocationConfig::setMethod(http_methods method, bool value)
 	_methods.set(method, value);
 }
 
-Path			LocationConfig::getAlias() const
+std::string	const &		LocationConfig::getAlias() const
 {
 	return _alias;
 }

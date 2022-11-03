@@ -2,12 +2,12 @@ NAME		=	webserv
 
 CC			=	c++
 
-CFLAGS		=	-Wall -Wextra -Werror -std=c++11 -I.
+CFLAGS		=	-Wall -Wextra -Werror -std=c++98 -I.
 ifeq ($(DEBUG), 1)
 	CFLAGS		+= -g3 -DDEBUG_LOG=1
 endif
 
-SRCS		=	 main.cpp Path.cpp GeneralConfig.cpp ServerConfig.cpp \
+SRCS		=	 main.cpp GeneralConfig.cpp ServerConfig.cpp \
 				LocationConfig.cpp Parsing.cpp
 # Request.cpp Response.cpp \
 # Utils.cpp Server.cpp
