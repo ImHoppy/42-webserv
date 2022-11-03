@@ -8,7 +8,7 @@ ifeq ($(DEBUG), 1)
 endif
 
 SRCS		=	 main.cpp Path.cpp GeneralConfig.cpp ServerConfig.cpp \
-				LocationConfig.cpp
+				LocationConfig.cpp Parsing.cpp
 # Request.cpp Response.cpp \
 # Utils.cpp Server.cpp
 
