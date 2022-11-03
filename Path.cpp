@@ -2,22 +2,21 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-std::string	
 
 void			Path::setRoot(std::string const & path)
 {
 	_rootPath = path;
 }
 
-std::string &	Path::getFilename() const
+std::string const &	Path::getFilename() const
 {
 	return _rootPath;
 }
-std::string &	Path::getFullpath()
+std::string const &	Path::getFullpath()
 {
 	return _rootPath;
 }
-std::string &	Path::joinRoot() const
+std::string const &	Path::joinRoot() const
 {
 	return _rootPath;
 }
