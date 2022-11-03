@@ -9,6 +9,8 @@ class Path : public std::string {
 	public:
 	using std::string::basic_string;
 
+	void			setRoot(std::string const & path);
+
 	std::string &	getFilename() const;
 	std::string &	getFullpath();
 	std::string &	joinRoot() const;

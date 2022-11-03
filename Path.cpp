@@ -2,6 +2,26 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+std::string	
+
+void			Path::setRoot(std::string const & path)
+{
+	_rootPath = path;
+}
+
+std::string &	Path::getFilename() const
+{
+	return _rootPath;
+}
+std::string &	Path::getFullpath()
+{
+	return _rootPath;
+}
+std::string &	Path::joinRoot() const
+{
+	return _rootPath;
+}
+
 bool	Path::isAbsolute( std::string const & path ) {
 	return path[0] == '/';
 }
