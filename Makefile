@@ -2,7 +2,7 @@ NAME		=	webserv
 
 CC			=	c++
 
-CFLAGS		=	-Wall -Wextra -Werror -std=c++11 -I.
+CFLAGS		=	-Wall -Wextra -Werror -std=c++98 -pedantic-errors -I.
 ifeq ($(DEBUG), 1)
 	CFLAGS		+= -g3 -DDEBUG_LOG=1
 endif
@@ -14,6 +14,12 @@ SRCS		=	 main.cpp Path.cpp GeneralConfig.cpp ServerConfig.cpp \
 
 OBJS		=	$(SRCS:.cpp=.o)
 DEPS		=	$(OBJS:.o=.d)
+
+RQST_NAME = rqst
+RQST_SRCS = request_tests.cpp request.cpp
+RQST_HDRS = request.hpp
+RQST_OBJS = $(RQST_SRCS:.cpp=.o)
+RQST_DEPS = $(RQST_OBJS:.o=.d)
 
 I = 0
 ifndef MAX_I
@@ -41,11 +47,14 @@ endef
 $(NAME)		:	$(OBJS)
 				$(call compil,$(CC) $(CFLAGS) $(OBJS) -o $(NAME),Linking, $@)
 				@printf "$(RED)[%i/%i] (%i%%)\t$(GREEN)$(BOLD)$@$(RESET)$(GREEN) is ready!\n" $(I) $(MAX_I) `expr $(I) \* 100 / $(MAX_I)`
+$(RQST_NAME)	:	$(RQST_OBJS)
+				$(CC) $(CFLAGS) $(CFLAGS) -o $(RQST_NAME) $(RQST_OBJS)
+				
 
 all			:	$(NAME)
 
 clean		:
-				rm -rf $(OBJS) $(DEPS)
+				rm -rf $(OBJS) $(DEPS) $(RQST_OBJS) $(RQST_DEPS)
 
 fclean		:	clean
 				rm -f $(NAME)
@@ -57,6 +66,7 @@ debug		:	fclean
 				@$(MAKE) --no-print-directory DEBUG=1
 
 -include $(DEPS)
+-include $(RQST_DEPS)
 
 .DEFAULT_GOAL = all
 .PHONY: all clean fclean re debug

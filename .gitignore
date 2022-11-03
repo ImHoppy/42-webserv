@@ -1,2 +1,8 @@
 webserv
+rqst
 ubuntu_tester
+*.o
+*.a
+*.d
+*.swp
+

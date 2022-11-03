@@ -6,24 +6,40 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/10/30 20:24:20 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/03 17:38:48 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "request.hpp"
 
-request::request(void) : _raw_rqst(), _map() {}
+/* Default constructor (private) */
+request::request(void) : _statusCode(200), _rawRqst(), _msgFields(), _body() {}
 
+/* Destructor */
 request::~request(void) {}
 
-request::request(const request& src) : _raw_rqst(src._raw_rqst), _map(src._map) {}
+/* Copy constructor */
+request::request(const request& src) : _statusCode(src._statusCode), _rawRqst(src._rawRqst), _msgFields(src._msgFields), _body(src._body) {}
 
+/* Assignment operator */
 request&	request::operator=(const request& src)
 {
-	_raw_rqst.assign(src._raw_rqst);
-	_map.clear();
-	_map = src._map;
+	_rawRqst.assign(src._rawRqst);
+	_msgFields.clear();
+	_msgFields = src._msgFields;
+	_body.assign(src._body);
+	_statusCode = src._statusCode;
 	return *this;
+}
+
+/* ATTENTION: str MUST NOT be empty! */
+/* Parametric construcotr */
+request::request(const std::string& str) : _statusCode(200), _rawRqst(str), _msgFields(), _body()
+{
+	if (_statusCode == 200)
+		set_status_line();
+	if (_statusCode == 200)
+		set_header_fields();
 }
 
 /* 
@@ -50,71 +66,64 @@ TODO: ERROR 405 if method known but not allowed for the requested resource.
 */
 int		request::set_status_line(void)
 {
-	std::string::iterator	start = _raw_rqst.begin();
-	while (start != _raw_rqst.end() && *start == '\n') // ignore and remove firsts CRLF if any
-		++start;
-	if (start == _raw_rqst.end())
-		return (perror("request: status line empty"), -1);
-	_raw_rqst.erase(_raw_rqst.begin(), start);
-	std::string::iterator	end = start;
-	while (end != _raw_rqst.end() && *end != ' ')
+	siterator_t	start = _rawRqst.begin();
+	/* ignore and remove firsts CRLF if any */
+	while (start != _rawRqst.end() && start == find_crlf(start, _rawRqst.end()))
+		start += 2;
+	if (start == _rawRqst.end())
+		return (_statusCode = 400, perror("request: status line empty"), -1);
+	_rawRqst.erase(_rawRqst.begin(), start);
+	start = _rawRqst.begin();
+	if ((find_crlf(start, _rawRqst.end()) - start) > STATUS_LINE_MAX_LENGTH)
+		return (_statusCode = 414, perror("request: status line too long"), -1);
+	siterator_t	end = start;
+	while (end != _rawRqst.end() && *end != ' ')
 		++end;
-	_map["method"] = std::string(start, end);
-	if (end == _raw_rqst.end() || ++end == _raw_rqst.end())
-		return (perror("Request line imcomplete"), -1);
+	_msgFields["method"] = std::string(start, end);
+	if (end == _rawRqst.end() || ++end == _rawRqst.end())
+		return (_statusCode = 400, perror("Request line imcomplete"), -1);
 	start = end;
-	while (end != _raw_rqst.end() && *end != ' ')
+	while (end != _rawRqst.end() && *end != ' ')
 		++end;
-	if (end == _raw_rqst.end())
-		return (perror("Request line imcomplete"), -1);
-	_map["request_uri"] = std::string(start, end);
-	if (end == _raw_rqst.end() || ++end == _raw_rqst.end())
-		return (perror("Request line imcomplete"), -1);
+	if (end == _rawRqst.end())
+		return (_statusCode = 400, perror("Request line imcomplete"), -1);
+	_msgFields["request_uri"] = std::string(start, end);
+	if (end == _rawRqst.end() || ++end == _rawRqst.end())
+		return (_statusCode = 400, perror("Request line imcomplete"), -1);
 	start = end;
-	while (end != _raw_rqst.end() && *end != '\n')
-		++end;
-	if (end == _raw_rqst.end())
-		return (perror("Request line imcomplete (need CRLF)"), -1);
-	_map["http_version"] = std::string(start, end);
+	end = find_crlf(end, _rawRqst.end());
+	if (end == _rawRqst.end())
+		return (_statusCode = 400, perror("Request line imcomplete (need CRLF)"), -1);
+	_msgFields["http_version"] = std::string(start, end);
 	return (0);
-}
-
-/* ATTENTION: str MUST NOT be empty! */
-request::request(const std::string& str) : _raw_rqst(str), _map()
-{
-	if (set_status_line() == -1)
-		std::cerr << "request: bad status line" << std::endl; // TODO: faire un try catch??
-	if (set_header_fields() == -1)
-		std::cerr << "request: bad header fields" << std::endl; // TODO: faire un try catch??
-//	for (std::map<std::string, std::string>::const_iterator it = _map.begin(); it != _map.end(); ++it)
-//		std::cout << it->first << " = " << it->second <<std::endl;
-
 }
 
 /*
 field-name ":" [ field-value ] (RFC 2616 page 32)
 */
-void	request::split_header(std::string::iterator start, std::string::iterator end)
+int	request::split_header(siterator_t start, siterator_t end)
 {
 	if (start == end)
-		return ;
-	std::string::iterator		name_end = find(start, end, ':');
-	if (name_end == end)
+		return (0);
+	siterator_t		name_end = find(start, end, ':');
+	if (name_end == end || name_end == start)
 	{
-		perror("request: header field name without value");
-		return ;
+		perror("request: split_header error");
+		_statusCode = 400;
+		return (-1);
 	}
-	std::string::iterator		value_start = name_end + 1;
+	siterator_t		value_start = name_end + 1;
 	while (value_start != end && *value_start == ' ')
 		++value_start;
-	_map[std::string(start, name_end)] = std::string(value_start, end);
+	_msgFields[std::string(start, name_end)] = std::string(value_start, end);
+	return (0);
 }
 
 /*
 Find in the range [first, last) the first occurence of CRLF ("\r\n"). Return an iterator
 to '\r' if found, end otherwise.
 */
-std::string::iterator	request::find_crlf(std::string::iterator start, std::string::iterator end)
+request::siterator_t	request::find_crlf(siterator_t start, siterator_t end)
 {
 	while (start != end)
 	{
@@ -126,26 +135,48 @@ std::string::iterator	request::find_crlf(std::string::iterator start, std::strin
 }
 
 /* The Host request-header field (section 14.23) MUST accompany all
-HTTP/1.1 requests. (RFC2616 page 51) */
+HTTP/1.1 requests. (RFC2616 page 51) .
+All
+Internet-based HTTP/1.1 servers MUST respond with a 400 (Bad Request)
+status code to any HTTP/1.1 request message which lacks a Host header
+field. (RFC 2616 page 129)*/
 int		request::set_header_fields(void)
 {
-	std::string::iterator		eof = _raw_rqst.end();
-	std::string::iterator		crlf = find_crlf(_raw_rqst.begin(), eof);
-	if (crlf == eof)
-		return (perror("request: No header fields"), -1);
-	std::string::iterator		start = crlf + 2;
-// TODO: if start == eof, then bad request format!!
-//	if (start == eof)
-//		return (perror("request: No header fields"), -1);
-//TODO: ATTENTION: message body avant eof!
+	siterator_t		eof = _rawRqst.end();
+	siterator_t		crlf = find_crlf(_rawRqst.begin(), eof);
+	if (crlf == eof || crlf + 2 >= eof || std::isspace(*(crlf + 2)))
+		return (_statusCode = 400, perror("request: No header fields"), -1);
+	siterator_t		start = crlf + 2;
 	while (start < eof)
 	{
-		std::string::iterator		hdr_end = find_crlf(start, eof);
-		if (hdr_end == eof)
-			return (perror("request: missing CRLF to message field"), -1);
-//TODO; if (start == hdr_end) => n est dsd message body
-		split_header(start, hdr_end);
+		siterator_t		hdr_end = find_crlf(start, eof);
+		if (hdr_end == eof || start == hdr_end)
+			return (_statusCode = 400, perror("request: missing CRLF to message field"), -1);
+		if (split_header(start, hdr_end) == -1)
+			return (-1);
 		start = hdr_end + 2;
 	}
 	return (0);
+}
+
+
+
+const std::string&		request::getRawRequest(void) const
+{
+	return this->_rawRqst;
+}
+
+const request::map_t&			request::getMap(void) const
+{
+	return this->_msgFields;
+}
+
+std::ostream&	operator<<(std::ostream& o, const request& me)
+{
+	request::map_t		meMap = me.getMap();
+	for (request::map_t::iterator it = meMap.begin(); it != meMap.end(); ++it)
+	{
+		o << "HF name =\'" << it->first << "\' value =\'" << it->second << "\'"<< std::endl;
+	}
+	return o;
 }
