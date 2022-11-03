@@ -1,10 +1,12 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include "GeneralConfig.hpp"
 #include <sstream>
 #include <algorithm>
 #include "Parsing.hpp"
+#include <vector>
+#include <utility>
+
 
 ParsingError::ParsingError() : message("Error on parsing."), line(-1) {}
 ParsingError::ParsingError(const char *msg) : message(msg), line(-1) {}
@@ -70,13 +72,6 @@ std::string & trim_quote(std::string & s, int lineNumber = -1)
 	|| (s.at(0) == '\'' || s[s.size()-1] == '\''))
 		throw ParsingError("Unfinished quote", lineNumber);
 	return (s);
-}
-
-std::string	IntToStr(int32_t	i)
-{
-	std::ostringstream s;
-	s << i;
-	return s.str();
 }
 
 // const std::map<std::string, std::string> {{"server", "host"}};
@@ -158,9 +153,9 @@ static void	remove_comment(std::string & s)
 	if (pos != std::string::npos)
 		s = s.substr(0, pos);
 }
-
 void	parseConf(std::string const & path )
 {
+	std::vector<std::pair<std::string, std::string> > key_value;
 	std::ifstream	ifs;
 
 	ifs.open(path.c_str());
@@ -227,10 +222,10 @@ void	parseConf(std::string const & path )
 		}
 		else
 			check_key(key, parents.back(), lineNumber);
-		
+		key_value.push_back(std::make_pair(key, value));
 	}
 	if (depth != 0 || parents.back() != "head")
 		throw ParsingError("Bracket not closed");
 	ifs.close();
-
+	fillConfig(key_value);
 }

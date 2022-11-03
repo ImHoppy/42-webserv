@@ -18,6 +18,12 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &other)
 }
 LocationConfig::~LocationConfig() {}
 
+LocationConfig::LocationConfig(std::string path) : _dirList(false), _alias(), _methods()
+{
+	_path = path;
+}
+
+
 void	LocationConfig::setDirList(bool dirList)
 {
 	_dirList = dirList;
@@ -33,6 +39,10 @@ void	LocationConfig::setMethods(const std::bitset<3> &methods)
 void	LocationConfig::setMethod(http_methods method, bool value)
 {
 	_methods.set(method, value);
+}
+void	LocationConfig::addMethod(http_methods method)
+{
+	_methods.set(method, true);
 }
 
 std::string	const &		LocationConfig::getAlias() const
@@ -50,6 +60,10 @@ bool			LocationConfig::getMethod(http_methods method) const
 std::string 	LocationConfig::getIndexFile() const
 {
 	return _indexFile;
+}
+std::string		LocationConfig::getPath() const
+{
+	return _path;
 }
 
 bool			LocationConfig::isDirList() const

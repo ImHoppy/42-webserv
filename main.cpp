@@ -1,9 +1,10 @@
 #include <iostream>
 #include <map>
 #include "Parsing.hpp"
+#include "GeneralConfig.hpp"
 
 #define hw "hi"
-void	parseConf(std::string const & path );
+void parseConf(std::string const & path );
 /*class A {
 	public:
 	A(){std::cout << "A\n";};
@@ -18,7 +19,7 @@ class B : public std::string {
 	};
 };
  */
-#include <vector>
+
 int main(int ac, char **av)
 {
 
@@ -36,6 +37,7 @@ int main(int ac, char **av)
 		std::cout << *it << " ";
 	std::cout << std::endl << listFiles.size() << std::endl;
 	std::cout << std::endl << std::endl; */
+
 	try
 	{
 		
@@ -48,6 +50,5 @@ int main(int ac, char **av)
 		if (line != -1)
 			std::cerr << "At line: " << line << '\n'; 
 	}
-	
 }
 
