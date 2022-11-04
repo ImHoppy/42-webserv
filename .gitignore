@@ -5,4 +5,4 @@ ubuntu_tester
 *.a
 *.d
 *.swp
-
+.nfs*
