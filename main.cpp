@@ -1,10 +1,11 @@
 #include <iostream>
 #include <map>
-#include "Path.hpp"
+#include "Parsing.hpp"
+#include "GeneralConfig.hpp"
 
 #define hw "hi"
-
-class A {
+void parseConf(std::string const & path );
+/*class A {
 	public:
 	A(){std::cout << "A\n";};
 	~A(){std::cout << "~A\n";};
@@ -17,6 +18,7 @@ class B : public std::string {
 		*this = ("new");
 	};
 };
+ */
 
 int main(int ac, char **av)
 {
@@ -24,21 +26,29 @@ int main(int ac, char **av)
 	(void)ac;
 	(void)av;
 	int i = 1;
-	B b("h");
-	b += '3';
-	std::cout << b << std::endl;
-	b.test();
-	std::cout << b << std::endl;
 	std::cout << hw << i << "\n";
 
 	std::cout << std::endl;
 
 	std::string path(".");
-	std::vector<std::string> listFiles = Path::listFiles(path);
+/* 	std::vector<std::string> listFiles = Path::listFiles(path);
 	std::cout << "listFiles: " << std::endl;
 	for (std::vector<std::string>::iterator it = listFiles.begin(); it != listFiles.end(); it++)
 		std::cout << *it << " ";
 	std::cout << std::endl << listFiles.size() << std::endl;
-	
+	std::cout << std::endl << std::endl; */
+
+	try
+	{
+		
+		parseConf("template.conf");
+	}
+	catch(ParsingError& e)
+	{
+		std::cerr << e.what() << '\n';
+		int line = e.whatLine();
+		if (line != -1)
+			std::cerr << "At line: " << line << '\n'; 
+	}
 }
 

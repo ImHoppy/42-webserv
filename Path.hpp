@@ -7,7 +7,7 @@ class Path : public std::string {
 	private:
 	std::string	_rootPath;
 	public:
-	using std::string::basic_string;
+	// using std::string::basic_string;
 
 	void			setRoot(std::string const & path);
 

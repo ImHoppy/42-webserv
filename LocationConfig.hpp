@@ -5,22 +5,26 @@
 #include "Path.hpp"
 #include "CGI.hpp"
 
+
 class LocationConfig {
-	private:
+	public:
+
 	typedef enum {
 		GET = 0,
 		POST = 1,
 		DELETE = 2
 	} http_methods;
 
+	private:
 	bool			_dirList;
 	bool			_redir;
 	bool			_CGIActive;
+	std::string		_path;
 	std::string		_CGIPath;
 	CGI				_CGI;
 	std::string		_redirUrl;
 	std::string		_indexFile;
-	Path			_alias;
+	std::string		_alias;
 	std::bitset<3>	_methods;
 
 	
@@ -30,15 +34,20 @@ class LocationConfig {
 	LocationConfig &operator=(const LocationConfig &other);
 	~LocationConfig();
 
+	LocationConfig(std::string path);
+
 	void	setDirList(bool dirList);
-	void	setAlias(const Path &alias);
+	void	setAlias(const std::string &alias);
 	void	setMethods(const std::bitset<3> &methods);
+	// TODO(mbraets): Check if used
 	void	setMethod(http_methods method, bool value);
+	void	addMethod(http_methods method);
 	
-	Path			getAlias() const;
+	std::string	const &	getAlias() const;
 	std::bitset<3>	getMethods() const;
 	bool			getMethod(http_methods method) const;
 	std::string 	getIndexFile() const;
+	std::string		getPath() const;
 
 	bool			isDirList() const;
 	bool			isRedirection() const;

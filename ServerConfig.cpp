@@ -47,12 +47,12 @@ int16_t			ServerConfig::getPort() const {
 LocationConfig	ServerConfig::getLocation(const std::string &path) const {
 	return _location.at(path);
 }
-ServerConfig::map_locs	ServerConfig::getLocations() const {
+ServerConfig::map_locs	const & ServerConfig::getLocations() const {
 	return _location;
 }
 int32_t			ServerConfig::getMaxBodySize() const {
 	return _maxBodySize;
 }
-std::map<int, std::string>	ServerConfig::getErrorPages() const {
+std::map<int, std::string>	const & ServerConfig::getErrorPages() const {
 	return _errorPages;
 }
