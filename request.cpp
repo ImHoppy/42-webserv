@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/03 21:19:15 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/04 12:57:26 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,14 +41,62 @@ request&	request::operator=(const request& src)
 /* Parametric construcotr */
 request::request(const std::string& str) : _statusCode(200), _rawRqst(str), _msgFields(), _body()
 {
+	siterator_t		curr;
 	if (_statusCode == 200)
 		set_request_line();
 	if (_statusCode == 200)
-		set_header_fields();
+		curr = set_header_fields();
 	if (_statusCode == 200)
 		parse_request_target();
-//	if (_statusCode == 200)
-//		check_host_header();
+	if (_statusCode == 200)
+		check_host_header();
+	if (_statusCode == 200 && curr < _rawRqst.end())
+	{
+		_body.assign(curr, _rawRqst.end());
+//		check_body_headers();
+	}
+}
+
+//void	request::check_body_headers(void)
+//{
+//	std::string::size_type	size = _body.size();
+//	map_t::iterator			te_hdr = _msgFields.find("Transfer-Encoding");
+//	map_t::iterator			cl_hdr = _msgFields.find("Content-Length");
+//	map_t::iterator			notfound = _msgFields.end();
+//
+//}
+
+/*
+USELESS better si la reponse s'en charge non?
+Returns true if there must be a message body, false otherwise. (doesnt check if there IS
+a message body, juste check if there should be one). Pour l'instant, si TE est present 
+alors on renvoi 501 (Not implemented) (en gros accepte que les CL, pour l'instant)
+(RFC 7230 page 30).
+The presence of a message body in a request is signaled by a
+Content-Length or Transfer-Encoding header field. (RFC 7230 page 28)
+A sender MUST NOT send a Content-Length header field in any message
+that contains a Transfer-Encoding header field. (RFC 7230 page 30)
+If a Transfer-Encoding header field
+is present in a request and the chunked transfer coding is not
+the final encoding, the message body length cannot be determined
+reliably; the server MUST respond with the 400 (Bad Request)
+status code and then close the connection. (RFC 7230 page 32)
+*/
+bool		request::message_body_presence(void)
+{
+	map_t::iterator		found_cl;
+	map_t::iterator		found_te;
+	map_t::iterator		notfound = _msgFields.end();
+	found_cl = _msgFields.find("Content-Length");
+	found_te = _msgFields.find("Transfer-Encoding");
+	
+	if (found_te != notfound && found_cl != notfound)
+		return (_statusCode = 400, perror("request: both Content-Length and Transfer-Encoding present"), false);
+	if (found_te != notfound)
+		return (_statusCode = 501, perror("request: Transfer-Encoding not implemented"), false);
+	else if (found_cl != notfound)
+		return (true);
+	return (false);
 }
 
 /*
@@ -63,15 +111,13 @@ by the end of the URI.
  If a URI contains an authority component, then the path component
    must either be empty or begin with a slash ("/") character.
   path          = path-abempty    ; begins with "/" or is empty
-*/
-
-/*
 The most common form of request-target is the origin-form:
 	origin-form= absolute-path [ "?" query ]
 (RFC 7230 page 42)
 else absolute form of URI (http-URI)
 (RFC 7230 page 45)
 https://fullstack.wiki/http/request-uri
+Remplit la structure t_uri avec les composants de la request target.
 */
 int		request::parse_request_target(void)
 {
@@ -131,7 +177,9 @@ int		request::parse_absolute_form(const std::string& target)
 int		request::parse_origin_form(const std::string& target)
 {
 	_uri.scheme = "http://";
-	_uri.authority.assign(_msgFields["Host"]);
+	map_t::iterator		host = _msgFields.find("Host");
+	if (host != _msgFields.end())
+		_uri.authority.assign(host->second);
 	std::string::size_type	path_end = target.find('?');
 	if (path_end == std::string::npos)
 	{
@@ -154,7 +202,8 @@ const t_uri&		request::getUri(void) const
 A client MUST send a Host header field in all HTTP/1.1 request
 messages. If the target URI includes an authority component, then a
 client MUST send a field-value for Host that is identical to that
-authority component. A server MUST respond with a 400 (Bad Request) 
+authority component. 
+A server MUST respond with a 400 (Bad Request) 
 status code to any
 HTTP/1.1 request message that lacks a Host header field and to any
 request message that contains more than one Host header field or a
@@ -166,14 +215,12 @@ in split_header() fct.
 */
 int		request::check_host_header(void)
 {
-	if (_msgFields.find("Host") == _msgFields.end())
+	if (_msgFields.find("Host") == _msgFields.end()) // si pas trouve
 	{
 		perror("request: missing Host header field");
 		this->_statusCode = 400;
 		return (-1);
 	}
-	//TODO: if Host valur != URI authority error
-	//TODO: if URI without authority => Host should be empty val
 	return (0);
 }
 
@@ -251,13 +298,16 @@ field-name ":" [ field-value ] (RFC 2616 page 32)
 Split start to end with ':' as delimiter, add the resulting key and value in map, and
 check if there is not more than one Host header field. Set statusCode and return -1 if
 any error encountered.
+A server MUST reject any received request message that contains
+whitespace between a header field-name and colon with a response code
+of 400 (Bad Request). (RFC 2616 pqge 25)
 */
 int	request::split_header(siterator_t start, siterator_t end)
 {
 	if (start == end)
 		return (0);
 	siterator_t		name_end = find(start, end, ':');
-	if (name_end == end || name_end == start)
+	if (name_end == end || name_end == start || std::isspace(*(name_end-1)) == true)
 	{
 		perror("request: split_header error (missing name or missing \':\'");
 		_statusCode = 400;
@@ -273,6 +323,12 @@ int	request::split_header(siterator_t start, siterator_t end)
 		_statusCode = 400;
 		return (-1);
 	}
+	if (end - value_start > HEADER_VALUE_MAX_LENGTH)
+	{
+		perror("request: value field too long");
+		_statusCode = 431;
+		return (-1);
+	}
 	_msgFields[std::string(start, name_end)] = std::string(value_start, end);
 	return (0);
 }
@@ -283,20 +339,26 @@ All
 Internet-based HTTP/1.1 servers MUST respond with a 400 (Bad Request)
 status code to any HTTP/1.1 request message which lacks a Host header
 field. (RFC 2616 page 129)*/
-int		request::set_header_fields(void)
+request::siterator_t		request::set_header_fields(void)
 {
 	siterator_t		eof = _rawRqst.end();
 	siterator_t		start = _rawRqst.begin();
 	while (start < eof)
 	{
 		siterator_t		hdr_end = find_crlf(start, eof);
-		if (hdr_end == eof || start == hdr_end)
-			return (_statusCode = 400, perror("request: missing CRLF to message field"), -1);
-		if (split_header(start, hdr_end) == -1)
-			return (-1);
+		if (hdr_end == eof) // CRLF pas trouve
+		{
+			perror("request: missing CRLF to end message field");
+			_statusCode = 400;
+			return (eof);
+		}
+		else if (hdr_end == start) // fin header field
+			return (start + 2);
+		else if (split_header(start, hdr_end) == -1)
+			return eof;
 		start = hdr_end + 2;
 	}
-	return (0);
+	return start;
 }
 
 const std::string&		request::getRawRequest(void) const

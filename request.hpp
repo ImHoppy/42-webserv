@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:37 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/03 20:53:00 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/04 12:53:31 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,9 @@
 # include <cctype> // isspace
 # ifndef STATUS_LINE_MAX_LENGTH
 #  define STATUS_LINE_MAX_LENGTH 8000 // en octets RFC7230 page 22
+# endif
+# ifndef HEADER_VALUE_MAX_LENGTH
+#  define HEADER_VALUE_MAX_LENGTH 400 // en octets RFC 2616 page 26
 # endif
 
 typedef struct s_uri
@@ -65,11 +68,12 @@ class request
 		int		check_host_header(void); // TODO: a finir qd URI parsing OK
 		int		set_request_line(void);
 		int		split_header(siterator_t start, siterator_t end);
-		int		set_header_fields(void);
-		siterator_t	find_crlf(siterator_t start, siterator_t end);
+		siterator_t		set_header_fields(void);
+		siterator_t		find_crlf(siterator_t start, siterator_t end);
 		int		parse_request_target(void);
 		int		parse_absolute_form(const std::string& target);
 		int		parse_origin_form(const std::string& target);
+		bool		message_body_presence(void);
 
 }; // end class request
 
