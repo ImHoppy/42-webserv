@@ -8,6 +8,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
 	if (this != &other) {
 		_host = other._host;
 		_port = other._port;
+		_root = other._root;
 		_location = other._location;
 		_maxBodySize = other._maxBodySize;
 		_errorPages = other._errorPages;
@@ -26,10 +27,10 @@ void	ServerConfig::setPort(int16_t port) {
 	_port = port;
 }
 void	ServerConfig::setRootPath(const std::string &root) {
-	_root = root;
+	_root.assign(root);
 	for (map_locs::iterator it = _location.begin(); it != _location.end(); it++) {
 		if (it->second.getRootPath() == "")
-			it->second.setRootPath(_root);
+			it->second.setRootPath(root);
 	}
 }
 void	ServerConfig::setMaxBodySize(int32_t maxBodySize) {
@@ -54,6 +55,7 @@ int16_t			ServerConfig::getPort() const {
 int32_t			ServerConfig::getMaxBodySize() const {
 	return _maxBodySize;
 }
+#include <iostream>
 std::string		ServerConfig::getRootPath() const {
 	return _root;
 }

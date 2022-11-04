@@ -101,14 +101,14 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 					else
 						throw ParsingError("Host must be an IPv4 address");
 				}
-				if (it->first == "port")
+				else if (it->first == "port")
 				{
 					if (isDigit(it->second))
 						server.setPort(StrToInt(it->second));
 					else
 						throw ParsingError("Port must be a number");
 				}
-				if (it->first == "error")
+				else if (it->first == "error")
 				{
 					++it;
 					while (it->first != "}")
@@ -117,18 +117,18 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 						++it;
 					}
 				}
-				if (it->first == "max_body_size")
+				else if (it->first == "max_body_size")
 				{
 					if (isDigit(it->second))
 						server.setMaxBodySize(StrToInt(it->second));
 					else
 						throw ParsingError("Max body size must be a number");
 				}
-				if (it->first == "root")
+				else if (it->first == "root")
 				{
 					server.setRootPath(it->second);
 				}
-				if (it->first == "location")
+				else if (it->first == "location")
 				{
 					++it;
 					while (it->first != "}")
@@ -138,9 +138,9 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 						{
 							if (it->first == "root")
 								location.setRootPath(it->second);
-							if (it->first == "default_file")
+							else if (it->first == "default_file")
 								location.setIndexFile(it->second);
-							if (it->first == "dir_list")
+							else if (it->first == "dir_list")
 							{
 								if (it->second == "true")
 									location.setDirList(true);
@@ -149,11 +149,11 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 								else
 									throw ParsingError("dir_list must be a boolean");
 							}
-							if (it->first == "redirect")
+							else if (it->first == "redirect")
 								location.setRedirUrl(it->second);
-							if (it->first == "cgi_cmd")
+							else if (it->first == "cgi_cmd")
 								location.setCGICmd(it->second);
-							if (it->first == "method")
+							else if (it->first == "method")
 							{
 								// split space separated methods and check if they are valid
 								std::vector<std::string> methods;
@@ -179,7 +179,7 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 							throw ParsingError("Location can't be a redirection and have a file or a cgi");
 						if (location.getRootPath().empty())
 							location.setRootPath(server.getRootPath());
-						server.addLocation(location.getRootPath(), location);
+						server.addLocation(location.getPath(), location);
 						++it;
 					}
 				}

@@ -87,6 +87,22 @@ bool			LocationConfig::isRedirection() const
 {
 	return (not _redirUrl.empty());
 }
+bool			LocationConfig::isCGIActive() const
+{
+	return _CGIActive;
+}
+std::string		LocationConfig::getPath() const
+{
+	return _path;
+}
+std::string		LocationConfig::getCGIPath() const
+{
+	return _CGIPath;
+}
+std::string		LocationConfig::getRedirUrl() const
+{
+	return _redirUrl;
+}
 std::bitset<3>	LocationConfig::getMethods() const
 {
 	return _methods;
