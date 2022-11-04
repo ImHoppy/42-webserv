@@ -27,6 +27,10 @@ void	ServerConfig::setPort(int16_t port) {
 }
 void	ServerConfig::setRootPath(const std::string &root) {
 	_root = root;
+	for (map_locs::iterator it = _location.begin(); it != _location.end(); it++) {
+		if (it->second.getRootPath() == "")
+			it->second.setRootPath(_root);
+	}
 }
 void	ServerConfig::setMaxBodySize(int32_t maxBodySize) {
 	_maxBodySize = maxBodySize;

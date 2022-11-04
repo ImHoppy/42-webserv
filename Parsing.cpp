@@ -94,13 +94,12 @@ bool	is_only_digits(std::string const & s)
 	return true;
 }
 
-const char *serverKeys[7] = {
+const char *serverKeys[6] = {
 	"host",
 	"port",
 	"server_name",
 	"max_body_size",
 	"root",
-	"autoindex",
 	"location"
 };
 
@@ -199,8 +198,6 @@ void	parseConf(std::string const & path )
 			std::cout << " | " << value;
 		std::cout << "\n";
 		if (value == "{")
-			++depth;
-		if (key == "{")
 			++depth;
 
 		// Check error
