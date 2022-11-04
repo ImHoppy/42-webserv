@@ -25,11 +25,14 @@ void	ServerConfig::setHost(int32_t host) {
 void	ServerConfig::setPort(int16_t port) {
 	_port = port;
 }
-void	ServerConfig::addLocation(const std::string &path, const LocationConfig &loc) {
-	_location[path] = loc;
+void	ServerConfig::setRootPath(const std::string &root) {
+	_root = root;
 }
 void	ServerConfig::setMaxBodySize(int32_t maxBodySize) {
 	_maxBodySize = maxBodySize;
+}
+void	ServerConfig::addLocation(const std::string &path, const LocationConfig &loc) {
+	_location[path] = loc;
 }
 void	ServerConfig::addErrorPage(int code, const std::string &page) {
 	_errorPages[code] = page;
@@ -44,14 +47,17 @@ int32_t			ServerConfig::getHost() const {
 int16_t			ServerConfig::getPort() const {
 	return _port;
 }
+int32_t			ServerConfig::getMaxBodySize() const {
+	return _maxBodySize;
+}
+std::string		ServerConfig::getRootPath() const {
+	return _root;
+}
 LocationConfig	ServerConfig::getLocation(const std::string &path) const {
 	return _location.at(path);
 }
 ServerConfig::map_locs	const & ServerConfig::getLocations() const {
 	return _location;
-}
-int32_t			ServerConfig::getMaxBodySize() const {
-	return _maxBodySize;
 }
 std::map<int, std::string>	const & ServerConfig::getErrorPages() const {
 	return _errorPages;

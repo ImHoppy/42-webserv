@@ -124,6 +124,10 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 					else
 						throw ParsingError("Max body size must be a number");
 				}
+				if (it->first == "root")
+				{
+					server.setRootPath(it->second);
+				}
 				if (it->first == "location")
 				{
 					++it;
@@ -132,14 +136,23 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 						LocationConfig location(it->first);
 						while (it->first != "}")
 						{
-							// if (it->first == "file")
-								// location.setFile(it->second);
-							// if (it->first == "root")
-								// location.setRoot(it->second);
-							// if (it->first == "index")
-								// location.setIndex(it->second);
-							// if (it->first == "autoindex")
-								// location.setAutoindex(StrToInt(it->second));
+							if (it->first == "root")
+								location.setRootPath(it->second);
+							if (it->first == "default_file")
+								location.setIndexFile(it->second);
+							if (it->first == "dir_list")
+							{
+								if (it->second == "true")
+									location.setDirList(true);
+								else if (it->second == "false")
+									location.setDirList(false);
+								else
+									throw ParsingError("dir_list must be a boolean");
+							}
+							if (it->first == "redirect")
+								location.setRedirUrl(it->second);
+							if (it->first == "cgi_cmd")
+								location.setCGICmd(it->second);
 							if (it->first == "method")
 							{
 								// split space separated methods and check if they are valid
@@ -159,18 +172,23 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 									++it2;
 								}
 							}
-							// if (it->first == "cgi")
-								// location.setCgi(it->second);
-							// if (it->first == "upload")
-								// location.setUpload(it->second);
 							++it;
 						}
-						server.addLocation(location.getPath(), location);
+						std::cout << location.isRedirection() << !location.isEmpty()<< std::endl;
+						if (location.isRedirection() && !location.isEmpty())
+							throw ParsingError("Location can't be a redirection and have a file or a cgi");
+						if (location.getRootPath().empty())
+							location.setRootPath(server.getRootPath());
+						server.addLocation(location.getRootPath(), location);
 						++it;
 					}
 				}
 				++it;
 			}
+			if (server.getPort() == 0)
+				throw ParsingError("Server must have a port");
+			if (server.getRootPath().empty())
+				throw ParsingError("Server must have a root");
 			config.addServer(server);
 		}
 		++it;

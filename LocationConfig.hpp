@@ -17,14 +17,13 @@ class LocationConfig {
 
 	private:
 	bool			_dirList;
-	bool			_redir;
 	bool			_CGIActive;
 	std::string		_path;
+	std::string		_root;
+	std::string		_indexFile;
+	std::string		_redirUrl;
 	std::string		_CGIPath;
 	CGI				_CGI;
-	std::string		_redirUrl;
-	std::string		_indexFile;
-	std::string		_alias;
 	std::bitset<3>	_methods;
 
 	
@@ -37,18 +36,28 @@ class LocationConfig {
 	LocationConfig(std::string path);
 
 	void	setDirList(bool dirList);
-	void	setAlias(const std::string &alias);
+	void	setPath(const std::string & path);
+	void	setRootPath(const std::string &path);
+	void	setIndexFile(const std::string &indexFile);
+	void	setRedirUrl(const std::string &url);
+	void	setCGIPath(const std::string &CGIPath);
+	void	setCGICmd(const std::string &CGIPath);
 	void	setMethods(const std::bitset<3> &methods);
 	// TODO(mbraets): Check if used
 	void	setMethod(http_methods method, bool value);
 	void	addMethod(http_methods method);
 	
-	std::string	const &	getAlias() const;
-	std::bitset<3>	getMethods() const;
-	bool			getMethod(http_methods method) const;
-	std::string 	getIndexFile() const;
-	std::string		getPath() const;
-
+	bool			isEmpty() const;
 	bool			isDirList() const;
 	bool			isRedirection() const;
+	bool			isCGIActive() const;
+	std::string		getPath() const;
+	std::string		getRootPath() const;
+	std::string		getCGIPath() const;
+	std::string		getRedirUrl() const;
+	std::string 	getIndexFile() const;
+	std::bitset<3>	getMethods() const;
+	bool			getMethod(http_methods method) const;
+
+
 };
