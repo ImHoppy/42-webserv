@@ -6,13 +6,14 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/04 12:57:26 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/04 15:13:47 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "request.hpp"
+#include "request.hpp"
+#include <cstring>
 
-/* Default constructor (private) */
+/* Default constructor */
 request::request(void) : _statusCode(200), _rawRqst(), _uri(), _msgFields(), _body() {}
 
 /* Destructor */
@@ -369,6 +370,25 @@ const std::string&		request::getRawRequest(void) const
 const request::map_t&			request::getMap(void) const
 {
 	return this->_msgFields;
+}
+
+void	request::clear(void)
+{
+	_statusCode = 200;
+	_rawRqst.clear();
+	std::memset((void*)(&_uri), 0, sizeof(_uri));
+	_msgFields.clear();
+	_body.clear();
+}
+
+int		request::getStatus(void) const
+{
+	return _statusCode;
+}
+
+void	request::setStatus(int code)
+{
+	this->_statusCode = code;
 }
 
 std::ostream&	operator<<(std::ostream& o, const request& me)

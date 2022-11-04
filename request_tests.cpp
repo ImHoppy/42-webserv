@@ -6,11 +6,12 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/03 12:43:43 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/03 16:12:58 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/04 14:36:30 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "request.hpp"
+#include "response.hpp"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -51,8 +52,10 @@ int	main(int argc, char **argv)
 	else
 		raw_rqst = rqst_file_to_string("request_template.txt");
 
-	request		rqst(raw_rqst);
-	std::cout << rqst << std::endl;
-	std::cout << "\nRaw request:\n" << rqst.getRawRequest() << std::endl;
+//	request		rqst(raw_rqst);
+//	std::cout << rqst << std::endl;
+//	std::cout << "\nRaw request:\n" << rqst.getRawRequest() << std::endl;
+
+	response	rpse(raw_rqst);
 	return (0);
 }

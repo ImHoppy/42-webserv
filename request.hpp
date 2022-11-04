@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:37 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/04 12:53:31 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/04 15:07:37 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,10 +50,10 @@ class request
 		t_uri									_uri;
 		std::map<std::string, std::string>		_msgFields; // contient aussi la status line
 		std::string								_body;
-		/* Private default constructor */
-		request(void);
 
 	public:
+		/* Default constructor */
+		request(void);
 		~request(void);
 		/* Parametric constructor */
 		request&	operator=(const request& src);
@@ -64,6 +64,9 @@ class request
 		const std::string&		getRawRequest(void) const;
 		const map_t&			getMap(void) const;
 		const t_uri&			getUri(void) const;
+		int						getStatus(void) const;
+		/* Setteur */
+		void					setStatus(int code);
 		/* Member functions */
 		int		check_host_header(void); // TODO: a finir qd URI parsing OK
 		int		set_request_line(void);
@@ -74,6 +77,7 @@ class request
 		int		parse_absolute_form(const std::string& target);
 		int		parse_origin_form(const std::string& target);
 		bool		message_body_presence(void);
+		void		clear(void);
 
 }; // end class request
 

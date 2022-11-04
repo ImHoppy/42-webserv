@@ -16,8 +16,8 @@ OBJS		=	$(SRCS:.cpp=.o)
 DEPS		=	$(OBJS:.o=.d)
 
 RQST_NAME = rqst
-RQST_SRCS = request_tests.cpp request.cpp
-RQST_HDRS = request.hpp
+RQST_SRCS = request_tests.cpp request.cpp response.cpp
+RQST_HDRS = request.hpp response.hpp
 RQST_OBJS = $(RQST_SRCS:.cpp=.o)
 RQST_DEPS = $(RQST_OBJS:.o=.d)
 
@@ -57,7 +57,7 @@ clean		:
 				rm -rf $(OBJS) $(DEPS) $(RQST_OBJS) $(RQST_DEPS)
 
 fclean		:	clean
-				rm -f $(NAME)
+				rm -f $(NAME) $(RQST_NAME)
 
 re			:	fclean
 				@$(MAKE) --no-print-directory
