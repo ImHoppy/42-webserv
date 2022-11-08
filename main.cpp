@@ -3,6 +3,31 @@
 #include "Parsing.hpp"
 #include "GeneralConfig.hpp"
 
+
+#include <sys/types.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <iostream>
+
+std::vector<std::string>	listFiles(std::string const & path)
+{
+	DIR							*dr;
+	struct dirent				*en;
+	std::vector<std::string>	vec_files;
+
+	dr = opendir(path.c_str());
+	if (dr)
+	{
+		while ((en = readdir(dr)) != NULL)
+		{
+			vec_files.push_back(en->d_name);
+		}
+		closedir(dr);
+	}
+	return vec_files;
+}
+
 #define hw "hi"
 void parseConf(std::string const & path );
 /*class A {
@@ -30,19 +55,22 @@ int main(int ac, char **av)
 
 	std::cout << std::endl;
 
-	std::string path(".");
-/* 	std::vector<std::string> listFiles = Path::listFiles(path);
+	std::vector<std::string> list = listFiles(".");
 	std::cout << "listFiles: " << std::endl;
-	for (std::vector<std::string>::iterator it = listFiles.begin(); it != listFiles.end(); it++)
-		std::cout << *it << " ";
-	std::cout << std::endl << listFiles.size() << std::endl;
-	std::cout << std::endl << std::endl; */
+	for (std::vector<std::string>::iterator it = list.begin(); it != list.end(); it++)
+	{
+		struct stat st;
+		stat(it->c_str(), &st);
+		std::cout << *it << " : " << st.st_size <<  "\n";
+	}
+	std::cout << std::endl << list.size() << std::endl;
+	std::cout << std::endl << std::endl;
 
 	// GeneralConfig generalConfig;
 	try
 	{
 		
-		parseConf("template.conf");
+		// parseConf("template.conf");
 	}
 	catch(ParsingError& e)
 	{
