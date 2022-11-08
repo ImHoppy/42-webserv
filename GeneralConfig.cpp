@@ -5,7 +5,7 @@
 #include <sstream>
 
 GeneralConfig::GeneralConfig() {
-	if (GeneralConfig::_errors.empty())
+	if (GeneralConfig::_error_status.empty())
 	{
 		std::fstream error_name("error.conf", std::fstream::in);
 		if (error_name.is_open()) {
@@ -18,7 +18,7 @@ GeneralConfig::GeneralConfig() {
 				std::getline(ss, key, '\t');
 				std::getline(ss, value);
 
-				GeneralConfig::_errors.insert(std::make_pair(StrToInt(key), value));
+				GeneralConfig::_error_status.insert(std::make_pair(StrToInt(key), value));
 			}
 		}
 	}
@@ -42,4 +42,4 @@ void	GeneralConfig::addServer(const ServerConfig &server) {
 	_servers.push_back(server);
 }
 
-std::map<int, std::string>	GeneralConfig::_errors;
+std::map<int, std::string>	GeneralConfig::_error_status;

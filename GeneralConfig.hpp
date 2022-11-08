@@ -9,7 +9,7 @@
 class GeneralConfig {
 	private:
 	std::vector<ServerConfig>	_servers;
-	static std::map<int, std::string>	_errors;
+	static std::map<int, std::string>	_error_status;
 
 	public:
 	GeneralConfig();
