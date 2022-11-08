@@ -132,7 +132,7 @@ void	checkParentObject(std::string const & parent, std::string const & key, int 
 	else if (parent != "server" && key == "location")
 		throw ParsingError("location can only be in server object", lineNumber);
 	if (key != "location" && key != "server" && key != "error" && parent != "location")
-		throw ParsingError("Cant have a location in a another location", lineNumber);
+		throw ParsingError("The path location can only be in location object", lineNumber);
 	// Usuless ?
 	// if (parent != "location")
 	// {

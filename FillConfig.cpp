@@ -73,15 +73,15 @@ typedef std::vector<std::pair<std::string, std::string> > key_value_t;
 
 void	locationBlock(ServerConfig & server, key_value_t::iterator & it)
 {
-	++it;
 	while (it->first != "}")
 	{
 		LocationConfig location(it->first);
+		++it;
 		while (it->first != "}")
 		{
 			if (it->first == "root")
 				location.setRootPath(it->second);
-			else if (it->first == "default_file")
+			else if (it->first == "index")
 				location.setIndexFile(it->second);
 			else if (it->first == "dir_list")
 			{
@@ -114,6 +114,10 @@ void	locationBlock(ServerConfig & server, key_value_t::iterator & it)
 						throw ParsingError("Invalid method");
 					++it2;
 				}
+			}
+			else {
+				std::cout << "Unknown key: " << it->first << std::endl;
+				throw ParsingError("Invalid Location key");
 			}
 			++it;
 		}
@@ -173,7 +177,11 @@ void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
 		}
 		else if (it->first == "location")
 		{
-			locationBlock(server, it);
+			locationBlock(server, ++it);
+		}
+		else {
+			std::cout << it->first << std::endl;
+			throw ParsingError("Invalid server key");
 		}
 		++it;
 	}
@@ -192,7 +200,7 @@ void	fillConfig(key_value_t key_value)
 	{
 		if (it->first == "server")
 		{
-			serverBlock(config, it);
+			serverBlock(config, ++it);
 		}
 		++it;
 	}
