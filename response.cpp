@@ -6,14 +6,14 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 11:51:04 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/04 15:45:29 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/08 10:51:16 by Cyrielle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "response.hpp"
 
 /* Default constructor */
-response::response(void) : _rqst(), _rsp("HTTP/1.1") {}
+response::response(void) : _rqst(), _rsp("HTTP/1.1 ") {}
 
 /* Destructor */
 response::~response(void) {}
@@ -31,22 +31,25 @@ response&	response::operator=(const response& src)
 
 void	response::set_rsp_error(int code)
 {
-	_rsp += phrase;
+//	_rsp += error_pages[code];
 }
 
 /* Parametric constructor */
-response::response(const std::string& raw_rqst) : _rqst(raw_rqst), _rsp("HTTP/1.1")
+response::response(const std::string& raw_rqst) : _rqst(raw_rqst), _rsp("HTTP/1.1 ")
 {
-	_rsp += " " + _rqst.getStatus() + " ";
-	if (_rqst.getStatus() != 200)
-	{
-		set_rsp_error(_rqst.getStatus());
-	}
-		
+	set_status_line();	
 	//TODO: set the _rsp string 
 }
 
 /* Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF */
 void	response::set_status_line(void)
 {
+	int		status = _rqst.getSatus();
+	_rsp += status + " ";
+	if (status != 200)
+	{
+		set_rsp_error(status);
+	}
+	else if (status == 200)
+		_rsp += "OK";
 }

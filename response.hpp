@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 11:48:00 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/04 15:50:28 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/08 10:51:25 by Cyrielle         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ class	response
 		request								_rqst;
 		std::string							_rsp;
 		//TODO: ajouter un tableau de configured errors body
-		status code | phrase | body
+//		status code | phrase | body
 
 }; // class response
 
