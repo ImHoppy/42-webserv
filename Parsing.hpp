@@ -15,7 +15,7 @@ class ParsingError : public std::exception
 	ParsingError();
 	ParsingError(const char *msg);
 	ParsingError(const char *msg, int lineNumber);
-	const char *	what();
+	virtual const char *	what() const throw();
 	int				whatLine();
 };
 

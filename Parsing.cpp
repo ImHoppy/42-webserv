@@ -11,7 +11,7 @@
 ParsingError::ParsingError() : message("Error on parsing."), line(-1) {}
 ParsingError::ParsingError(const char *msg) : message(msg), line(-1) {}
 ParsingError::ParsingError(const char *msg, int lineNumber) : message(msg), line(lineNumber) {}
-const char *	ParsingError::what()
+const char *	ParsingError::what() const throw()
 {
 	return message;
 }
@@ -97,7 +97,7 @@ bool	is_only_digits(std::string const & s)
 const char *serverKeys[6] = {
 	"host",
 	"port",
-	"server_name",
+	"server_names",
 	"max_body_size",
 	"root",
 	"location"

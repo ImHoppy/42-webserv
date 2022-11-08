@@ -9,14 +9,14 @@
 class ServerConfig {
 	private:
 	
-	typedef typename std::map<std::string, LocationConfig> map_locs;
+	typedef std::map<std::string, LocationConfig> map_locs;
 	
-	int32_t		_host;
-	int16_t		_port;
-	std::string	_root;
-	// std::string	_names; // Optional on subject
-	int32_t		_maxBodySize;
-	map_locs	_location;
+	int32_t						_host;
+	int16_t						_port;
+	std::string					_root;
+	std::vector<std::string>	_server_names;
+	int32_t						_maxBodySize;
+	map_locs					_location;
 	std::map<int, std::string>	_errorPages;
 
 	public:
@@ -32,6 +32,7 @@ class ServerConfig {
 	void	setMaxBodySize(int32_t maxBodySize);
 	void	addLocation(const std::string &path, const LocationConfig &loc);
 	void	addErrorPage(int code, const std::string &page);
+	void	setServerNames(const std::vector<std::string> &server_names);
 
 	int32_t			getHost() const;
 	int16_t			getPort() const;
@@ -40,6 +41,5 @@ class ServerConfig {
 	LocationConfig	getLocation(const std::string &path) const;
 	map_locs	const &	getLocations() const;
 	std::map<int, std::string>	const & getErrorPages() const;
-
-	
+	std::vector<std::string> const & getServerNames() const;
 };

@@ -4,21 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include "Parsing.hpp"
-
-// static std::string	IntToStr(int32_t	i)
-// {
-// 	std::ostringstream s;
-// 	s << i;
-// 	return s.str();
-// }
-
-static int32_t		StrToInt(std::string const & str)
-{
-	std::istringstream s(str);
-	int32_t i;
-	s >> i;
-	return i;
-}
+#include "Utils.hpp"
 
 // string ip to int32_t
 static int32_t		StrToIp(std::string const & ip)
@@ -108,6 +94,12 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 					else
 						throw ParsingError("Port must be a number");
 				}
+				else if (it->first == "server_names")
+				{
+					std::vector<std::string> server_names;
+					split(it->second, ' ', server_names);
+					server.setServerNames(server_names);
+				}
 				else if (it->first == "error")
 				{
 					++it;
@@ -174,7 +166,7 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 							}
 							++it;
 						}
-						std::cout << location.isRedirection() << !location.isEmpty()<< std::endl;
+						std::cout << location.isRedirection() << !location.isEmpty() << std::endl;
 						if (location.isRedirection() && !location.isEmpty())
 							throw ParsingError("Location can't be a redirection and have a file or a cgi");
 						if (location.getRootPath().empty())

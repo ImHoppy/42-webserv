@@ -1,7 +1,27 @@
 #include "GeneralConfig.hpp"
+#include "Utils.hpp"
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 GeneralConfig::GeneralConfig() {
-	// std::cout << "GeneralConfig constructor called" << std::endl;
+	if (GeneralConfig::_errors.empty())
+	{
+		std::fstream error_name("error.conf", std::fstream::in);
+		if (error_name.is_open()) {
+			std::string line;
+			while (std::getline(error_name, line)) {
+				
+				std::istringstream ss(line);
+				std::string key;
+				std::string value;
+				std::getline(ss, key, '\t');
+				std::getline(ss, value);
+
+				GeneralConfig::_errors.insert(std::make_pair(StrToInt(key), value));
+			}
+		}
+	}
 }
 GeneralConfig::GeneralConfig(const GeneralConfig &other) {
 	// std::cout << "GeneralConfig copy constructor called" << std::endl;
@@ -21,3 +41,5 @@ GeneralConfig::~GeneralConfig() {
 void	GeneralConfig::addServer(const ServerConfig &server) {
 	_servers.push_back(server);
 }
+
+std::map<int, std::string>	GeneralConfig::_errors;

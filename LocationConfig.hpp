@@ -58,6 +58,4 @@ class LocationConfig {
 	std::string 	getIndexFile() const;
 	std::bitset<3>	getMethods() const;
 	bool			getMethod(http_methods method) const;
-
-
 };

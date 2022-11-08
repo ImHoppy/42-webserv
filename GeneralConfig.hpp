@@ -4,10 +4,12 @@
 #include <vector>
 #include "ServerConfig.hpp"
 #include <iostream>
+#include <map>
 
 class GeneralConfig {
 	private:
 	std::vector<ServerConfig>	_servers;
+	static std::map<int, std::string>	_errors;
 
 	public:
 	GeneralConfig();

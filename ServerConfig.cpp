@@ -1,6 +1,14 @@
 #include "ServerConfig.hpp"
 
-ServerConfig::ServerConfig() {}
+ServerConfig::ServerConfig() :
+	_host(0),
+	_port(8080),
+	_root("."),
+	_server_names(),
+	_maxBodySize(1024),
+	_location(),
+	_errorPages()
+{}
 ServerConfig::ServerConfig(const ServerConfig &other) {
 	*this = other;
 }
@@ -9,8 +17,9 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
 		_host = other._host;
 		_port = other._port;
 		_root = other._root;
-		_location = other._location;
+		_server_names = other._server_names;
 		_maxBodySize = other._maxBodySize;
+		_location = other._location;
 		_errorPages = other._errorPages;
 	}
 	return *this;
@@ -42,6 +51,9 @@ void	ServerConfig::addLocation(const std::string &path, const LocationConfig &lo
 void	ServerConfig::addErrorPage(int code, const std::string &page) {
 	_errorPages[code] = page;
 }
+void	ServerConfig::setServerNames(const std::vector<std::string> &server_names) {
+	_server_names = server_names;
+}
 
 
 /* ********************************* GETTER ********************************* */
@@ -67,4 +79,7 @@ ServerConfig::map_locs	const & ServerConfig::getLocations() const {
 }
 std::map<int, std::string>	const & ServerConfig::getErrorPages() const {
 	return _errorPages;
+}
+std::vector<std::string> const & ServerConfig::getServerNames() const {
+	return _server_names;
 }
