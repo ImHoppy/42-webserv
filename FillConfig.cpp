@@ -123,6 +123,10 @@ void	locationBlock(ServerConfig & server, key_value_t::iterator & it)
 		}
 		if (location.isRedirection() && !location.isEmpty())
 			throw ParsingError("Location can't be a redirection and have a file or a cgi");
+		if (not location.isRedirection() && location.getMethods().none())
+			location.addMethod(LocationConfig::GET);
+		if (location.getIndexFile().empty())
+			location.setIndexFile("index.html");
 		if (location.getRootPath().empty())
 			location.setRootPath(server.getRootPath());
 		server.addLocation(location.getPath(), location);

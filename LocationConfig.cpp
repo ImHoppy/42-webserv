@@ -31,8 +31,15 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &other)
 }
 LocationConfig::~LocationConfig() {}
 
-LocationConfig::LocationConfig(std::string path)  : _dirList(false), _CGIActive(false),_path(path)
-{}
+LocationConfig::LocationConfig(std::string path) :
+_dirList(false),
+_CGIActive(false),
+_path(path),
+_root(),
+_indexFile(),
+_redirUrl(),
+_CGIPath(),
+_methods() {}
 
 void	LocationConfig::setPath(const std::string & path)
 {
