@@ -69,7 +69,123 @@ static bool	isDigit(std::string const & s)
 	return true;
 }
 
-void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
+typedef std::vector<std::pair<std::string, std::string> > key_value_t;
+
+void	locationBlock(ServerConfig & server, key_value_t::iterator & it)
+{
+	++it;
+	while (it->first != "}")
+	{
+		LocationConfig location(it->first);
+		while (it->first != "}")
+		{
+			if (it->first == "root")
+				location.setRootPath(it->second);
+			else if (it->first == "default_file")
+				location.setIndexFile(it->second);
+			else if (it->first == "dir_list")
+			{
+				if (it->second == "true")
+					location.setDirList(true);
+				else if (it->second == "false")
+					location.setDirList(false);
+				else
+					throw ParsingError("dir_list must be a boolean");
+			}
+			else if (it->first == "redirect")
+				location.setRedirUrl(it->second);
+			else if (it->first == "cgi_cmd")
+				location.setCGICmd(it->second);
+			else if (it->first == "method")
+			{
+				// split space separated methods and check if they are valid
+				std::vector<std::string> methods;
+				split(it->second, ' ', methods);
+				std::vector<std::string>::iterator it2 = methods.begin();
+				while (it2 != methods.end())
+				{
+					if (*it2 == "GET")
+						location.addMethod(LocationConfig::GET);
+					else if (*it2 == "POST")
+						location.addMethod(LocationConfig::POST);
+					else if (*it2 == "DELETE")
+						location.addMethod(LocationConfig::DELETE);
+					else
+						throw ParsingError("Invalid method");
+					++it2;
+				}
+			}
+			++it;
+		}
+		std::cout << location.isRedirection() << !location.isEmpty() << std::endl;
+		if (location.isRedirection() && !location.isEmpty())
+			throw ParsingError("Location can't be a redirection and have a file or a cgi");
+		if (location.getRootPath().empty())
+			location.setRootPath(server.getRootPath());
+		server.addLocation(location.getPath(), location);
+		++it;
+	}
+}
+
+void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
+{
+	ServerConfig server;
+	while (it->first != "}")
+	{
+		if (it->first == "host")
+		{
+			if (isIpv4(it->second))
+				server.setHost(StrToIp(it->second));
+			else
+				throw ParsingError("Host must be an IPv4 address");
+		}
+		else if (it->first == "port")
+		{
+			if (isDigit(it->second))
+				server.setPort(StrToInt(it->second));
+			else
+				throw ParsingError("Port must be a number");
+		}
+		else if (it->first == "server_names")
+		{
+			std::vector<std::string> server_names;
+			split(it->second, ' ', server_names);
+			server.setServerNames(server_names);
+		}
+		else if (it->first == "error")
+		{
+			++it;
+			while (it->first != "}")
+			{
+				server.addErrorPage(StrToInt(it->first), it->second);
+				++it;
+			}
+		}
+		else if (it->first == "max_body_size")
+		{
+			if (isDigit(it->second))
+				server.setMaxBodySize(StrToInt(it->second));
+			else
+				throw ParsingError("Max body size must be a number");
+		}
+		else if (it->first == "root")
+		{
+			server.setRootPath(it->second);
+		}
+		else if (it->first == "location")
+		{
+			locationBlock(server, it);
+		}
+		++it;
+	}
+	if (server.getPort() == 0)
+		throw ParsingError("Server must have a port");
+	if (server.getRootPath().empty())
+		throw ParsingError("Server must have a root");
+	config.addServer(server);
+}
+
+void	fillConfig(key_value_t key_value)
 {
 	std::vector<std::pair<std::string, std::string> >::iterator it = key_value.begin();
 	GeneralConfig config;
@@ -77,111 +193,7 @@ void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value)
 	{
 		if (it->first == "server")
 		{
-			ServerConfig server;
-			while (it->first != "}")
-			{
-				if (it->first == "host")
-				{
-					if (isIpv4(it->second))
-						server.setHost(StrToIp(it->second));
-					else
-						throw ParsingError("Host must be an IPv4 address");
-				}
-				else if (it->first == "port")
-				{
-					if (isDigit(it->second))
-						server.setPort(StrToInt(it->second));
-					else
-						throw ParsingError("Port must be a number");
-				}
-				else if (it->first == "server_names")
-				{
-					std::vector<std::string> server_names;
-					split(it->second, ' ', server_names);
-					server.setServerNames(server_names);
-				}
-				else if (it->first == "error")
-				{
-					++it;
-					while (it->first != "}")
-					{
-						server.addErrorPage(StrToInt(it->first), it->second);
-						++it;
-					}
-				}
-				else if (it->first == "max_body_size")
-				{
-					if (isDigit(it->second))
-						server.setMaxBodySize(StrToInt(it->second));
-					else
-						throw ParsingError("Max body size must be a number");
-				}
-				else if (it->first == "root")
-				{
-					server.setRootPath(it->second);
-				}
-				else if (it->first == "location")
-				{
-					++it;
-					while (it->first != "}")
-					{
-						LocationConfig location(it->first);
-						while (it->first != "}")
-						{
-							if (it->first == "root")
-								location.setRootPath(it->second);
-							else if (it->first == "default_file")
-								location.setIndexFile(it->second);
-							else if (it->first == "dir_list")
-							{
-								if (it->second == "true")
-									location.setDirList(true);
-								else if (it->second == "false")
-									location.setDirList(false);
-								else
-									throw ParsingError("dir_list must be a boolean");
-							}
-							else if (it->first == "redirect")
-								location.setRedirUrl(it->second);
-							else if (it->first == "cgi_cmd")
-								location.setCGICmd(it->second);
-							else if (it->first == "method")
-							{
-								// split space separated methods and check if they are valid
-								std::vector<std::string> methods;
-								split(it->second, ' ', methods);
-								std::vector<std::string>::iterator it2 = methods.begin();
-								while (it2 != methods.end())
-								{
-									if (*it2 == "GET")
-										location.addMethod(LocationConfig::GET);
-									else if (*it2 == "POST")
-										location.addMethod(LocationConfig::POST);
-									else if (*it2 == "DELETE")
-										location.addMethod(LocationConfig::DELETE);
-									else
-										throw ParsingError("Invalid method");
-									++it2;
-								}
-							}
-							++it;
-						}
-						std::cout << location.isRedirection() << !location.isEmpty() << std::endl;
-						if (location.isRedirection() && !location.isEmpty())
-							throw ParsingError("Location can't be a redirection and have a file or a cgi");
-						if (location.getRootPath().empty())
-							location.setRootPath(server.getRootPath());
-						server.addLocation(location.getPath(), location);
-						++it;
-					}
-				}
-				++it;
-			}
-			if (server.getPort() == 0)
-				throw ParsingError("Server must have a port");
-			if (server.getRootPath().empty())
-				throw ParsingError("Server must have a root");
-			config.addServer(server);
+			serverBlock(config, it);
 		}
 		++it;
 	}

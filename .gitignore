@@ -6,3 +6,4 @@ ubuntu_tester
 *.d
 *.swp
 .nfs*
+www/isometric-map

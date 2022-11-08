@@ -38,11 +38,11 @@ int main(int ac, char **av)
 	std::cout << std::endl << listFiles.size() << std::endl;
 	std::cout << std::endl << std::endl; */
 
-	GeneralConfig generalConfig;
+	// GeneralConfig generalConfig;
 	try
 	{
 		
-		// parseConf("template.conf");
+		parseConf("template.conf");
 	}
 	catch(ParsingError& e)
 	{

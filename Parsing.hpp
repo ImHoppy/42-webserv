@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cstddef>
 
 class ParsingError : public std::exception
 {

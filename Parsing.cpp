@@ -2,10 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <algorithm>
 #include "Parsing.hpp"
-#include <vector>
-#include <utility>
+#include <stdint.h>
 
 
 ParsingError::ParsingError() : message("Error on parsing."), line(-1) {}
