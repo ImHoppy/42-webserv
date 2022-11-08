@@ -1,6 +1,14 @@
 #include "LocationConfig.hpp"
 
-LocationConfig::LocationConfig() : _dirList(false), _CGIActive(false) {}
+LocationConfig::LocationConfig() :
+_dirList(false),
+_CGIActive(false),
+_path("/"),
+_root(),
+_indexFile("index.html"),
+_redirUrl(),
+_CGIPath(),
+_methods() {}
 LocationConfig::LocationConfig(const LocationConfig &other)
 {
 	*this = other;
@@ -13,7 +21,7 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &other)
 		_CGIActive = other._CGIActive;
 		_path = other._path;
 		_CGIPath = other._CGIPath;
-		_CGI = other._CGI;
+		// _CGI = other._CGI;
 		_redirUrl = other._redirUrl;
 		_indexFile = other._indexFile;
 		_root = other._root;
@@ -111,7 +119,6 @@ bool			LocationConfig::getMethod(http_methods method) const
 {
 	return _methods.test(method);
 }
-#include <iostream>
 bool	LocationConfig::isEmpty() const
 {
 	return (_dirList == false && _CGIActive == false && _CGIPath.empty() && _indexFile.empty() && _root.empty() && _methods.none());

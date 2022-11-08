@@ -117,7 +117,6 @@ void	locationBlock(ServerConfig & server, key_value_t::iterator & it)
 			}
 			++it;
 		}
-		std::cout << location.isRedirection() << !location.isEmpty() << std::endl;
 		if (location.isRedirection() && !location.isEmpty())
 			throw ParsingError("Location can't be a redirection and have a file or a cgi");
 		if (location.getRootPath().empty())

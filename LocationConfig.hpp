@@ -23,7 +23,7 @@ class LocationConfig {
 	std::string		_indexFile;
 	std::string		_redirUrl;
 	std::string		_CGIPath;
-	CGI				_CGI;
+	// CGI				_CGI;
 	std::bitset<3>	_methods;
 
 	
