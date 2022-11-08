@@ -23,6 +23,10 @@ class GeneralConfig {
 			std::cout << "Host: " << it->getHost() << std::endl;
 			std::cout << "Port: " << it->getPort() << std::endl;
 			std::cout << "Root: " << it->getRootPath() << std::endl;
+			std::cout << "Server Name: " << std::endl;
+			for (std::vector<std::string>::const_iterator it2 = it->getServerNames().begin(); it2 != it->getServerNames().end(); it2++) {
+				std::cout << "\t" << *it2 << std::endl;
+			}
 			std::cout << "MaxBodySize: " << it->getMaxBodySize() << std::endl;
 			std::cout << "ErrorPages: " << std::endl;
 			for (std::map<int, std::string>::const_iterator it2 = it->getErrorPages().begin(); it2 != it->getErrorPages().end(); it2++) {
@@ -41,4 +45,6 @@ class GeneralConfig {
 			}
 		}
 	};
+
+	std::vector<ServerConfig> const &	getServers() const;
 };

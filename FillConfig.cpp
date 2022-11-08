@@ -196,6 +196,42 @@ void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
 	config.addServer(server);
 }
 
+#include <algorithm>
+bool	ServerNamesIsEqual(std::vector<std::string> const & a, std::vector<std::string> const & b)
+{
+	std::vector<std::string>::const_iterator it = a.begin();
+	while (it != a.end())
+	{
+		if (std::find(b.begin(), b.end(), *it) != b.end())
+			return true;
+		++it;
+	}
+	return false;
+}
+
+void	CheckVirtualServer(GeneralConfig & config)
+{
+	std::vector<ServerConfig> servers = config.getServers();
+	std::vector<ServerConfig>::iterator it = servers.begin();
+	std::vector<ServerConfig>::iterator it2 = servers.begin();
+	while (it != servers.end())
+	{
+		it2 = it + 1;
+		while (it2 != servers.end())
+		{
+			if (it->getPort() == it2->getPort())
+			{
+				if (ServerNamesIsEqual(it->getServerNames(), it2->getServerNames()))
+					throw ParsingError("Duplicate virtual server");
+				if (it->getServerNames().empty() || it2->getServerNames().empty())
+					throw ParsingError("Duplicate port without server names");
+			}
+			++it2;
+		}
+		++it;
+	}
+}
+
 void	fillConfig(key_value_t key_value)
 {
 	std::vector<std::pair<std::string, std::string> >::iterator it = key_value.begin();
@@ -209,5 +245,6 @@ void	fillConfig(key_value_t key_value)
 		++it;
 	}
 	key_value.clear();
+	CheckVirtualServer(config);
 	config.printConfig();
 }

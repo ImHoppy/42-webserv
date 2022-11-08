@@ -42,4 +42,8 @@ void	GeneralConfig::addServer(const ServerConfig &server) {
 	_servers.push_back(server);
 }
 
+std::vector<ServerConfig> const &	GeneralConfig::getServers() const {
+	return _servers;
+}
+
 std::map<int, std::string>	GeneralConfig::_error_status;
