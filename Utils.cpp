@@ -1,5 +1,6 @@
 #include <string>
 #include <sstream>
+#include <vector>
 #include "Utils.hpp"
 
 int32_t		StrToInt(std::string const & str)
@@ -8,4 +9,52 @@ int32_t		StrToInt(std::string const & str)
 	int32_t i;
 	s >> i;
 	return i;
+}
+
+int32_t		StrToIp(std::string const & ip)
+{
+	std::stringstream s(ip);
+	int a,b,c,d;
+	char ch;
+	s >> a >> ch >> b >> ch >> c >> ch >> d;
+	return (a << 24) + (b << 16) + (c << 8) + d;
+}
+
+bool	isIpv4(std::string const & s)
+{
+	int		count = 0;
+	int		i = 0;
+	int		nb = 0;
+	std::string::const_iterator it;
+
+	for (it = s.begin(); it < s.end(); it++)
+	{
+		if (*it == '.')
+		{
+			if (nb > 255)
+				return false;
+			nb = 0;
+			count++;
+			i = 0;
+		}
+		else if (*it >= '0' && *it <= '9')
+		{
+			nb = nb * 10 + (*it - '0');
+			i++;
+		}
+		else
+			return false;
+	}
+	if (count != 3)
+		return false;
+	return true;
+}
+
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+	std::stringstream ss(s);
+	std::string item;
+	while (std::getline(ss, item, delim)) {
+		elems.push_back(item);
+	}
+	return elems;
 }
