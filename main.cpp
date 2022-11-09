@@ -67,7 +67,7 @@ int main(int ac, char **av)
 	std::cout << std::endl << list.size() << std::endl;
 	std::cout << std::endl << std::endl;
 
-	GeneralConfig generalConfig;
+	GeneralConfig generalConfig; // NOTE: Maybe delete this class and put all vector<ServerConfig> in WebServ class or main
 	try
 	{
 		
@@ -83,6 +83,9 @@ int main(int ac, char **av)
 	WebServ webserv;
 	Server serv;
 	serv.addConfig(generalConfig.getServers()[0]);
+	serv.InitServer();
+
 	webserv.addServer(serv);
+	webserv.StartLoop();
 }
 

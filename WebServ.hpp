@@ -7,6 +7,8 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
+#define MAX_EVENTS 100 // NOTE: 4096
+
 class WebServ {
 	private:
 		std::vector<Server>	_servers;
@@ -46,7 +48,7 @@ class WebServ {
 					throw std::runtime_error("epoll_ctl del failed");
 				}
 			}
-			if (socket > 0)
+			if (socket >= 0)
 				close(socket);
 		}
 		if (_epollInstance > 0)
@@ -86,10 +88,10 @@ class WebServ {
 			return;
 		}
 		_isRunning = true;
-		struct epoll_event *events = NULL;
+		struct epoll_event events[MAX_EVENTS];
 		while (_isRunning) {
 
-			int nfds = epoll_wait(_epollInstance, events, 4096, 200);
+			int nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, 200);
 			if (nfds < 0) {
 				throw std::runtime_error("epoll_wait failed");
 			}
@@ -100,12 +102,31 @@ class WebServ {
 				if (serv == NULL)
 				{
 					// NOTE: events[i].data.fd == Client socket
+					if (events[i].events & EPOLLIN)
+					{
+						char buf[1024];
+						int ret = recv(events[i].data.fd, buf, 1024, 0);
+						// if (ret == 0)
+						// {
+							// close(events[i].data.fd);
+							// TODO: remove from epoll
+							// continue;
+						// }
+						std::cout << "Client: " << ret << '\n' << buf << std::endl;	
+						std::memset(buf, 0, 1024);
+					}
 
+					if (events[i].events & EPOLLOUT)
+					{
+						std::string buf("HTTP/1.1 404 Not Found\r");
+						write(events[i].data.fd, buf.c_str(), buf.size());
+					}
 					continue;
 				}
 				else
+				{
 					serv->AcceptNewClient(_epollInstance);
-
+				}
 				// serv->handleRequest();
 			}
 		}

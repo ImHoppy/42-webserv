@@ -17,7 +17,7 @@ class Server {
 	std::vector<ServerConfig>	configs;
 	std::vector<socket_t>		clients;
 	public:
-	Server() {};
+	Server(): _socket(-1), _listen(false) {};
 
 	void addConfig(ServerConfig const & config) {
 		configs.push_back(config);
@@ -42,6 +42,7 @@ class Server {
 		{
 			std::cerr << "error: setsockopt() failed" << std::endl;
 			close(_socket);
+			_socket = -1;
 			exit(1);
 		}
 
@@ -89,9 +90,11 @@ class Server {
 			{
 				throw std::runtime_error("listen() failed");
 			}
+			_listen = true;
 		}
-		// NOTE: else Si accept a besoin d'etre sur un nouveau epoll
+		else // NOTE: else Si accept a besoin d'etre sur un nouveau epoll
 		{
+			std::cout << "accept" << std::endl;
 			struct epoll_event event;
 			struct sockaddr_in client_addr;
 			socklen_t client_addr_len = sizeof(client_addr);
