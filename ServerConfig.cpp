@@ -67,8 +67,7 @@ int16_t			ServerConfig::getPort() const {
 int32_t			ServerConfig::getMaxBodySize() const {
 	return _maxBodySize;
 }
-#include <iostream>
-std::string		ServerConfig::getRootPath() const {
+std::string	const &	ServerConfig::getRootPath() const {
 	return _root;
 }
 LocationConfig	ServerConfig::getLocation(const std::string &path) const {
