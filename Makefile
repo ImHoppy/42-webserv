@@ -7,8 +7,9 @@ ifeq ($(DEBUG), 1)
 	CFLAGS		+= -g3 -DDEBUG_LOG=1
 endif
 
-SRCS		=	 main.cpp GeneralConfig.cpp ServerConfig.cpp \
-				LocationConfig.cpp Parsing.cpp FillConfig.cpp Utils.cpp
+SRCS		=	main.cpp GeneralConfig.cpp ServerConfig.cpp \
+				LocationConfig.cpp Parsing.cpp FillConfig.cpp \
+				Utils.cpp
 # Request.cpp Response.cpp \
 # Utils.cpp Server.cpp
 

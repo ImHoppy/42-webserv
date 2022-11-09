@@ -44,7 +44,8 @@ class B : public std::string {
 	};
 };
  */
-
+#include "Server.hpp"
+#include "WebServ.hpp"
 int main(int ac, char **av)
 {
 
@@ -70,7 +71,7 @@ int main(int ac, char **av)
 	try
 	{
 		
-		// parseConf("template.conf");
+		parseConf("template.conf");
 	}
 	catch(ParsingError& e)
 	{
@@ -79,5 +80,6 @@ int main(int ac, char **av)
 		if (line != -1)
 			std::cerr << "At line: " << line << '\n'; 
 	}
+	WebServ webServ;
 }
 
