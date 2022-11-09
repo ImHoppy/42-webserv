@@ -9,7 +9,7 @@ endif
 
 SRCS		=	main.cpp GeneralConfig.cpp ServerConfig.cpp \
 				LocationConfig.cpp Parsing.cpp FillConfig.cpp \
-				Utils.cpp Trim.cpp
+				Utils.cpp Trim.cpp Request.cpp
 # Request.cpp Response.cpp \
 # Utils.cpp Server.cpp
 
@@ -17,8 +17,8 @@ OBJS		=	$(SRCS:.cpp=.o)
 DEPS		=	$(OBJS:.o=.d)
 
 RQST_NAME = rqst
-RQST_SRCS = request_tests.cpp request.cpp
-RQST_HDRS = request.hpp
+RQST_SRCS = request_tests.cpp Request.cpp
+RQST_HDRS = Request.hpp
 RQST_OBJS = $(RQST_SRCS:.cpp=.o)
 RQST_DEPS = $(RQST_OBJS:.o=.d)
 

@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   request.hpp                                        :+:      :+:    :+:   */
+/*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:37 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/04 12:53:31 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/09 21:14:03 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ typedef struct s_uri
 	std::string		total;
 }				t_uri;
 
-class request
+class Request
 {
 	public:
 		typedef std::map<std::string, std::string>		map_t;
@@ -51,14 +51,14 @@ class request
 		std::map<std::string, std::string>		_msgFields; // contient aussi la status line
 		std::string								_body;
 		/* Private default constructor */
-		request(void);
+		Request(void);
 
 	public:
-		~request(void);
+		~Request(void);
 		/* Parametric constructor */
-		request&	operator=(const request& src);
-		request(const std::string& str);
-		request(const request& src);
+		Request&	operator=(const Request& src);
+		Request(const std::string& str);
+		Request(const Request& src);
 
 		/* Getteurs */
 		const std::string&		getRawRequest(void) const;
@@ -66,17 +66,17 @@ class request
 		const t_uri&			getUri(void) const;
 		/* Member functions */
 		int		check_host_header(void); // TODO: a finir qd URI parsing OK
-		int		set_request_line(void);
+		int		set_Request_line(void);
 		int		split_header(siterator_t start, siterator_t end);
 		siterator_t		set_header_fields(void);
 		siterator_t		find_crlf(siterator_t start, siterator_t end);
-		int		parse_request_target(void);
+		int		parse_Request_target(void);
 		int		parse_absolute_form(const std::string& target);
 		int		parse_origin_form(const std::string& target);
 		bool		message_body_presence(void);
 
-}; // end class request
+}; // end class Request
 
-std::ostream&	operator<<(std::ostream& o, const request& me);
+std::ostream&	operator<<(std::ostream& o, const Request& me);
 
 #endif

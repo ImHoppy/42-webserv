@@ -6,6 +6,7 @@
 #include <vector>
 #include <sys/epoll.h>
 #include <unistd.h>
+#include "Request.hpp"
 
 #define MAX_EVENTS 100 // NOTE: 4096
 
@@ -14,6 +15,7 @@ class WebServ {
 		std::vector<Server>	_servers;
 		socket_t			_epollInstance;
 		bool				_isRunning;
+		std::map<int, Server*>		_clientMap; // key = client socket, dc a chaque accept on add une pair<client_fd, Server*>;
 	public:
 		typedef std::vector<Server> vec_servers;
 		static std::map<socket_t, std::string>	error_status;
@@ -22,7 +24,7 @@ class WebServ {
 		// _servers[serv->getSocket()] = serv;
 	};
 
-	WebServ(): _epollInstance(0), _isRunning(false) {
+	WebServ(): _servers(), _epollInstance(-1), _isRunning(false), _clientMap() {
 	};
 
 	WebServ(WebServ const & other) {
@@ -34,11 +36,13 @@ class WebServ {
 			_servers = other._servers;
 			_epollInstance = other._epollInstance;
 			_isRunning = other._isRunning;
+			_clientMap = other._clientMap;
 		}
 		return *this;
 	};
 
 	~WebServ() {
+	//TODO: ici, on ferme QUE les client_sockets qui sont OK epoll, mais il peut y en avoir 15000 ouverts mais pas ready qu'on ferme pas
 		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
 			const socket_t socket = it->getSocket();
 
@@ -62,76 +66,114 @@ class WebServ {
 	void EndLoop() {
 		_isRunning = false;
 	};
-	void InitEpoll() {
-		if (_servers.size() == 0)
-			throw std::runtime_error("No servers to listen to");
-		_epollInstance = epoll_create(_servers.size());
-		if (_epollInstance < 0) {
-			throw std::runtime_error("epoll_create failed");
-		}
-		struct epoll_event event = {};
-		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
-			socket_t socket = it->getSocket();
 
-			event.data.fd = socket;
-			event.events = EPOLLIN;
-			if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, socket, &event) < 0) {
-				throw std::runtime_error("epoll_ctl add failed");
-			}
-		}
+	void InitEpoll() {
+	   if (_servers.size() == 0)
+			   throw std::runtime_error("No servers to listen to");
+	   _epollInstance = epoll_create(_servers.size());
+	   if (_epollInstance < 0) {
+			   throw std::runtime_error("epoll_create failed");
+	   }
+	   struct epoll_event event = {};
+	   for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
+			   socket_t socket = it->getSocket();
+
+			   event.data.fd = socket;
+			   event.events = EPOLLIN;
+			   if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, socket, &event) < 0) {
+					   throw std::runtime_error("epoll_ctl add failed");
+			   }
+	   }
 	};
-	void StartLoop() {
-		if (_epollInstance == 0) {
+
+	void StartLoop()
+	{
+		if (_epollInstance < 0)
 			InitEpoll();
-		}
 		if (_isRunning) {
 			return;
 		}
 		_isRunning = true;
 		struct epoll_event events[MAX_EVENTS];
+		int nfds = 0;
+		//TODO: to remove, only test
+		bool		get = false;
+		int			prev_nb = 0;
 		while (_isRunning) {
+			nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, -1);
 
-			int nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, 200);
 			if (nfds < 0) {
 				throw std::runtime_error("epoll_wait failed");
 			}
+			if (nfds != prev_nb)
+			{
+				std::cout << "nfds=" << nfds << std::endl;
+				for (int j = 0; j < nfds; ++j)
+				{
+					std::cout << "events[" << j << "] = " << events[j].data.fd << std::endl;
+				}
+			}
 			for (int i = 0; i < nfds; i++)
 			{
-				// if (events[i].events & EPOLLERR)
 				Server * serv = FindServerFromSocket(events[i].data.fd);
 				if (serv == NULL)
 				{
 					// NOTE: events[i].data.fd == Client socket
+		/* Une request est associee a un client_fd, qui est associe a un listen_socket, qui est associe a un Server,
+		et c'est donc ce Server qui va process la request avec une des ses configs, choisit parmis celles-ci en
+		fonction du Host header. */
 					if (events[i].events & EPOLLIN)
 					{
+						std::cout << "POLLIN event on client fd " << events[i].data.fd <<std::endl;
 						char buf[1024];
-						int ret = recv(events[i].data.fd, buf, 1024, 0);
-						// if (ret == 0)
-						// {
-							// close(events[i].data.fd);
-							// TODO: remove from epoll
-							// continue;
-						// }
-						std::cout << "Client: " << ret << '\n' << buf << std::endl;	
-						std::memset(buf, 0, 1024);
+						ssize_t bytes = recv(events[i].data.fd, buf, 1024, 0);
+						if (bytes == 0)
+						{
+							std::cout << "EOF received from client " << events[i].data.fd << std::endl;
+							if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, events[i].data.fd, NULL) < 0) {
+								throw std::runtime_error("epoll_ctl DEL after EOF failed");
+							}
+							close(events[i].data.fd);
+							continue;
+						}
+						else
+						{
+							std::cout << bytes << "bytes reveived from client " << events[i].data.fd << ": \n";
+							std::cout << buf << "______END" << std::endl;	
+							//TODO: create la Request avec le buff recu et "l'envoyer" au bon Server
+							Request		new_reqst(buf);
+							Request::map_t		fields = new_reqst.getMap();
+							if (fields["method"] == "GET")
+							{
+								get = true;
+							}
+						}
 					}
-
-					if (events[i].events & EPOLLOUT)
+					else if (events[i].events & EPOLLOUT && get == true)
 					{
+						std::cout << "POLLOUT event on client fd " << events[i].data.fd <<std::endl;
+						ssize_t		bytes;
 						std::string buf("HTTP/1.1 200 OK\r\n\r\nHello World\r\n");
-						write(events[i].data.fd, buf.c_str(), buf.size());
-						close(events[i].data.fd);
+						bytes = send(events[i].data.fd, buf.c_str(), buf.size(), 0);
+						if (bytes == -1)
+						{
+							throw std::runtime_error("send failed");
+						}
+						std::cout << bytes << " send to client " << events[i].data.fd << std::endl;
+						get = false;
 					}
-					continue;
 				}
 				else
 				{
+					std::cout << "accept on lsocket " << events[i].data.fd << std::endl;
 					serv->AcceptNewClient(_epollInstance);
 				}
 				// serv->handleRequest();
 			}
+			prev_nb = nfds;
 		}
 	};
+
 	Server	*FindServerFromSocket(socket_t socket) {
 		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
 			if (it->getSocket() == socket) {
