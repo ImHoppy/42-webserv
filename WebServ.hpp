@@ -118,8 +118,9 @@ class WebServ {
 
 					if (events[i].events & EPOLLOUT)
 					{
-						std::string buf("HTTP/1.1 404 Not Found\r");
+						std::string buf("HTTP/1.1 200 OK\r\n\r\nHello World\r\n");
 						write(events[i].data.fd, buf.c_str(), buf.size());
+						close(events[i].data.fd);
 					}
 					continue;
 				}

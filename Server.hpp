@@ -83,7 +83,7 @@ class Server {
 	~Server() {
 		close(_socket);
 	};
-	void AcceptNewClient(socket_t epollInstance)
+	void AcceptNewClient(socket_t & epollInstance)
 	{
 		if (isListen() == false) {
 			if (listen(_socket, std::numeric_limits<short>::max()/2) < 0)
