@@ -17,7 +17,12 @@ class Server {
 	std::vector<ServerConfig>	configs;
 	std::vector<socket_t>		clients;
 	public:
-	Server() {
+	Server() {};
+
+	void addConfig(ServerConfig const & config) {
+		configs.push_back(config);
+	};
+	void InitServer() {
 		int on = 1;
 		struct sockaddr_in servaddr;
 

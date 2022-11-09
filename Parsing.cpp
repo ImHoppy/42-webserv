@@ -2,8 +2,9 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include "Parsing.hpp"
 #include <stdint.h>
+#include "Parsing.hpp"
+#include "Utils.hpp"
 
 
 ParsingError::ParsingError() : message("Error on parsing."), line(-1) {}
@@ -17,64 +18,6 @@ int	ParsingError::whatLine()
 {
 	return line;
 }
-
-const char* ws = " \t\n\r\f\v";
-
-// trim from end of string (right)
-inline std::string& rtrim(std::string& s, const char* t = ws)
-{
-    s.erase(s.find_last_not_of(t) + 1);
-    return s;
-}
-
-// trim from beginning of string (left)
-inline std::string& ltrim(std::string& s, const char* t = ws)
-{
-    s.erase(0, s.find_first_not_of(t));
-    return s;
-}
-
-// trim from both ends of string (right then left)
-inline std::string& trim(std::string& s, const char* t = ws)
-{
-    return ltrim(rtrim(s, t), t);
-}
-
-
-static int	count_char(std::string const & s, char c)
-{
-	int	count = 0;
-	std::string::const_iterator it;
-
-	for (it = s.begin(); it < s.end(); it++)
-		if (*it == c)
-			++count;
-	return count;
-}
-
-std::string & trim_quote(std::string & s, int lineNumber = -1)
-{
-	trim(s);
-	if (s.empty())
-		return (s);
-	char typeQuote = 0;
-	if ((s.at(0) == '"' && s[s.size()-1] == '"') \
-	|| (s.at(0) == '\'' && s[s.size()-1] == '\''))
-	{
-		typeQuote = (s.at(0) == '"') ? '"' : '\'';
-		s = s.substr(1, s.size() - 2);
-		if (count_char(s, typeQuote) > 0)
-			throw ParsingError("Quoted string cant contains self quote", lineNumber);
-	}
-	else if ((s.at(0) == '"' || s[s.size()-1] == '"') \
-	|| (s.at(0) == '\'' || s[s.size()-1] == '\''))
-		throw ParsingError("Unfinished quote", lineNumber);
-	return (s);
-}
-
-// const std::map<std::string, std::string> {{"server", "host"}};
-
-// Check if std::string is in array
 bool	is_in_array(std::string const & s, char const ** array, int size)
 {
 	for (int i = 0; i < size; i++)
@@ -107,7 +50,7 @@ void	check_key(std::string const & key, std::string const & parent, int lineNumb
 		throw ParsingError("Key not allowed in head", lineNumber);
 	if (key.empty())
 		throw ParsingError("Empty key", lineNumber);
-	if (key.find_first_of(ws) != std::string::npos)
+	if (key.find_first_of(SpaceChar) != std::string::npos)
 		throw ParsingError("Key cant contains whitespace", lineNumber);
 	if (key.find_first_of("[]") != std::string::npos)
 		throw ParsingError("Key cant contains []", lineNumber);
@@ -150,7 +93,7 @@ static void	remove_comment(std::string & s)
 	if (pos != std::string::npos)
 		s = s.substr(0, pos);
 }
-void	parseConf(std::string const & path )
+void	parseConf(GeneralConfig & config, std::string const & path )
 {
 	std::vector<std::pair<std::string, std::string> > key_value;
 	std::ifstream	ifs;
@@ -222,5 +165,5 @@ void	parseConf(std::string const & path )
 	if (depth != 0 || parents.back() != "head")
 		throw ParsingError("Bracket not closed");
 	ifs.close();
-	fillConfig(key_value);
+	fillConfig(key_value, config);
 }

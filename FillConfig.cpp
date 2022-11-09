@@ -236,10 +236,9 @@ void	CheckVirtualServer(GeneralConfig & config)
 	}
 }
 
-void	fillConfig(key_value_t key_value)
+void	fillConfig(key_value_t key_value, GeneralConfig & config)
 {
 	std::vector<std::pair<std::string, std::string> >::iterator it = key_value.begin();
-	GeneralConfig config;
 	while (it != key_value.end())
 	{
 		if (it->first == "server")
@@ -250,5 +249,5 @@ void	fillConfig(key_value_t key_value)
 	}
 	key_value.clear();
 	CheckVirtualServer(config);
-	config.printConfig();
+	// config.printConfig();
 }

@@ -40,10 +40,14 @@ class WebServ {
 		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
 			const socket_t socket = it->getSocket();
 
-			if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, socket, NULL) < 0) {
-				throw std::runtime_error("epoll_ctl failed");
+			if (_epollInstance > 0)
+			{ 
+				if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, socket, NULL) < 0) {
+					throw std::runtime_error("epoll_ctl del failed");
+				}
 			}
-			close(socket);
+			if (socket > 0)
+				close(socket);
 		}
 		if (_epollInstance > 0)
 			close(_epollInstance);
@@ -57,7 +61,9 @@ class WebServ {
 		_isRunning = false;
 	};
 	void InitEpoll() {
-		_epollInstance = epoll_create(_servers.size()+1);
+		if (_servers.size() == 0)
+			throw std::runtime_error("No servers to listen to");
+		_epollInstance = epoll_create(_servers.size());
 		if (_epollInstance < 0) {
 			throw std::runtime_error("epoll_create failed");
 		}
@@ -68,7 +74,7 @@ class WebServ {
 			event.data.fd = socket;
 			event.events = EPOLLIN;
 			if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, socket, &event) < 0) {
-				throw std::runtime_error("epoll_ctl failed");
+				throw std::runtime_error("epoll_ctl add failed");
 			}
 		}
 	};

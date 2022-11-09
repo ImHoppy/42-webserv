@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #include <cstddef>
+#include "GeneralConfig.hpp"
 
 class ParsingError : public std::exception
 {
@@ -20,4 +21,4 @@ class ParsingError : public std::exception
 	int				whatLine();
 };
 
-void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value);
+void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value, GeneralConfig &);

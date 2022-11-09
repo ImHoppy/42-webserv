@@ -29,7 +29,7 @@ std::vector<std::string>	listFiles(std::string const & path)
 }
 
 #define hw "hi"
-void parseConf(std::string const & path );
+void parseConf(GeneralConfig &, std::string const & path );
 /*class A {
 	public:
 	A(){std::cout << "A\n";};
@@ -67,11 +67,11 @@ int main(int ac, char **av)
 	std::cout << std::endl << list.size() << std::endl;
 	std::cout << std::endl << std::endl;
 
-	// GeneralConfig generalConfig;
+	GeneralConfig generalConfig;
 	try
 	{
 		
-		parseConf("template.conf");
+		parseConf(generalConfig, "template.conf");
 	}
 	catch(ParsingError& e)
 	{
@@ -80,6 +80,9 @@ int main(int ac, char **av)
 		if (line != -1)
 			std::cerr << "At line: " << line << '\n'; 
 	}
-	WebServ webServ;
+	WebServ webserv;
+	Server serv;
+	serv.addConfig(generalConfig.getServers()[0]);
+	webserv.addServer(serv);
 }
 
