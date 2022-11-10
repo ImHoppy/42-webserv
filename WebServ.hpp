@@ -7,6 +7,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #include "Request.hpp"
+#include "Client.hpp"
 
 #define MAX_EVENTS 100 // NOTE: 4096
 
@@ -15,7 +16,7 @@ class WebServ {
 		std::vector<Server>	_servers;
 		socket_t			_epollInstance;
 		bool				_isRunning;
-		std::map<int, Server*>		_clientMap; // key = client socket, dc a chaque accept on add une pair<client_fd, Server*>;
+		std::map<socket_t, Client&>		_clients; // Map de key = client socket, value = Ref sur client
 	public:
 		typedef std::vector<Server> vec_servers;
 		static std::map<socket_t, std::string>	error_status;
@@ -24,7 +25,7 @@ class WebServ {
 		// _servers[serv->getSocket()] = serv;
 	};
 
-	WebServ(): _servers(), _epollInstance(-1), _isRunning(false), _clientMap() {
+	WebServ(): _servers(), _epollInstance(-1), _isRunning(false), _clients() {
 	};
 
 	WebServ(WebServ const & other) {
@@ -36,7 +37,7 @@ class WebServ {
 			_servers = other._servers;
 			_epollInstance = other._epollInstance;
 			_isRunning = other._isRunning;
-			_clientMap = other._clientMap;
+			_clients = other._clients;
 		}
 		return *this;
 	};
@@ -96,8 +97,6 @@ class WebServ {
 		_isRunning = true;
 		struct epoll_event events[MAX_EVENTS];
 		int nfds = 0;
-		//TODO: to remove, only test
-		bool		get = false;
 		int			prev_nb = 0;
 		while (_isRunning) {
 			nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, -1);
@@ -119,48 +118,61 @@ class WebServ {
 				if (serv == NULL)
 				{
 					// NOTE: events[i].data.fd == Client socket
-		/* Une request est associee a un client_fd, qui est associe a un listen_socket, qui est associe a un Server,
-		et c'est donc ce Server qui va process la request avec une des ses configs, choisit parmis celles-ci en
-		fonction du Host header. */
+//					if (events[i].events & EPOLLHUP) // voir note plus bas sur Connection close 
+//					{
+//						std::cout << "EPOLLHUP event (peer closed its end)" << std::endl;
+//						if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, events[i].data.fd, NULL) < 0) {
+//							throw std::runtime_error("epoll_ctl DEL after EOF failed");
+//						}
+//						close(events[i].data.fd);
+//					}
 					if (events[i].events & EPOLLIN)
 					{
 						std::cout << "POLLIN event on client fd " << events[i].data.fd <<std::endl;
-						char buf[1024];
+						char buf[3000];
+						memset(&buf, 0, sizeof(buf));
 						ssize_t bytes = recv(events[i].data.fd, buf, 1024, 0);
-						if (bytes == 0)
+						if (bytes < 0)
+							throw std::runtime_error("recv failed");
+						else if (bytes == 0)
 						{
 							std::cout << "EOF received from client " << events[i].data.fd << std::endl;
 							if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, events[i].data.fd, NULL) < 0) {
 								throw std::runtime_error("epoll_ctl DEL after EOF failed");
 							}
 							close(events[i].data.fd);
-							continue;
 						}
-						else
+						else if (bytes > 0)
 						{
+							buf[bytes] = 0;
 							std::cout << bytes << "bytes reveived from client " << events[i].data.fd << ": \n";
 							std::cout << buf << "______END" << std::endl;	
 							//TODO: create la Request avec le buff recu et "l'envoyer" au bon Server
 							Request		new_reqst(buf);
 							Request::map_t		fields = new_reqst.getMap();
-							if (fields["method"] == "GET")
+							if (events[i].events & EPOLLOUT)
 							{
-								get = true;
+								if (fields["method"] == "GET")
+								{
+									std::cout << "POLLOUT event on client fd " << events[i].data.fd <<std::endl;
+									ssize_t		bytes;
+									std::string buf("HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Keep-Alive\r\n\r\nHello, world!");
+									bytes = send(events[i].data.fd, buf.c_str(), buf.size(), 0);
+									if (bytes == -1)
+									{
+										throw std::runtime_error("send failed");
+									}
+									std::cout << bytes << " send to client " << events[i].data.fd << std::endl;
+								}
+//								else if (fields["Connection"] == "Close") // NOTE: en fait sert a rien, car si tu envoi une reponse avec Connection = close, le client declenchera au prochain tour de boucle un POLLIN avec un res du read a 0 bytes, et cest la du coup quon close la co
+//								{
+//									std::cout << "Close Acknoledgement received from client " << events[i].data.fd << std::endl;
+//									if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, events[i].data.fd, NULL) < 0)
+//										throw std::runtime_error("epoll_ctl del failed");
+//									close(events[i].data.fd);
+//								}
 							}
 						}
-					}
-					else if (events[i].events & EPOLLOUT && get == true)
-					{
-						std::cout << "POLLOUT event on client fd " << events[i].data.fd <<std::endl;
-						ssize_t		bytes;
-						std::string buf("HTTP/1.1 200 OK\r\n\r\nHello World\r\n");
-						bytes = send(events[i].data.fd, buf.c_str(), buf.size(), 0);
-						if (bytes == -1)
-						{
-							throw std::runtime_error("send failed");
-						}
-						std::cout << bytes << " send to client " << events[i].data.fd << std::endl;
-						get = false;
 					}
 				}
 				else
