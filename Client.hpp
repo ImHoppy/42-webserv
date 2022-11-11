@@ -21,21 +21,21 @@ class Client
 {
 	int		_csock; // client socket, the one returned by accept() calls
 	int		_lsock; // listen socket on which the csock was accepted
-	Server*	_servby; // ptr to the Server which had accepted this client
 	std::deque<Request>		_pendingRqst; // deque of requests from this clientwhich havn't been respond yet
 	public:
 		Client(void);
 		~Client(void);
 		Client(const Client& src);
 		Client&		operator=(const Client& src);
-		Client(int csock, int lsock, Server* server);
+		Client(int csock, int lsock);
 		void	addRequest(const std::string& raw_rqst);
 		void	addRequest(const Request& rqst);
+		void	popoutRequest(void);
 
 }; // end class Client
 
 /* Default Constructor */
-Client::Client(void) : _csock(-1), _lsock(-1), _servby(), _pendingRqst() {}
+Client::Client(void) : _csock(-1), _lsock(-1), _pendingRqst() {}
 
 /* Destructor */
 Client::~Client(void) {}
@@ -44,14 +44,12 @@ Client::~Client(void) {}
 Client::Client(const Client& src) :
 	_csock(src._csock),
 	_lsock(src._lsock),
-	_servby(src._servby),
 	_pendingRqst(src._pendingRqst) {}
 
 /* Parametric Constructor (with empty pending requests) */
-Client::Client(int csock, int lsock, Server* server) :
+Client::Client(int csock, int lsock) :
 	_csock(csock),
 	_lsock(lsock),
-	_servby(server),
 	_pendingRqst() {}
 
 /* Assignement operator */
@@ -61,7 +59,6 @@ Client&		Client::operator=(const Client& src)
 		return *this;
 	_csock = src._csock;
 	_lsock = src._lsock;
-	_servby = src._servby;
 	_pendingRqst = src._pendingRqst;
 	return *this;
 }
@@ -76,4 +73,9 @@ void	Client::addRequest(const std::string& raw_rqst)
 void	Client::addRequest(const Request& rqst)
 {
 	_pendingRqst.push_back(rqst);
+}
+
+void	Client::popoutRequest(void)
+{
+	_pendingRqst.pop_front();
 }

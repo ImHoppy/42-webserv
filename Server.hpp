@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <sys/epoll.h>
 #include <stdio.h> // perror
+#include "Client.hpp"
 
 #include <errno.h>
 typedef int socket_t;
@@ -15,7 +16,7 @@ typedef int socket_t;
 class Server {
 	socket_t					_socket;
 	std::vector<ServerConfig>	_configs;
-	std::vector<socket_t>		_clients;
+	std::map<socket_t, Client*>		_clients;
 	public:
 	Server(): _socket(-1), _configs(), _clients() {};
 
@@ -74,6 +75,8 @@ class Server {
 		close(_socket);
 	};
 
+	/* Create a new client socket with accept, and create a new Client instance with it.
+	Then add it with its pair client socket to the _clients map. */
 	void AcceptNewClient(socket_t & epollInstance)
 	{
 		struct epoll_event event;
@@ -94,15 +97,8 @@ class Server {
 		if (epoll_ctl(epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
 			throw std::runtime_error("epoll_ctl failed");
 		}
-		addClient(event.data.fd);
-	}
-
-	void handleRequest() {
-
-	}
-
-	void	addClient(socket_t client) {
-		_clients.push_back(client);
+		Client	new_client = Client(event.data.fd, _socket);
+		_clients.insert(std::pair<socket_t, Client*>(event.data.fd, &new_client));
 	}
 
 	socket_t getSocket() const {
@@ -113,4 +109,33 @@ class Server {
 		return _configs;
 	}
 
+	/* Read (with recv()) from the cient socket 'csocket'. If bytes rcved is 0, closes
+	th connection with the client. Else, create a Request object with the buf received,
+	and add it the its Client queud requests. */
+	void	recvRequest(socket_t csocket)
+	{
+		std::cout << "POLLIN: serv " << _socket << " client " << csocket << std::endl;
+		ssize_t		bufsize = 3000;
+		char buf[bufsize];
+		memset(&buf, 0, sizeof(buf));
+		ssize_t bytes = recv(events[i].data.fd, buf, bufsize, 0);
+		if (bytes < 0)
+			throw std::runtime_error("recv failed");
+		else if (bytes == 0)
+		{
+			std::cout << "EOF received from client " << events[i].data.fd << std::endl;
+			if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, events[i].data.fd, NULL) < 0) {
+				throw std::runtime_error("epoll_ctl DEL after EOF failed");
+			}
+			close(events[i].data.fd);
+		}
+		else if (bytes > 0)
+		{
+			buf[bytes] = 0;
+			std::cout << bytes << "bytes reveived from client " << events[i].data.fd << ": \n";
+			std::cout << buf << "______END" << std::endl;	
+			Request		new_reqst(buf);
+			Request::map_t		fields = new_reqst.getMap();
+		}
+	}
 };
