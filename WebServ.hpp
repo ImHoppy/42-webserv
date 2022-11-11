@@ -13,20 +13,15 @@
 
 class WebServ {
 	private:
-		std::vector<Server>	_servers;
+		std::map<socket_t, Server*>		_servers;
+		std::map<socket_t, Client*>		_clients;
 		socket_t			_epollInstance;
 		bool				_isRunning;
-		std::map<socket_t, Client&>		_clients; // Map de key = client socket, value = Ref sur client
 	public:
-		typedef std::vector<Server> vec_servers;
+		typedef std::map<socket_t, Server*>		map_servers;
 		static std::map<socket_t, std::string>	error_status;
-	void CreateServer() {
-		// Server *serv = new Server();
-		// _servers[serv->getSocket()] = serv;
-	};
 
-	WebServ(): _servers(), _epollInstance(-1), _isRunning(false), _clients() {
-	};
+	WebServ(): _servers(), _clients(), _epollInstance(-1), _isRunning(false) {};
 
 	WebServ(WebServ const & other) {
 		*this = other;
@@ -44,8 +39,8 @@ class WebServ {
 
 	~WebServ() {
 	//TODO: ici, on ferme QUE les client_sockets qui sont OK epoll, mais il peut y en avoir 15000 ouverts mais pas ready qu'on ferme pas
-		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
-			const socket_t socket = it->getSocket();
+		for (map_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
+			const socket_t socket = it->second->getSocket();
 
 			if (_epollInstance > 0)
 			{ 
@@ -61,7 +56,8 @@ class WebServ {
 	};
 
 	void addServer(Server &serv) {
-		_servers.push_back(serv);
+		if (serv.getSocket() != -1)
+			_servers.insert(std::make_pair(serv.getSocket(), &serv));
 	};
 
 	void EndLoop() {
@@ -76,8 +72,8 @@ class WebServ {
 			   throw std::runtime_error("epoll_create failed");
 	   }
 	   struct epoll_event event = {};
-	   for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
-			   socket_t socket = it->getSocket();
+	   for (map_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
+			   socket_t socket = it->first;
 
 			   event.data.fd = socket;
 			   event.events = EPOLLIN;
@@ -114,18 +110,9 @@ class WebServ {
 			}
 			for (int i = 0; i < nfds; i++)
 			{
-				Server * serv = FindServerFromSocket(events[i].data.fd);
-				if (serv == NULL)
+				Server * serv = _servers[events[i].data.fd];
+				if (serv == NULL) // PAS un listen socket
 				{
-					// NOTE: events[i].data.fd == Client socket
-//					if (events[i].events & EPOLLHUP) // voir note plus bas sur Connection close 
-//					{
-//						std::cout << "EPOLLHUP event (peer closed its end)" << std::endl;
-//						if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, events[i].data.fd, NULL) < 0) {
-//							throw std::runtime_error("epoll_ctl DEL after EOF failed");
-//						}
-//						close(events[i].data.fd);
-//					}
 					if (events[i].events & EPOLLIN)
 					{
 						std::cout << "POLLIN event on client fd " << events[i].data.fd <<std::endl;
@@ -147,7 +134,6 @@ class WebServ {
 							buf[bytes] = 0;
 							std::cout << bytes << "bytes reveived from client " << events[i].data.fd << ": \n";
 							std::cout << buf << "______END" << std::endl;	
-							//TODO: create la Request avec le buff recu et "l'envoyer" au bon Server
 							Request		new_reqst(buf);
 							Request::map_t		fields = new_reqst.getMap();
 							if (events[i].events & EPOLLOUT)
@@ -164,13 +150,6 @@ class WebServ {
 									}
 									std::cout << bytes << " send to client " << events[i].data.fd << std::endl;
 								}
-//								else if (fields["Connection"] == "Close") // NOTE: en fait sert a rien, car si tu envoi une reponse avec Connection = close, le client declenchera au prochain tour de boucle un POLLIN avec un res du read a 0 bytes, et cest la du coup quon close la co
-//								{
-//									std::cout << "Close Acknoledgement received from client " << events[i].data.fd << std::endl;
-//									if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, events[i].data.fd, NULL) < 0)
-//										throw std::runtime_error("epoll_ctl del failed");
-//									close(events[i].data.fd);
-//								}
 							}
 						}
 					}
@@ -185,13 +164,4 @@ class WebServ {
 			prev_nb = nfds;
 		}
 	};
-
-	Server	*FindServerFromSocket(socket_t socket) {
-		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
-			if (it->getSocket() == socket) {
-				return &(*it);
-			}
-		}
-		return NULL;
-	};
-};
+}; // end class Webserv

@@ -60,9 +60,10 @@ Client&		Client::operator=(const Client& src)
 	if (this == &src)
 		return *this;
 	_csock = src._csock;
-	_lsock = src._lscok;
+	_lsock = src._lsock;
 	_servby = src._servby;
 	_pendingRqst = src._pendingRqst;
+	return *this;
 }
 
 /* Add a new Request to the pending queue of request to be respond. */
