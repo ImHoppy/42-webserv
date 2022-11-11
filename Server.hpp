@@ -180,8 +180,9 @@ class Server {
 
 	void	respond(Client* client)
 	{
+		if (client == NULL) return;
 		Request*	rqst = client->getFirstRequest();
-		if (rqst && rqst->method() == "GET")
+		if (rqst != NULL && rqst->method() == "GET")
 		{
 			socket_t	socket = client->getSocket();
 			std::cout << "POLLOUT event on client fd " << socket <<std::endl;

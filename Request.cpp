@@ -387,8 +387,7 @@ std::ostream&	operator<<(std::ostream& o, const Request& me)
 
 std::string		Request::method(void)
 {
-	map_t::iterator	it = _msgFields.find("method");
-	if (it == _msgFields.end())
-		return (std::string("NONE"));
-	return _msgFields["method"];
+	if (_msgFields.find("method") != _msgFields.end())
+		return _msgFields["method"];
+	return (std::string("UNDEFINED"));
 }

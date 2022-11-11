@@ -94,7 +94,7 @@ void	Client::popOutRequest(void)
 
 Request*	Client::getFirstRequest(void)
 {
-	if (!_pendingRqst.empty())
+	if (_pendingRqst.empty())
 		return NULL;
 	return &(this->_pendingRqst.front());
 }
