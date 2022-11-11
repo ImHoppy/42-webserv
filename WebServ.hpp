@@ -8,8 +8,17 @@
 #include <unistd.h>
 #include "Request.hpp"
 #include "Client.hpp"
+#include <csignal>
 
 #define MAX_EVENTS 100 // NOTE: 4096
+
+bool	endServer = false;
+
+void	sig_handler(int sig)
+{
+	(void)sig;
+	endServer = true;
+}
 
 /*
 	Listen sockets:
@@ -31,7 +40,9 @@ class WebServ {
 		typedef std::map<socket_t, Server*>		map_servers;
 		static std::map<socket_t, std::string>	error_status;
 
-	WebServ(): _servers(), _epollInstance(-1), _isRunning(false), _index(0) {};
+	WebServ(): _servers(), _epollInstance(-1), _isRunning(false), _index(0)
+	{
+	};
 
 	WebServ(WebServ const & other) {
 		*this = other;
@@ -105,12 +116,13 @@ class WebServ {
 		_isRunning = true;
 		struct epoll_event events[MAX_EVENTS];
 		int nfds = 0;
-		int			prev_nb = 0;
+		std::signal(SIGINT, sig_handler);
 		while (_isRunning) {
 			nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, -1);
-
 			if (nfds < 0) {
-				throw std::runtime_error("epoll_wait failed");
+//				throw std::runtime_error("epoll_wait failed");
+				perror("WebServ: epoll_wait failed");
+				_isRunning = false;
 			}
 			for (int i = 0; i < nfds; i++)
 			{
@@ -137,7 +149,7 @@ class WebServ {
 					_servers.insert(std::make_pair(clientFd, serv));
 				}
 			}
-			prev_nb = nfds;
+
 		}
 	};
 }; // end class Webserv

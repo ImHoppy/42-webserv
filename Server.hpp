@@ -11,6 +11,7 @@
 #include "Client.hpp"
 #include <ctime> //time
 #include <iomanip>
+#include <unistd.h>
 
 #ifndef BUFFSIZE
 # define BUFFSIZE 3000
@@ -27,6 +28,8 @@ class Server {
 	int								_index;	
 	typedef std::map<socket_t, Client*>		map_client;
 	public:
+	
+	/* Default Constructor */
 	Server(): _socket(-1), _configs(), _clients(), _index(-1) {};
 
 	void addConfig(ServerConfig const & config) {
@@ -68,6 +71,7 @@ class Server {
 		return (0);
 	};
 
+	/* Copy Constructor */
 	Server(Server const & other) {
 		*this = other;
 	};
@@ -83,13 +87,13 @@ class Server {
 		return *this;
 	};
 
+	/* Destructor */
 	public:
 	~Server() {
 		for (map_client::iterator	it = _clients.begin(); it != _clients.end(); ++it)
 		{
 			delete it->second;
 		}
-		close(_socket);
 	};
 
 	/* Create a new client socket with accept, and create a new Client instance with it.
