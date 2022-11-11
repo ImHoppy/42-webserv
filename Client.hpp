@@ -39,7 +39,7 @@ class Client
 		void	addRequest(std::string raw_rqst);
 		void	addRequest(const Request& rqst);
 		void	popOutRequest(void);
-		Request&	getFirstRequest(void);
+		Request*	getFirstRequest(void);
 		const std::deque<Request>&	getPendingRequests(void) const;
 		int		recvRequest(void);
 		Server*		getServer(void);
@@ -92,9 +92,11 @@ void	Client::popOutRequest(void)
 	this->_pendingRqst.pop_front();
 }
 
-Request&	Client::getFirstRequest(void)
+Request*	Client::getFirstRequest(void)
 {
-	return this->_pendingRqst.front();
+	if (!_pendingRqst.empty())
+		return NULL;
+	return &(this->_pendingRqst.front());
 }
 
 const std::deque<Request>&	Client::getPendingRequests(void) const
