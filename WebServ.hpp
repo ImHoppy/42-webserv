@@ -166,5 +166,5 @@ void	sig_handler(int sig)
 {
 	(void)sig;
 	std::cout << "SIG HANDLER REACHED" << std::endl;
-	WebServ::_isRunning = true;
+	WebServ::_isRunning = false;
 }
