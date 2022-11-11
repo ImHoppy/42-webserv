@@ -123,8 +123,10 @@ class Server {
 			return (-1);
 		}
 		Client*	new_client = new Client(client_socket, this);
-		t_polldata data = {this, new_client};
-		event.data.ptr = reinterpret_cast<void *>(&data);
+		t_polldata* data = new t_polldata;
+		data->server = this;
+		data->client = new_client;
+		event.data.ptr = reinterpret_cast<void *>(data);
 		event.events = EPOLLIN | EPOLLOUT;
 		if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
 			throw std::runtime_error("epoll_ctl failed");

@@ -92,8 +92,10 @@ class WebServ {
 		{
 			Server*	server = *it;
 			server->setEpollInstance(_epollInstance);
-			t_polldata data = {server, NULL};
-			event.data.ptr = &data; 
+			t_polldata* data = new t_polldata;
+			data->server = server;
+			data->client = NULL;
+			event.data.ptr = data; 
 			event.events = EPOLLIN;
 			if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, server->getSocket(), &event) < 0) {
 				   throw std::runtime_error("epoll_ctl add failed");
@@ -125,12 +127,7 @@ class WebServ {
 				t_polldata*	data = reinterpret_cast<t_polldata*>(events[i].data.ptr);
 				Server	*server = data->server;
 				Client	*client = data->client;
-				if (server != NULL)
-				{
-					std::cout << "accept on lsocket " << server->getSocket() << std::endl;
-					server->AcceptNewClient();
-				}
-				else if (client != NULL)
+				if (client != NULL)
 				{
 					if (events[i].events & EPOLLERR)
 					{
@@ -150,6 +147,11 @@ class WebServ {
 					{
 						client->getServer()->respond(client);
 					}
+				}
+				else if (server != NULL)
+				{
+					std::cout << "accept on lsocket " << server->getSocket() << std::endl;
+					server->AcceptNewClient();
 				}
 			}
 		}
