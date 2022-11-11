@@ -48,19 +48,21 @@ class Client : private AEntity
 }; // end class Client
 
 /* Default Constructor */
-Client::Client(void) : _csock(-1), _myServer(), _pendingRqst() {}
+Client::Client(void) : AEntity("Client"), _csock(-1), _myServer(), _pendingRqst() {}
 
 /* Destructor */
 Client::~Client(void) {}
 
 /* Copy Constructor */
 Client::Client(const Client& src) :
+	AEntity("Client"),
 	_csock(src._csock),
 	_myServer(src._myServer),
 	_pendingRqst(src._pendingRqst) {}
 
 /* Parametric Constructor (with empty pending requests) */
 Client::Client(socket_t csock, Server* serv) :
+	AEntity("Client"),
 	_csock(csock),
 	_myServer(serv),
 	_pendingRqst() {}

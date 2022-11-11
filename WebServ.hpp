@@ -122,15 +122,14 @@ class WebServ {
 			}
 			for (int i = 0; i < nfds; i++)
 			{
-				AEntity *x = reinterpret_cast<AEntity*>(events[i].data.ptr);
-				Server*	server = dynamic_cast<Server*>(x);
-				Client*	client= dynamic_cast<Client*>(x);
-				if (server != NULL)
+				Server*	server = static_cast<Server*>(events[i].data.ptr);
+				Client*	client= static_cast<Client*>(events[i].data.ptr);
+				if (server->getType() == "Server")
 				{
 					std::cout << "accept on lsocket " << server->getSocket() << std::endl;
 					server->AcceptNewClient();
 				}
-				else if (client != NULL)
+				else if (client->getType() == "Client")
 				{
 					std::cout << "LALALA" << std::endl;
 					if (events[i].events & EPOLLERR)

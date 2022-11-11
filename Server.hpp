@@ -30,12 +30,12 @@ class Server : private AEntity {
 	public:
 	
 	/* Default Constructor */
-	Server(void) : AEntity("Client"), _socket(-1), _configs(), _clients(), _epollInstance(-1) {};
+	Server(void) : AEntity("Server"), _socket(-1), _configs(), _clients(), _epollInstance(-1) {};
 
 	/* Copy Constructor */
-	Server(Server const & other) {
-		*this = other;
-	};
+	Server(Server const & other) : AEntity("Server"), _socket(other._socket), 
+	_configs(other._configs), _clients(other._clients), 
+	_epollInstance(other._epollInstance) {}
 
 	/* Assignement operator (should be private) */
 	Server & operator=(Server const & other) {
@@ -121,7 +121,7 @@ class Server : private AEntity {
 			std::cout << "Here\n";
 			return (-1);
 		}
-		event.data.ptr = reinterpret_cast<void *>(this); // addr de this Server
+		event.data.ptr = this; // addr de this Server
 		event.events = EPOLLIN | EPOLLOUT;
 		if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
 			throw std::runtime_error("epoll_ctl failed");
