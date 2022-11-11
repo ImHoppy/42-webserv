@@ -14,13 +14,14 @@
 #include <unistd.h>
 #include <vector>
 #include <set>
+#include "AEntity.hpp"
 
 #include <errno.h>
 typedef int socket_t;
 
 class Client;
 
-class Server {
+class Server : private AEntity {
 	socket_t					_socket;
 	std::vector<ServerConfig>	_configs;
 	std::set<Client*>			_clients;
@@ -29,7 +30,35 @@ class Server {
 	public:
 	
 	/* Default Constructor */
-	Server(): _socket(-1), _configs(), _clients(), _epollInstance(-1) {};
+	Server(void) : AEntity("Client"), _socket(-1), _configs(), _clients(), _epollInstance(-1) {};
+
+	/* Copy Constructor */
+	Server(Server const & other) {
+		*this = other;
+	};
+
+	/* Assignement operator (should be private) */
+	Server & operator=(Server const & other) {
+		if (this != &other) {
+			_socket = other._socket;
+			_configs = other._configs;
+			_clients = other._clients;
+		}
+		return *this;
+	};
+
+	/* Destructor */
+	~Server() {
+		for (set_client::iterator	it = _clients.begin(); it != _clients.end(); ++it)
+		{
+			delete *it;
+		}
+	};
+
+	const std::string&		getType(void) const
+	{
+		return _type;
+	}
 
 	void addConfig(ServerConfig const & config) {
 		_configs.push_back(config);
@@ -73,30 +102,6 @@ class Server {
 			return (-1);
 		}
 		return (0);
-	};
-
-	/* Copy Constructor */
-	Server(Server const & other) {
-		*this = other;
-	};
-
-	private:
-	Server & operator=(Server const & other) {
-		if (this != &other) {
-			_socket = other._socket;
-			_configs = other._configs;
-			_clients = other._clients;
-		}
-		return *this;
-	};
-
-	/* Destructor */
-	public:
-	~Server() {
-		for (set_client::iterator	it = _clients.begin(); it != _clients.end(); ++it)
-		{
-			delete *it;
-		}
 	};
 
 	/* Create a new client socket with accept, and create a new Client instance with it.

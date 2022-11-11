@@ -2,6 +2,7 @@
 
 #include "Server.hpp"
 #include "Request.hpp"
+#include "AEntity.hpp"
 
 #include <iostream>
 #include <deque>
@@ -24,7 +25,7 @@ avec une des ses configs, choisit parmis celles-ci en fonction du Host header
 typedef int socket_t;
 class Server;
 
-class Client
+class Client : private AEntity
 {
 	socket_t		_csock; // client socket, the one returned by accept() calls
 	Server*			_myServer;
@@ -43,6 +44,7 @@ class Client
 		const std::deque<Request>&	getPendingRequests(void) const;
 		int		recvRequest(void);
 		Server*		getServer(void);
+		const std::string&		getType(void) const;
 }; // end class Client
 
 /* Default Constructor */
@@ -134,6 +136,11 @@ int		Client::recvRequest(void)
 Server*		Client::getServer(void)
 {
 	return _myServer;
+}
+
+const std::string&		Client::getType(void) const
+{
+	return _type;
 }
 
 /* MARCHE PS CAUSE DOUBLE INCLUSION

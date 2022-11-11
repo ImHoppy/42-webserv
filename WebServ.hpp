@@ -9,6 +9,7 @@
 #include "Request.hpp"
 #include "Client.hpp"
 #include <csignal>
+#include "AEntity.hpp"
 
 #define MAX_EVENTS 100 // NOTE: 4096
 
@@ -121,20 +122,17 @@ class WebServ {
 			}
 			for (int i = 0; i < nfds; i++)
 			{
-				
-				Server	*server = NULL;
-				Client	*client = NULL;
-				server = dynamic_cast<Server*>(events[i].data.ptr);
+				AEntity *x = reinterpret_cast<AEntity*>(events[i].data.ptr);
+				Server*	server = dynamic_cast<Server*>(x);
+				Client*	client= dynamic_cast<Client*>(x);
 				if (server != NULL)
 				{
 					std::cout << "accept on lsocket " << server->getSocket() << std::endl;
 					server->AcceptNewClient();
 				}
-				else
+				else if (client != NULL)
 				{
-					client = dynamic_cast<Client*>(events[i].data.ptr);
-					if (client == NULL)
-						continue;
+					std::cout << "LALALA" << std::endl;
 					if (events[i].events & EPOLLERR)
 					{
 						std::cout << "ERROR on socket " << client->getSocket() <<std::endl;
