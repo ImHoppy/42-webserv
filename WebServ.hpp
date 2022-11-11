@@ -12,13 +12,9 @@
 
 #define MAX_EVENTS 100 // NOTE: 4096
 
-bool	endServer = false;
+//bool	endServer = false;
 
-void	sig_handler(int sig)
-{
-	(void)sig;
-	endServer = true;
-}
+void	sig_handler(int sig);
 
 /*
 	Listen sockets:
@@ -34,13 +30,13 @@ class WebServ {
 	private:
 		std::map<socket_t, Server*>				_servers;
 		socket_t								_epollInstance;
-		bool									_isRunning;
 		int										_index;
 	public:
+		static bool								_isRunning;
 		typedef std::map<socket_t, Server*>		map_servers;
 		static std::map<socket_t, std::string>	error_status;
 
-	WebServ(): _servers(), _epollInstance(-1), _isRunning(false), _index(0)
+	WebServ(): _servers(), _epollInstance(-1), _index(0)
 	{
 	};
 
@@ -52,7 +48,6 @@ class WebServ {
 		if (this != &other) {
 			_servers = other._servers;
 			_epollInstance = other._epollInstance;
-			_isRunning = other._isRunning;
 		}
 		return *this;
 	};
@@ -84,7 +79,7 @@ class WebServ {
 	};
 
 	void EndLoop() {
-		_isRunning = false;
+		WebServ::_isRunning = false;
 	};
 
 	void InitEpoll() {
@@ -110,28 +105,40 @@ class WebServ {
 	{
 		if (_epollInstance < 0)
 			InitEpoll();
-		if (_isRunning) {
+		if (WebServ::_isRunning) {
 			return;
 		}
-		_isRunning = true;
+		WebServ::_isRunning = true;
 		struct epoll_event events[MAX_EVENTS];
 		int nfds = 0;
 		std::signal(SIGINT, sig_handler);
-		while (_isRunning) {
+		while (WebServ::_isRunning) {
 			nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, -1);
 			if (nfds < 0) {
 //				throw std::runtime_error("epoll_wait failed");
 				perror("WebServ: epoll_wait failed");
-				_isRunning = false;
+				WebServ::_isRunning = false;
+				continue ;
 			}
 			for (int i = 0; i < nfds; i++)
 			{
+//				Server* ptr = static_cast<Server*>(events[i].data.ptr);
 				map_servers::iterator	it = _servers.find(events[i].data.fd);
 				if (it == _servers.end())
 					continue ;
 				Server *serv = it->second;
+//				if (serv == ptr)
+//					std::cout << "On est trop cons" << std::endl;
 				if (serv->getSocket() != events[i].data.fd) // Pas un listen socket
 				{
+					if (events[i].data.fd & EPOLLERR)
+					{
+						std::cout << "ERROR on socket " << events[i].data.fd <<std::endl;
+					}
+					else if (events[i].data.fd & EPOLLRDHUP)
+					{
+						std::cout << "POLLRDHUP on socket " << events[i].data.fd <<std::endl;
+					}
 					if (events[i].events & EPOLLIN)
 					{
 						if (serv->recvRequest(events[i].data.fd, _epollInstance) == 0)
@@ -152,4 +159,12 @@ class WebServ {
 
 		}
 	};
-}; // end class Webserv
+};
+// end class Webserv
+bool WebServ::_isRunning = false;
+void	sig_handler(int sig)
+{
+	(void)sig;
+	std::cout << "SIG HANDLER REACHED" << std::endl;
+	WebServ::_isRunning = true;
+}

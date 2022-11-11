@@ -114,6 +114,7 @@ class Server {
 			return (-1);
 		}
 		event.data.fd = client_socket;
+//		event.data.ptr = this; // addr de this Server
 		event.events = EPOLLIN | EPOLLOUT;
 		if (epoll_ctl(epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
 			throw std::runtime_error("epoll_ctl failed");
