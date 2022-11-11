@@ -9,16 +9,25 @@
 #include <sys/epoll.h>
 #include <stdio.h> // perror
 #include "Client.hpp"
+#include <ctime> //time
+#include <iomanip>
+
+#ifndef BUFFSIZE
+# define BUFFSIZE 3000
+#endif
+
 
 #include <errno.h>
 typedef int socket_t;
 
 class Server {
-	socket_t					_socket;
-	std::vector<ServerConfig>	_configs;
+	socket_t						_socket;
+	std::vector<ServerConfig>		_configs;
 	std::map<socket_t, Client*>		_clients;
+	int								_index;	
+	typedef std::map<socket_t, Client*>		map_client;
 	public:
-	Server(): _socket(-1), _configs(), _clients() {};
+	Server(): _socket(-1), _configs(), _clients(), _index(-1) {};
 
 	void addConfig(ServerConfig const & config) {
 		_configs.push_back(config);
@@ -62,22 +71,30 @@ class Server {
 	Server(Server const & other) {
 		*this = other;
 	};
+
+	private:
 	Server & operator=(Server const & other) {
 		if (this != &other) {
 			_socket = other._socket;
 			_configs = other._configs;
 			_clients = other._clients;
+			_index = other._index;
 		}
 		return *this;
 	};
 
+	public:
 	~Server() {
+		for (map_client::iterator	it = _clients.begin(); it != _clients.end(); ++it)
+		{
+			delete it->second;
+		}
 		close(_socket);
 	};
 
 	/* Create a new client socket with accept, and create a new Client instance with it.
 	Then add it with its pair client socket to the _clients map. */
-	void AcceptNewClient(socket_t & epollInstance)
+	socket_t	 AcceptNewClient(socket_t & epollInstance)
 	{
 		struct epoll_event event;
 		struct sockaddr_in client_addr;
@@ -90,17 +107,38 @@ class Server {
 		else if (client_socket < 0)
 		{
 			std::cout << "Here\n";
-			return;
+			return (-1);
 		}
 		event.data.fd = client_socket;
 		event.events = EPOLLIN | EPOLLOUT;
 		if (epoll_ctl(epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
 			throw std::runtime_error("epoll_ctl failed");
 		}
-		Client	new_client = Client(event.data.fd, _socket);
-		_clients.insert(std::pair<socket_t, Client*>(event.data.fd, &new_client));
+		Client*	new_client = new Client(event.data.fd, _socket);
+		_clients.insert(std::make_pair(client_socket, new_client));
+		displayTime();
+		std::cout << "Server #" << _index << ": accepted new client " << client_socket << std::endl;
+		return (client_socket);
 	}
 
+	void	displayTime(void) const
+	{
+		std::time_t time = std::time(0);
+		std::tm *tm = std::localtime(&time);
+		std::cout << std::setfill('0') << "["
+		<< std::setw(4) << (tm->tm_year + 1900)
+		<< std::setw(2) << (tm->tm_mon + 1)
+		<< std::setw(2) << tm->tm_mday
+		<< "_"
+		<< std::setw(2) << tm->tm_hour
+		<< std::setw(2) <<tm->tm_min
+		<< std::setw(2) << tm->tm_sec
+		<< "] ";
+	}
+
+	void	setIndex(int index) {
+		_index = index;
+	}
 	socket_t getSocket() const {
 		return _socket;
 	}
@@ -112,30 +150,64 @@ class Server {
 	/* Read (with recv()) from the cient socket 'csocket'. If bytes rcved is 0, closes
 	th connection with the client. Else, create a Request object with the buf received,
 	and add it the its Client queud requests. */
-	void	recvRequest(socket_t csocket)
+	int	recvRequest(socket_t csocket, socket_t epollInst)
 	{
 		std::cout << "POLLIN: serv " << _socket << " client " << csocket << std::endl;
-		ssize_t		bufsize = 3000;
-		char buf[bufsize];
+		char buf[BUFFSIZE];
 		memset(&buf, 0, sizeof(buf));
-		ssize_t bytes = recv(events[i].data.fd, buf, bufsize, 0);
+		ssize_t bytes = recv(csocket, buf, BUFFSIZE, 0);
 		if (bytes < 0)
 			throw std::runtime_error("recv failed");
 		else if (bytes == 0)
 		{
-			std::cout << "EOF received from client " << events[i].data.fd << std::endl;
-			if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, events[i].data.fd, NULL) < 0) {
-				throw std::runtime_error("epoll_ctl DEL after EOF failed");
-			}
-			close(events[i].data.fd);
+			std::cout << "EOF received from client " << csocket << std::endl;
+			removeClient(csocket, epollInst);
+			return (0);
 		}
-		else if (bytes > 0)
+		else
 		{
 			buf[bytes] = 0;
-			std::cout << bytes << "bytes reveived from client " << events[i].data.fd << ": \n";
-			std::cout << buf << "______END" << std::endl;	
-			Request		new_reqst(buf);
-			Request::map_t		fields = new_reqst.getMap();
+			std::cout << bytes << "bytes reveived from client " << csocket << ": \n";
+			map_client::iterator	it = _clients.find(csocket);
+			if (it == _clients.end())
+				return (0);
+			it->second->addRequest(buf);
+			return (bytes);
 		}
 	}
+
+	void	removeClient(socket_t csocket, socket_t epollInst)
+	{
+			if (epoll_ctl(epollInst, EPOLL_CTL_DEL, csocket, NULL) < 0) {
+				throw std::runtime_error("epoll_ctl DEL after EOF failed");
+			}
+			close(csocket);
+			delete _clients[csocket];
+			_clients.erase(csocket);
+	}
+
+	void	respond(socket_t csocket)
+	{
+		map_client::iterator	it = _clients.find(csocket);
+		if (it == _clients.end()) // si pas trouve, pas normal btw
+			return ;
+		Client *client = it->second;
+		if (client->getPendingRequests().empty()) // si pas de pending request
+			return ;
+		Request&	rqst = client->getFirstRequest();
+		if (rqst.method() == "GET")
+		{
+			std::cout << "POLLOUT event on client fd " << csocket <<std::endl;
+			ssize_t		bytes;
+			std::string buf("HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Keep-Alive\r\n\r\nHello, world!");
+			bytes = send(csocket, buf.c_str(), buf.size(), 0);
+			if (bytes == -1)
+			{
+				throw std::runtime_error("send failed");
+			}
+			std::cout << bytes << " send to client " << csocket << std::endl;
+			client->popoutRequest();
+		}
+	}
+
 };

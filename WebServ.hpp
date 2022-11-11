@@ -26,11 +26,12 @@ class WebServ {
 		std::map<socket_t, Server*>				_servers;
 		socket_t								_epollInstance;
 		bool									_isRunning;
+		int										_index;
 	public:
 		typedef std::map<socket_t, Server*>		map_servers;
 		static std::map<socket_t, std::string>	error_status;
 
-	WebServ(): _servers(), _epollInstance(-1), _isRunning(false) {};
+	WebServ(): _servers(), _epollInstance(-1), _isRunning(false), _index(0) {};
 
 	WebServ(WebServ const & other) {
 		*this = other;
@@ -46,9 +47,8 @@ class WebServ {
 	};
 
 	~WebServ() {
-	//TODO: ici, on ferme QUE les client_sockets qui sont OK epoll, mais il peut y en avoir 15000 ouverts mais pas ready qu'on ferme pas
 		for (map_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
-			const socket_t socket = it->second->getSocket();
+			const socket_t socket = it->first;
 
 			if (_epollInstance > 0)
 			{ 
@@ -63,9 +63,13 @@ class WebServ {
 			close(_epollInstance);
 	};
 
-	void addServer(Server &serv) {
-		if (serv.getSocket() != -1)
-			_servers.insert(std::make_pair(serv.getSocket(), &serv));
+	void addServer(Server *serv) {
+		if (serv->getSocket() != -1)
+		{
+			_servers.insert(std::make_pair(serv->getSocket(), serv));
+			serv->setIndex(_index);
+			_index++;
+		}
 	};
 
 	void EndLoop() {
@@ -108,14 +112,6 @@ class WebServ {
 			if (nfds < 0) {
 				throw std::runtime_error("epoll_wait failed");
 			}
-			if (nfds != prev_nb)
-			{
-				std::cout << "nfds=" << nfds << std::endl;
-				for (int j = 0; j < nfds; ++j)
-				{
-					std::cout << "events[" << j << "] = " << events[j].data.fd << std::endl;
-				}
-			}
 			for (int i = 0; i < nfds; i++)
 			{
 				map_servers::iterator	it = _servers.find(events[i].data.fd);
@@ -126,28 +122,19 @@ class WebServ {
 				{
 					if (events[i].events & EPOLLIN)
 					{
-						serv->recvRequest(events[i].data.fd);
+						if (serv->recvRequest(events[i].data.fd, _epollInstance) == 0)
+							_servers.erase(events[i].data.fd);
 					}
 					if (events[i].events & EPOLLOUT)
 					{
-						if (fields["method"] == "GET")
-						{
-							std::cout << "POLLOUT event on client fd " << events[i].data.fd <<std::endl;
-							ssize_t		bytes;
-							std::string buf("HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Keep-Alive\r\n\r\nHello, world!");
-							bytes = send(events[i].data.fd, buf.c_str(), buf.size(), 0);
-							if (bytes == -1)
-							{
-								throw std::runtime_error("send failed");
-							}
-							std::cout << bytes << " send to client " << events[i].data.fd << std::endl;
-						}
+						serv->respond(events[i].data.fd);
 					}
 				}
 				else // is a listen socket
 				{
 					std::cout << "accept on lsocket " << serv->getSocket() << std::endl;
-					serv->AcceptNewClient(_epollInstance);
+					socket_t clientFd = serv->AcceptNewClient(_epollInstance);
+					_servers.insert(std::make_pair(clientFd, serv));
 				}
 			}
 			prev_nb = nfds;

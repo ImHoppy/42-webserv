@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:37 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/11 12:49:58 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/11 15:46:05 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ class Request
 		~Request(void);
 		/* Parametric constructor */
 		Request&	operator=(const Request& src);
-		Request(const std::string& str);
+		Request(std::string str);
 		Request(const Request& src);
 
 		/* Getteurs */
@@ -74,6 +74,7 @@ class Request
 		int		parse_absolute_form(const std::string& target);
 		int		parse_origin_form(const std::string& target);
 		bool		message_body_presence(void);
+		std::string	method(void);
 
 }; // end class Request
 

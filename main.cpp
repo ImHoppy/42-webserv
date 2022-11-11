@@ -81,11 +81,12 @@ int main(int ac, char **av)
 			std::cerr << "At line: " << line << '\n'; 
 	}
 	WebServ webserv;
-	Server serv;
-	serv.addConfig(generalConfig.getServers()[0]);
-	serv.InitServer();
+	Server* serv = new Server;
+	serv->addConfig(generalConfig.getServers()[0]);
+	serv->InitServer();
 
 	webserv.addServer(serv);
 	webserv.StartLoop();
+	delete serv;
 }
 

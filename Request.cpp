@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/09 21:14:00 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/11 15:45:34 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,9 @@ Request::Request(void) : _statusCode(200), _rawRqst(), _uri(), _msgFields(), _bo
 Request::~Request(void) {}
 
 /* Copy constructor */
-Request::Request(const Request& src) : _statusCode(src._statusCode), _rawRqst(src._rawRqst), _uri(src._uri), _msgFields(src._msgFields), _body(src._body) {}
+Request::Request(const Request& src) : _statusCode(src._statusCode),
+_rawRqst(src._rawRqst),
+_uri(src._uri), _msgFields(src._msgFields), _body(src._body) {}
 
 /* Assignment operator */
 Request&	Request::operator=(const Request& src)
@@ -39,7 +41,7 @@ Request&	Request::operator=(const Request& src)
 
 /* ATTENTION: str MUST NOT be empty! */
 /* Parametric construcotr */
-Request::Request(const std::string& str) : _statusCode(200), _rawRqst(str), _msgFields(), _body()
+Request::Request(std::string str) : _statusCode(200), _rawRqst(str), _msgFields(), _body()
 {
 	siterator_t		curr;
 	if (_statusCode == 200)
@@ -381,4 +383,12 @@ std::ostream&	operator<<(std::ostream& o, const Request& me)
 	}
 	o << "______ REQUEST URI IS: \'" << me.getUri().total << "\'" << std::endl;
 	return o;
+}
+
+std::string	Request::method(void)
+{
+	map_t::iterator	it = _msgFields.find("method");
+	if (it == _msgFields.end())
+		return (std::string(""));
+	return _msgFields["method"];
 }

@@ -28,10 +28,13 @@ class Client
 		Client(const Client& src);
 		Client&		operator=(const Client& src);
 		Client(int csock, int lsock);
-		void	addRequest(const std::string& raw_rqst);
+		int		getClientSocket(void) const;
+		int		getListenSocket(void) const;
+		void	addRequest(std::string raw_rqst);
 		void	addRequest(const Request& rqst);
 		void	popoutRequest(void);
-
+		Request&	getFirstRequest(void);
+		const std::deque<Request>&	getPendingRequests(void) const;
 }; // end class Client
 
 /* Default Constructor */
@@ -64,18 +67,39 @@ Client&		Client::operator=(const Client& src)
 }
 
 /* Add a new Request to the pending queue of request to be respond. */
-void	Client::addRequest(const std::string& raw_rqst)
+void	Client::addRequest(std::string raw_rqst)
 {
-	_pendingRqst.push_back(Request(raw_rqst));
+	Request	rqst(raw_rqst);
+	this->_pendingRqst.push_back(rqst);
 }
 
 /* Add a new Request to the pending queue of request to be respond. */
 void	Client::addRequest(const Request& rqst)
 {
-	_pendingRqst.push_back(rqst);
+	this->_pendingRqst.push_back(rqst);
 }
 
 void	Client::popoutRequest(void)
 {
-	_pendingRqst.pop_front();
+	this->_pendingRqst.pop_front();
+}
+
+Request&	Client::getFirstRequest(void)
+{
+	return this->_pendingRqst.front();
+}
+
+const std::deque<Request>&	Client::getPendingRequests(void) const
+{
+	return this->_pendingRqst;
+}
+
+int		Client::getClientSocket(void) const
+{
+	return _csock;
+}
+
+int		Client::getListenSocket(void) const
+{
+	return _lsock;
 }
