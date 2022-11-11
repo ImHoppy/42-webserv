@@ -18,6 +18,12 @@
 #include <errno.h>
 typedef int socket_t;
 
+typedef struct s_polldata
+{
+	Server*	server;
+	Client*	client;
+} t_polldata;
+
 class Client;
 
 class Server {
@@ -116,12 +122,14 @@ class Server {
 			std::cout << "Here\n";
 			return (-1);
 		}
-		event.data.ptr = reinterpret_cast<void *>(this); // addr de this Server
+		Client*	new_client = new Client(client_socket, this);
+		t_polldata data = {this, new_client};
+		event.data.ptr = reinterpret_cast<void *>(&data);
 		event.events = EPOLLIN | EPOLLOUT;
 		if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
 			throw std::runtime_error("epoll_ctl failed");
 		}
-		_clients.insert(new Client(client_socket, this));
+		_clients.insert(new_client);
 		displayTime();
 		std::cout << "Server #" << ": accepted new client " << client_socket << std::endl;
 		return (client_socket);

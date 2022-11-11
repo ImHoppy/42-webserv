@@ -92,7 +92,8 @@ class WebServ {
 		{
 			Server*	server = *it;
 			server->setEpollInstance(_epollInstance);
-			event.data.ptr = server; 
+			t_polldata data = {server, NULL};
+			event.data.ptr = &data; 
 			event.events = EPOLLIN;
 			if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, server->getSocket(), &event) < 0) {
 				   throw std::runtime_error("epoll_ctl add failed");
@@ -121,20 +122,16 @@ class WebServ {
 			}
 			for (int i = 0; i < nfds; i++)
 			{
-				
-				Server	*server = NULL;
-				Client	*client = NULL;
-				server = dynamic_cast<Server*>(events[i].data.ptr);
+				t_polldata*	data = reinterpret_cast<t_polldata*>(events[i].data.ptr);
+				Server	*server = data->server;
+				Client	*client = data->client;
 				if (server != NULL)
 				{
 					std::cout << "accept on lsocket " << server->getSocket() << std::endl;
 					server->AcceptNewClient();
 				}
-				else
+				else if (client != NULL)
 				{
-					client = dynamic_cast<Client*>(events[i].data.ptr);
-					if (client == NULL)
-						continue;
 					if (events[i].events & EPOLLERR)
 					{
 						std::cout << "ERROR on socket " << client->getSocket() <<std::endl;
@@ -157,9 +154,10 @@ class WebServ {
 			}
 		}
 	};
-};
-// end class Webserv
+};// end class Webserv
+
 bool WebServ::_isRunning = false;
+
 void	sig_handler(int sig)
 {
 	(void)sig;
