@@ -12,29 +12,33 @@
 #include <ctime> //time
 #include <iomanip>
 #include <unistd.h>
-
-#ifndef BUFFSIZE
-# define BUFFSIZE 3000
-#endif
-
+#include <vector>
+#include <set>
 
 #include <errno.h>
 typedef int socket_t;
 
+class Client;
+
 class Server {
-	socket_t						_socket;
-	std::vector<ServerConfig>		_configs;
-	std::map<socket_t, Client*>		_clients;
-	int								_index;	
-	typedef std::map<socket_t, Client*>		map_client;
+	socket_t					_socket;
+	std::vector<ServerConfig>	_configs;
+	std::set<Client*>			_clients;
+	int							_epollInstance;
+	typedef std::set<Client*>	set_client;
 	public:
 	
 	/* Default Constructor */
-	Server(): _socket(-1), _configs(), _clients(), _index(-1) {};
+	Server(): _socket(-1), _configs(), _clients(), _epollInstance(-1) {};
 
 	void addConfig(ServerConfig const & config) {
 		_configs.push_back(config);
 	};
+	
+	void	setEpollInstance(int inst)
+	{
+		_epollInstance = inst;
+	}
 
 	/* Create, bind, and set in listen state its _socket. */
 	int		InitServer()
@@ -82,7 +86,6 @@ class Server {
 			_socket = other._socket;
 			_configs = other._configs;
 			_clients = other._clients;
-			_index = other._index;
 		}
 		return *this;
 	};
@@ -90,15 +93,15 @@ class Server {
 	/* Destructor */
 	public:
 	~Server() {
-		for (map_client::iterator	it = _clients.begin(); it != _clients.end(); ++it)
+		for (set_client::iterator	it = _clients.begin(); it != _clients.end(); ++it)
 		{
-			delete it->second;
+			delete *it;
 		}
 	};
 
 	/* Create a new client socket with accept, and create a new Client instance with it.
-	Then add it with its pair client socket to the _clients map. */
-	socket_t	 AcceptNewClient(socket_t & epollInstance)
+	Then add it with its pair client socket to the _clients set. */
+	socket_t	 AcceptNewClient(void)
 	{
 		struct epoll_event event;
 		struct sockaddr_in client_addr;
@@ -113,16 +116,14 @@ class Server {
 			std::cout << "Here\n";
 			return (-1);
 		}
-		event.data.fd = client_socket;
-//		event.data.ptr = this; // addr de this Server
+		event.data.ptr = reinterpret_cast<void *>(this); // addr de this Server
 		event.events = EPOLLIN | EPOLLOUT;
-		if (epoll_ctl(epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
+		if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
 			throw std::runtime_error("epoll_ctl failed");
 		}
-		Client*	new_client = new Client(event.data.fd, _socket);
-		_clients.insert(std::make_pair(client_socket, new_client));
+		_clients.insert(new Client(client_socket, this));
 		displayTime();
-		std::cout << "Server #" << _index << ": accepted new client " << client_socket << std::endl;
+		std::cout << "Server #" << ": accepted new client " << client_socket << std::endl;
 		return (client_socket);
 	}
 
@@ -141,9 +142,6 @@ class Server {
 		<< "] ";
 	}
 
-	void	setIndex(int index) {
-		_index = index;
-	}
 	socket_t getSocket() const {
 		return _socket;
 	}
@@ -152,66 +150,40 @@ class Server {
 		return _configs;
 	}
 
-	/* Read (with recv()) from the cient socket 'csocket'. If bytes rcved is 0, closes
-	th connection with the client. Else, create a Request object with the buf received,
-	and add it the its Client queud requests. */
-	int	recvRequest(socket_t csocket, socket_t epollInst)
+	/* Terminates connection with the 'client': deletes it frome the epoll fds,
+	close the connected socket, delete its memory and removes it from the set of Clients.
+	*/
+	void	removeClient(Client* client)
 	{
-		std::cout << "POLLIN: serv " << _socket << " client " << csocket << std::endl;
-		char buf[BUFFSIZE];
-		memset(&buf, 0, sizeof(buf));
-		ssize_t bytes = recv(csocket, buf, BUFFSIZE, 0);
-		if (bytes < 0)
-			throw std::runtime_error("recv failed");
-		else if (bytes == 0)
-		{
-			std::cout << "EOF received from client " << csocket << std::endl;
-			removeClient(csocket, epollInst);
-			return (0);
+		socket_t socket = client->getSocket();
+		if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, socket, NULL) < 0) {
+			throw std::runtime_error("epoll_ctl DEL after EOF failed");
 		}
-		else
+		close(socket);
+		set_client::iterator	it = _clients.find(client);
+		if (it != _clients.end())
 		{
-			buf[bytes] = 0;
-			std::cout << bytes << "bytes reveived from client " << csocket << ": \n";
-			map_client::iterator	it = _clients.find(csocket);
-			if (it == _clients.end())
-				return (0);
-			it->second->addRequest(buf);
-			return (bytes);
+			delete *it;
+			_clients.erase(it);
 		}
 	}
 
-	void	removeClient(socket_t csocket, socket_t epollInst)
+	void	respond(Client* client)
 	{
-			if (epoll_ctl(epollInst, EPOLL_CTL_DEL, csocket, NULL) < 0) {
-				throw std::runtime_error("epoll_ctl DEL after EOF failed");
-			}
-			close(csocket);
-			delete _clients[csocket];
-			_clients.erase(csocket);
-	}
-
-	void	respond(socket_t csocket)
-	{
-		map_client::iterator	it = _clients.find(csocket);
-		if (it == _clients.end()) // si pas trouve, pas normal btw
-			return ;
-		Client *client = it->second;
-		if (client->getPendingRequests().empty()) // si pas de pending request
-			return ;
 		Request&	rqst = client->getFirstRequest();
 		if (rqst.method() == "GET")
 		{
-			std::cout << "POLLOUT event on client fd " << csocket <<std::endl;
+			socket_t	socket = client->getSocket();
+			std::cout << "POLLOUT event on client fd " << socket <<std::endl;
 			ssize_t		bytes;
 			std::string buf("HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Keep-Alive\r\n\r\nHello, world!");
-			bytes = send(csocket, buf.c_str(), buf.size(), 0);
+			bytes = send(socket, buf.c_str(), buf.size(), 0);
 			if (bytes == -1)
 			{
 				throw std::runtime_error("send failed");
 			}
-			std::cout << bytes << " send to client " << csocket << std::endl;
-			client->popoutRequest();
+			std::cout << bytes << " send to client " << socket << std::endl;
+			client->popOutRequest();
 		}
 	}
 

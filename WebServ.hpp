@@ -28,15 +28,14 @@ void	sig_handler(int sig);
 
 class WebServ {
 	private:
-		std::map<socket_t, Server*>				_servers;
+		std::vector<Server*>				_servers;
 		socket_t								_epollInstance;
-		int										_index;
 	public:
 		static bool								_isRunning;
-		typedef std::map<socket_t, Server*>		map_servers;
+		typedef std::vector<Server*>		vec_servers;
 		static std::map<socket_t, std::string>	error_status;
 
-	WebServ(): _servers(), _epollInstance(-1), _index(0)
+	WebServ(): _servers(), _epollInstance(-1) 
 	{
 	};
 
@@ -53,8 +52,8 @@ class WebServ {
 	};
 
 	~WebServ() {
-		for (map_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
-			const socket_t socket = it->first;
+		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
+			const socket_t socket = (*it)->getSocket();
 
 			if (_epollInstance > 0)
 			{ 
@@ -72,34 +71,34 @@ class WebServ {
 	void addServer(Server *serv) {
 		if (serv->getSocket() != -1)
 		{
-			_servers.insert(std::make_pair(serv->getSocket(), serv));
-			serv->setIndex(_index);
-			_index++;
+			_servers.push_back(serv);
 		}
 	};
 
-	void EndLoop() {
+	void	EndLoop(void)
+	{
 		WebServ::_isRunning = false;
-	};
+	}
 
-	void InitEpoll() {
-	   if (_servers.size() == 0)
-			   throw std::runtime_error("No servers to listen to");
-	   _epollInstance = epoll_create(_servers.size());
-	   if (_epollInstance < 0) {
-			   throw std::runtime_error("epoll_create failed");
-	   }
-	   struct epoll_event event = {};
-	   for (map_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
-			   socket_t socket = it->first;
-
-			   event.data.fd = socket;
-			   event.events = EPOLLIN;
-			   if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, socket, &event) < 0) {
-					   throw std::runtime_error("epoll_ctl add failed");
-			   }
-	   }
-	};
+	void	InitEpoll(void)
+	{
+		if (_servers.size() == 0)
+			throw std::runtime_error("No servers to listen to");
+		_epollInstance = epoll_create(_servers.size());
+		if (_epollInstance < 0)
+			throw std::runtime_error("epoll_create failed");
+		struct epoll_event event = {};
+		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it)
+		{
+			Server*	server = *it;
+			server->setEpollInstance(_epollInstance);
+			event.data.ptr = server; 
+			event.events = EPOLLIN;
+			if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, server->getSocket(), &event) < 0) {
+				   throw std::runtime_error("epoll_ctl add failed");
+			}
+		}
+	}
 
 	void StartLoop()
 	{
@@ -122,41 +121,40 @@ class WebServ {
 			}
 			for (int i = 0; i < nfds; i++)
 			{
-//				Server* ptr = static_cast<Server*>(events[i].data.ptr);
-				map_servers::iterator	it = _servers.find(events[i].data.fd);
-				if (it == _servers.end())
-					continue ;
-				Server *serv = it->second;
-//				if (serv == ptr)
-//					std::cout << "On est trop cons" << std::endl;
-				if (serv->getSocket() != events[i].data.fd) // Pas un listen socket
+				
+				Server	*server = NULL;
+				Client	*client = NULL;
+				server = dynamic_cast<Server*>(events[i].data.ptr);
+				if (server != NULL)
 				{
-					if (events[i].data.fd & EPOLLERR)
+					std::cout << "accept on lsocket " << server->getSocket() << std::endl;
+					server->AcceptNewClient();
+				}
+				else
+				{
+					client = dynamic_cast<Client*>(events[i].data.ptr);
+					if (client == NULL)
+						continue;
+					if (events[i].events & EPOLLERR)
 					{
-						std::cout << "ERROR on socket " << events[i].data.fd <<std::endl;
+						std::cout << "ERROR on socket " << client->getSocket() <<std::endl;
 					}
-					else if (events[i].data.fd & EPOLLRDHUP)
+					if (events[i].events & EPOLLRDHUP)
 					{
-						std::cout << "POLLRDHUP on socket " << events[i].data.fd <<std::endl;
+						std::cout << "POLLRDHUP on socket " << client->getSocket()  <<std::endl;
 					}
 					if (events[i].events & EPOLLIN)
 					{
-						if (serv->recvRequest(events[i].data.fd, _epollInstance) == 0)
-							_servers.erase(events[i].data.fd);
+						int readSize = client->recvRequest();
+						if (readSize == 0)
+							client->getServer()->removeClient(client);
 					}
 					if (events[i].events & EPOLLOUT)
 					{
-						serv->respond(events[i].data.fd);
+						client->getServer()->respond(client);
 					}
 				}
-				else // is a listen socket
-				{
-					std::cout << "accept on lsocket " << serv->getSocket() << std::endl;
-					socket_t clientFd = serv->AcceptNewClient(_epollInstance);
-					_servers.insert(std::make_pair(clientFd, serv));
-				}
 			}
-
 		}
 	};
 };
