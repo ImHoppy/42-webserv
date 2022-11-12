@@ -14,14 +14,20 @@
 #include <unistd.h>
 #include <vector>
 #include <set>
-#include "AEntity.hpp"
+#include "Base.hpp"
 
 #include <errno.h>
 typedef int socket_t;
 
+typedef struct s_polldata
+{
+	Server*	server;
+	Client*	client;
+} t_polldata;
+
 class Client;
 
-class Server : private AEntity {
+class Server : public Base {
 	socket_t					_socket;
 	std::vector<ServerConfig>	_configs;
 	std::set<Client*>			_clients;
@@ -30,12 +36,14 @@ class Server : private AEntity {
 	public:
 	
 	/* Default Constructor */
-	Server(void) : AEntity("Server"), _socket(-1), _configs(), _clients(), _epollInstance(-1) {};
+	Server(void) : Base("Server"), _socket(-1), _configs(), _clients(), _epollInstance(-1) {};
 
 	/* Copy Constructor */
-	Server(Server const & other) : AEntity("Server"), _socket(other._socket), 
+	Server(Server const & other) : Base("Server"), _socket(other._socket), 
 	_configs(other._configs), _clients(other._clients), 
 	_epollInstance(other._epollInstance) {}
+	std::string const & getType() const;
+
 
 	/* Assignement operator (should be private) */
 	Server & operator=(Server const & other) {
@@ -54,11 +62,6 @@ class Server : private AEntity {
 			delete *it;
 		}
 	};
-
-	const std::string&		getType(void) const
-	{
-		return _type;
-	}
 
 	void addConfig(ServerConfig const & config) {
 		_configs.push_back(config);
@@ -118,15 +121,16 @@ class Server : private AEntity {
 		}
 		else if (client_socket < 0)
 		{
-			std::cout << "Here\n";
+			perror("accept() failed");
 			return (-1);
 		}
-		event.data.ptr = this; // addr de this Server
+		Client * client = new Client(client_socket, this);
+		event.data.ptr = client; // addr de this Server
 		event.events = EPOLLIN | EPOLLOUT;
 		if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
 			throw std::runtime_error("epoll_ctl failed");
 		}
-		_clients.insert(new Client(client_socket, this));
+		_clients.insert(client);
 		displayTime();
 		std::cout << "Server #" << ": accepted new client " << client_socket << std::endl;
 		return (client_socket);
@@ -175,8 +179,9 @@ class Server : private AEntity {
 
 	void	respond(Client* client)
 	{
-		Request&	rqst = client->getFirstRequest();
-		if (rqst.method() == "GET")
+		if (client == NULL) return;
+		Request*	rqst = client->getFirstRequest();
+		if (rqst != NULL && rqst->method() == "GET")
 		{
 			socket_t	socket = client->getSocket();
 			std::cout << "POLLOUT event on client fd " << socket <<std::endl;
@@ -193,3 +198,5 @@ class Server : private AEntity {
 	}
 
 };
+
+std::string const & Server::getType() const { return _type; }

@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/11 15:45:34 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/11 23:10:59 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ Request&	Request::operator=(const Request& src)
 
 /* ATTENTION: str MUST NOT be empty! */
 /* Parametric construcotr */
-Request::Request(std::string str) : _statusCode(200), _rawRqst(str), _msgFields(), _body()
+Request::Request(std::string str) : _statusCode(200), _rawRqst(str), _uri(), _msgFields(), _body()
 {
 	siterator_t		curr;
 	if (_statusCode == 200)
@@ -385,10 +385,9 @@ std::ostream&	operator<<(std::ostream& o, const Request& me)
 	return o;
 }
 
-std::string	Request::method(void)
+std::string		Request::method(void)
 {
-	map_t::iterator	it = _msgFields.find("method");
-	if (it == _msgFields.end())
-		return (std::string(""));
-	return _msgFields["method"];
+	if (_msgFields.find("method") != _msgFields.end())
+		return _msgFields["method"];
+	return (std::string("UNDEFINED"));
 }

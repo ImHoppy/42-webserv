@@ -2,7 +2,7 @@
 
 #include "Server.hpp"
 #include "Request.hpp"
-#include "AEntity.hpp"
+#include "Base.hpp"
 
 #include <iostream>
 #include <deque>
@@ -25,7 +25,7 @@ avec une des ses configs, choisit parmis celles-ci en fonction du Host header
 typedef int socket_t;
 class Server;
 
-class Client : private AEntity
+class Client : public Base
 {
 	socket_t		_csock; // client socket, the one returned by accept() calls
 	Server*			_myServer;
@@ -40,29 +40,31 @@ class Client : private AEntity
 		void	addRequest(std::string raw_rqst);
 		void	addRequest(const Request& rqst);
 		void	popOutRequest(void);
-		Request&	getFirstRequest(void);
+		Request*	getFirstRequest(void);
 		const std::deque<Request>&	getPendingRequests(void) const;
 		int		recvRequest(void);
 		Server*		getServer(void);
-		const std::string&		getType(void) const;
+
+		std::string const & getType() const;
+
 }; // end class Client
 
 /* Default Constructor */
-Client::Client(void) : AEntity("Client"), _csock(-1), _myServer(), _pendingRqst() {}
+Client::Client(void) : Base("Client"), _csock(-1), _myServer(), _pendingRqst() {}
 
 /* Destructor */
 Client::~Client(void) {}
 
 /* Copy Constructor */
 Client::Client(const Client& src) :
-	AEntity("Client"),
+	Base("Client"),
 	_csock(src._csock),
 	_myServer(src._myServer),
 	_pendingRqst(src._pendingRqst) {}
 
 /* Parametric Constructor (with empty pending requests) */
 Client::Client(socket_t csock, Server* serv) :
-	AEntity("Client"),
+	Base("Client"),
 	_csock(csock),
 	_myServer(serv),
 	_pendingRqst() {}
@@ -96,9 +98,11 @@ void	Client::popOutRequest(void)
 	this->_pendingRqst.pop_front();
 }
 
-Request&	Client::getFirstRequest(void)
+Request*	Client::getFirstRequest(void)
 {
-	return this->_pendingRqst.front();
+	if (_pendingRqst.empty())
+		return NULL;
+	return &(this->_pendingRqst.front());
 }
 
 const std::deque<Request>&	Client::getPendingRequests(void) const
@@ -140,11 +144,6 @@ Server*		Client::getServer(void)
 	return _myServer;
 }
 
-const std::string&		Client::getType(void) const
-{
-	return _type;
-}
-
 /* MARCHE PS CAUSE DOUBLE INCLUSION
 //TODO: pourauoi pas faire une nested class ou j'en sais rien. Ou alors une structure
 pour epoll ptr avec juste deux obj, Client et Server.
@@ -160,3 +159,6 @@ void	Client::askForResponse(void)
 	_myServer->respond(this);
 }
 */
+
+
+std::string const & Client::getType() const { return _type; }

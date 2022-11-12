@@ -27,6 +27,8 @@ void	sig_handler(int sig);
 		POLLOUT =>	Server[csocket].respondClient(csocket);
 */
 
+
+
 class WebServ {
 	private:
 		std::vector<Server*>				_servers;
@@ -122,16 +124,21 @@ class WebServ {
 			}
 			for (int i = 0; i < nfds; i++)
 			{
-				Server*	server = static_cast<Server*>(events[i].data.ptr);
-				Client*	client= static_cast<Client*>(events[i].data.ptr);
-				if (server->getType() == "Server")
+				Base *base = static_cast<Base*>(events[i].data.ptr);
+				if (base == NULL)
 				{
+					std::cout << "base is null" << std::endl;
+					continue ;
+				}
+				if (base->getType() == "Server")
+				{
+					Server*	server = dynamic_cast<Server*>(base);
 					std::cout << "accept on lsocket " << server->getSocket() << std::endl;
 					server->AcceptNewClient();
 				}
-				else if (client->getType() == "Client")
+				else if (base->getType() == "Client")
 				{
-					std::cout << "LALALA" << std::endl;
+					Client*	client= dynamic_cast<Client*>(base);
 					if (events[i].events & EPOLLERR)
 					{
 						std::cout << "ERROR on socket " << client->getSocket() <<std::endl;
@@ -154,9 +161,10 @@ class WebServ {
 			}
 		}
 	};
-};
-// end class Webserv
+};// end class Webserv
+
 bool WebServ::_isRunning = false;
+
 void	sig_handler(int sig)
 {
 	(void)sig;
