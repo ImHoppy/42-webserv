@@ -66,6 +66,7 @@ class WebServ {
 			}
 			if (socket >= 0)
 				close(socket);
+			delete *it;
 		}
 		if (_epollInstance > 0)
 			close(_epollInstance);

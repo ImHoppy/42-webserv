@@ -87,6 +87,5 @@ int main(int ac, char **av)
 
 	webserv.addServer(serv);
 	webserv.StartLoop();
-	delete serv;
 }
 
