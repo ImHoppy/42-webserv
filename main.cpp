@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <iostream>
 
+#define CONSTRUC
+
 std::vector<std::string>	listFiles(std::string const & path)
 {
 	DIR							*dr;
@@ -57,15 +59,15 @@ int main(int ac, char **av)
 	std::cout << std::endl;
 
 	std::vector<std::string> list = listFiles(".");
-	std::cout << "listFiles: " << std::endl;
-	for (std::vector<std::string>::iterator it = list.begin(); it != list.end(); it++)
-	{
-		struct stat st;
-		stat(it->c_str(), &st);
-		std::cout << *it << " : " << st.st_size <<  "\n";
-	}
-	std::cout << std::endl << list.size() << std::endl;
-	std::cout << std::endl << std::endl;
+//	std::cout << "listFiles: " << std::endl;
+//	for (std::vector<std::string>::iterator it = list.begin(); it != list.end(); it++)
+//	{
+//		struct stat st;
+//		stat(it->c_str(), &st);
+//		std::cout << *it << " : " << st.st_size <<  "\n";
+//	}
+//	std::cout << std::endl << list.size() << std::endl;
+//	std::cout << std::endl << std::endl;
 
 	GeneralConfig generalConfig; // NOTE: Maybe delete this class and put all vector<ServerConfig> in WebServ class or main
 	try

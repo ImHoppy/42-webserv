@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef CONSTRUC
+# define CONSTRUC
+#endif
+
 #include "Server.hpp"
 #include "Request.hpp"
 #include "Base.hpp"
@@ -50,24 +54,44 @@ class Client : public Base
 }; // end class Client
 
 /* Default Constructor */
-Client::Client(void) : Base("Client"), _csock(-1), _myServer(), _pendingRqst() {}
+Client::Client(void) : Base("Client"), _csock(-1), _myServer(), _pendingRqst()
+{
+	#ifdef CONSTRUC
+	std::cerr << "Client Default constructor" << std::endl;
+	#endif
+}
 
 /* Destructor */
-Client::~Client(void) {}
+Client::~Client(void)
+{
+	#ifdef CONSTRUC
+	std::cerr << "Client Destructor" << std::endl;
+	#endif
+}
 
 /* Copy Constructor */
 Client::Client(const Client& src) :
 	Base("Client"),
 	_csock(src._csock),
 	_myServer(src._myServer),
-	_pendingRqst(src._pendingRqst) {}
+	_pendingRqst(src._pendingRqst)
+{
+	#ifdef CONSTRUC
+	std::cerr << "Client Copy constructor" << std::endl;
+	#endif
+}
 
 /* Parametric Constructor (with empty pending requests) */
 Client::Client(socket_t csock, Server* serv) :
 	Base("Client"),
 	_csock(csock),
 	_myServer(serv),
-	_pendingRqst() {}
+	_pendingRqst()
+{
+	#ifdef CONSTRUC
+	std::cerr << "Client Parametric constructor" << std::endl;
+	#endif
+}
 
 /* Assignement operator */
 Client&		Client::operator=(const Client& src)
@@ -77,6 +101,9 @@ Client&		Client::operator=(const Client& src)
 	_csock = src._csock;
 	_myServer = src._myServer;
 	_pendingRqst = src._pendingRqst;
+	#ifdef CONSTRUC
+	std::cerr << "Client Assignement operator" << std::endl;
+	#endif
 	return *this;
 }
 

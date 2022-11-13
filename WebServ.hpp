@@ -152,7 +152,10 @@ class WebServ {
 					{
 						int readSize = client->recvRequest();
 						if (readSize == 0)
+						{
 							client->getServer()->removeClient(client);
+							events[i].events = 0; // pour pas passer ds le pollou suivant alors qu'on a delete le client
+						}
 					}
 					if (events[i].events & EPOLLOUT)
 					{
