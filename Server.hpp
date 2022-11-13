@@ -120,6 +120,17 @@ void	Server::setEpollInstance(int inst)
 	_epollInstance = inst;
 }
 
+/* Une response est fct de la requete evidemment, et de la config:
+	1) Trouver la bonne config: check le host header pour avoir le server name
+	ou l'URI
+	2) Bah regarder ce qu'on nous demande dessus
+Dans nginx default:
+	location / {
+		try_files $uri $uri/ =404
+	} 
+ils expliquent = Firs attempt to serve request as file, then as directory, then
+fallback to displaying a 404
+*/
 void	Server::respond(Client* client)
 {
 	if (client == NULL) return;

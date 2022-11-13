@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:37 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/11 15:46:05 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/13 15:42:09 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,9 @@ class Request
 		const std::string&		getRawRequest(void) const;
 		const map_t&			getMap(void) const;
 		const t_uri&			getUri(void) const;
-		/* Member functions */
+		/* Public Member functions */
+		std::string	method(void);
+	private:
 		int		check_host_header(void); // TODO: a finir qd URI parsing OK
 		int		set_Request_line(void);
 		int		split_header(siterator_t start, siterator_t end);
@@ -74,7 +76,6 @@ class Request
 		int		parse_absolute_form(const std::string& target);
 		int		parse_origin_form(const std::string& target);
 		bool		message_body_presence(void);
-		std::string	method(void);
 
 }; // end class Request
 

@@ -161,7 +161,9 @@ int		Client::recvRequest(void)
 	{
 		buf[bytes] = 0;
 		std::cout << bytes << "bytes reveived from client " << _csock << ": \n";
-		_pendingRqst.push_back(Request(buf));
+		Request		new_rqst(buf);
+		_pendingRqst.push_back(new_rqst);
+		std::cout << new_rqst << std::endl;
 		return (bytes);
 	}
 }

@@ -84,88 +84,92 @@ class WebServ {
 		WebServ::_isRunning = false;
 	}
 
-	void	InitEpoll(void)
+	void	InitEpoll(void);
+	void StartLoop(void);
+};// end class WebServ
+
+void	WebServ::InitEpoll(void)
+{
+	if (_servers.size() == 0)
+		throw std::runtime_error("No servers to listen to");
+	_epollInstance = epoll_create(_servers.size());
+	if (_epollInstance < 0)
+		throw std::runtime_error("epoll_create failed");
+	struct epoll_event event = {};
+	for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it)
 	{
-		if (_servers.size() == 0)
-			throw std::runtime_error("No servers to listen to");
-		_epollInstance = epoll_create(_servers.size());
-		if (_epollInstance < 0)
-			throw std::runtime_error("epoll_create failed");
-		struct epoll_event event = {};
-		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it)
-		{
-			Server*	server = *it;
-			server->setEpollInstance(_epollInstance);
-			event.data.ptr = server; 
-			event.events = EPOLLIN;
-			if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, server->getSocket(), &event) < 0) {
-				   throw std::runtime_error("epoll_ctl add failed");
-			}
+		Server*	server = *it;
+		server->setEpollInstance(_epollInstance);
+		event.data.ptr = server; 
+		event.events = EPOLLIN;
+		if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, server->getSocket(), &event) < 0) {
+			   throw std::runtime_error("epoll_ctl add failed");
 		}
 	}
+}
 
-	void StartLoop()
+void	WebServ::StartLoop(void)
+{
+	if (_epollInstance < 0)
+		InitEpoll();
+	if (WebServ::_isRunning)
+		return;
+	WebServ::_isRunning = true;
+	struct epoll_event events[MAX_EVENTS];
+	int nfds = 0;
+	std::signal(SIGINT, sig_handler);
+	while (WebServ::_isRunning)
 	{
-		if (_epollInstance < 0)
-			InitEpoll();
-		if (WebServ::_isRunning) {
-			return;
+		nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, -1);
+		if (nfds < 0)
+		{
+//			throw std::runtime_error("epoll_wait failed");
+			perror("WebServ: epoll_wait failed");
+			WebServ::_isRunning = false;
+			continue ;
 		}
-		WebServ::_isRunning = true;
-		struct epoll_event events[MAX_EVENTS];
-		int nfds = 0;
-		std::signal(SIGINT, sig_handler);
-		while (WebServ::_isRunning) {
-			nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, -1);
-			if (nfds < 0) {
-//				throw std::runtime_error("epoll_wait failed");
-				perror("WebServ: epoll_wait failed");
-				WebServ::_isRunning = false;
+		for (int i = 0; i < nfds; ++i)
+		{
+			Base *base = static_cast<Base*>(events[i].data.ptr);
+			if (base == NULL)
+			{
+				std::cout << "base is null" << std::endl;
 				continue ;
 			}
-			for (int i = 0; i < nfds; i++)
+			if (base->getType() == "Server")
 			{
-				Base *base = static_cast<Base*>(events[i].data.ptr);
-				if (base == NULL)
-				{
-					std::cout << "base is null" << std::endl;
-					continue ;
-				}
-				if (base->getType() == "Server")
-				{
-					Server*	server = dynamic_cast<Server*>(base);
-					std::cout << "accept on lsocket " << server->getSocket() << std::endl;
-					server->AcceptNewClient();
-				}
-				else if (base->getType() == "Client")
-				{
-					Client*	client= dynamic_cast<Client*>(base);
-					if (events[i].events & EPOLLERR)
-					{
-						std::cout << "ERROR on socket " << client->getSocket() <<std::endl;
-					}
-					if (events[i].events & EPOLLRDHUP)
-					{
-						std::cout << "POLLRDHUP on socket " << client->getSocket()  <<std::endl;
-					}
-					if (events[i].events & EPOLLIN)
-					{
-						int readSize = client->recvRequest();
-						if (readSize == 0)
-						{
-							client->getServer()->removeClient(client);
-							events[i].events = 0; // pour pas passer ds le pollou suivant alors qu'on a delete le client
-						}
-					}
-					if (events[i].events & EPOLLOUT)
-					{
-						client->getServer()->respond(client);
-					}
-				}
+				Server*	server = dynamic_cast<Server*>(base);
+				server->AcceptNewClient();
 			}
+			else if (base->getType() == "Client")
+			{
+				Client*	client= dynamic_cast<Client*>(base);
+				if (events[i].events & EPOLLERR)
+				{
+					std::cout << "ERROR on socket " << client->getSocket() <<std::endl;
+				}
+				if (events[i].events & EPOLLRDHUP)
+				{
+					std::cout << "POLLRDHUP on socket " << client->getSocket()  <<std::endl;
+				}
+				if (events[i].events & EPOLLIN)
+				{
+					int readSize = client->recvRequest();
+					if (readSize == 0)
+					{
+						client->getServer()->removeClient(client);
+						events[i].events = 0; // pour pas passer ds le pollou suivant alors qu'on a delete le client
+					}
+				}
+				if (events[i].events & EPOLLOUT)
+				{
+					client->getServer()->respond(client);
+				}
+			} 
 		}
-	};
-};// end class Webserv
+	}
+}
+
 
 bool WebServ::_isRunning = false;
 
