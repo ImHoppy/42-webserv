@@ -130,3 +130,14 @@ bool	LocationConfig::isEmpty() const
 {
 	return (_dirList == false && _CGIActive == false && _CGIPath.empty() && _indexFile.empty() && _root.empty() && _methods.none());
 }
+
+bool	LocationConfig::methodIsAllowed(std::string method)
+{
+	if (method == "GET" && (_methods & GET))
+		return true;
+	if (method == "POST" && (_methods & POST))
+		return true;
+	if (method == "DELETE" && (_methods & DELETE))
+		return true;
+	return false;
+}

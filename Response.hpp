@@ -6,6 +6,7 @@
 # include <map>
 # include "ServerConfig.hpp"
 # include "Request.hpp"
+# include "Utils.hpp"
 
 class Response
 {
@@ -24,9 +25,13 @@ class Response
 		Response(const Response& src);
 		Response&	operator=(const Response& src);
 		Response(ServerConfig* config, Request* request);
+		/* Getteurs */
+		std::string		getResponse(void) const;
+		/* Public Member functions */
+		bool	requestedMethodIsAllowed(void) const;
 	
 }; // end class Response
 
-std::ostream&	operator<<(std::ostream& o, const Request& me);
+std::ostream&	operator<<(std::ostream& o, const Response& me);
 
 #endif

@@ -10,9 +10,9 @@ class LocationConfig {
 	public:
 
 	typedef enum {
-		GET = 0,
-		POST = 1,
-		DELETE = 2
+		GET = 1,
+		POST = 2,
+		DELETE = 4
 	} http_methods;
 
 	private:
@@ -58,4 +58,6 @@ class LocationConfig {
 	std::string 	getIndexFile() const;
 	std::bitset<3>	getMethods() const;
 	bool			getMethod(http_methods method) const;
+
+	bool	methodIsAllowed(std::string method);
 };

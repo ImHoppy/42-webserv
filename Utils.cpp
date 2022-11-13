@@ -3,6 +3,13 @@
 #include <vector>
 #include "Utils.hpp"
 
+std::string	nbToString(int nb)
+{
+	std::stringstream	ss;
+	ss << nb;
+	return ss.str();
+}
+
 int32_t		StrToInt(std::string const & str)
 {
 	std::istringstream s(str);

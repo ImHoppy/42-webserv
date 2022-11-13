@@ -82,3 +82,72 @@ std::map<int, std::string>	const & ServerConfig::getErrorPages() const {
 std::vector<std::string> const & ServerConfig::getServerNames() const {
 	return _server_names;
 }
+
+std::ostream&	operator<<(std::ostream& o, const ServerConfig& me)
+{
+	o << "Host: " << me.getHost() << std::endl;
+	o << "Port: " << me.getPort() << std::endl;
+	o << "Root: " << me.getRootPath() << std::endl;
+	o << "Server Name: " << std::endl;
+	for (std::vector<std::string>::const_iterator it2 = me.getServerNames().begin(); it2 != me.getServerNames().end(); it2++) {
+		o << "\t" << *it2 << std::endl;
+	}
+	o << "MaxBodySize: " << me.getMaxBodySize() << std::endl;
+	o << "ErrorPages: " << std::endl;
+	for (std::map<int, std::string>::const_iterator it2 = me.getErrorPages().begin(); it2 != me.getErrorPages().end(); it2++) {
+		o << "\t" << it2->first << " " << it2->second << std::endl;
+	}
+	o << "Locations: " << std::endl;
+	for (std::map<std::string, LocationConfig>::const_iterator it2 = me.getLocations().begin(); it2 != me.getLocations().end(); it2++) {
+		o << it2->first << std::endl;
+		o << "\tRoot: " << it2->second.getRootPath() << std::endl;
+		o << "\tMethods: " << it2->second.getMethods() << std::endl;
+		o << "\tRedirect: " << it2->second.getRedirUrl() << std::endl;
+		o << "\tCgi: " << std::boolalpha <<it2->second.isCGIActive() << std::endl;
+		o << "\tCgiPath: " << it2->second.getCGIPath() << std::endl;
+	}
+	return o;
+}
+
+std::string		ServerConfig::processGet(LocationConfig& location, std::string& path)
+{
+	if (location.isFile(path) == true)
+	{
+		
+	}
+	else if (location.isDirList() == true)
+	{
+		//TODO: print dir list;
+		return (std::string("HTTP/1.1 200 OK"));
+	}
+	else
+	{
+		response = "HTTP/1.1 404 File Not Found";
+		return response;
+	}
+}
+
+std::string		ServerConfig::respondRequest(Request const & rqst)
+{
+	std::string		response;
+	std::string		host = rqst.getHost();
+	if (host == "UNDEFINED")
+	{
+		response = "HTTP/1.1 400 Bad Request\r\n";
+		return response;
+	}
+	std::string		path = rqst.getUri().path;
+	LocationConfig	location = getLocation(path);
+	if (location.methodIsAllowed(method) == false)
+	{
+		response = "HTTP/1.1 405 Method Not Allowed\r\n";
+		return response;
+	}
+	if (method == "GET")
+	{
+		response = processGet(location, path);
+		return response;
+	}
+//	return response;
+	return (std::string("HTTP/1.1 200 OK"));
+}

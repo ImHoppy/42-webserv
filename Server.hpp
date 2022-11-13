@@ -81,7 +81,6 @@ _epollInstance(other._epollInstance)
 	#endif
 }
 
-
 /* Assignement operator (should be private) */
 Server &	Server::operator=(Server const & other)
 {
@@ -137,9 +136,16 @@ void	Server::respond(Client* client)
 {
 	if (client == NULL) return;
 	Request*	rqst = client->getFirstRequest();
+	if (rqst == NULL)
+		return ;
 	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
 	Response	rsp(chosen_conf, rqst);
+	std::cout << "______ RESPONSE MAP CONTAINS:" << std::endl;
 	std::cout << rsp << std::endl;
+	std::cout << "\n_______END RESPONSE" << std::endl;
+	std::cout << "_______Chosen config is: \n";
+	std::cout << *chosen_conf;
+	std::cout << "\n_______END chosen conf" << std::endl;
 	if (rqst != NULL && rqst->getMethod() == "GET")
 	{
 		socket_t	socket = client->getSocket();

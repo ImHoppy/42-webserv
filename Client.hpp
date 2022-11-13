@@ -67,6 +67,8 @@ Client::~Client(void)
 	#ifdef CONSTRUC
 	std::cerr << "Client Destructor" << std::endl;
 	#endif
+	if (_csock >= 0)
+		close(_csock);
 }
 
 /* Copy Constructor */

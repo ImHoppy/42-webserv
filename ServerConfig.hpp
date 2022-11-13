@@ -5,7 +5,10 @@
 #include <map>
 #include "LocationConfig.hpp"
 #include <stdint.h>
+#include <iostream>
+#include "Request.hpp"
 
+//TODO: class Config nested in Server
 class ServerConfig {
 	private:
 	
@@ -34,12 +37,17 @@ class ServerConfig {
 	void	addErrorPage(int code, const std::string &page);
 	void	setServerNames(const std::vector<std::string> &server_names);
 
-	int32_t			getHost() const;
-	int16_t			getPort() const;
-	int32_t			getMaxBodySize() const;
-	std::string	const &	getRootPath() const;
-	LocationConfig	getLocation(const std::string &path) const;
-	map_locs	const &	getLocations() const;
-	std::map<int, std::string>	const & getErrorPages() const;
-	std::vector<std::string> const & getServerNames() const;
+	int32_t									getHost() const;
+	int16_t									getPort() const;
+	int32_t									getMaxBodySize() const;
+	std::string	const &						getRootPath() const;
+	LocationConfig							getLocation(const std::string &path) const;
+	map_locs	const &						getLocations() const;
+	std::map<int, std::string>	const &		getErrorPages() const;
+	std::vector<std::string> const &		getServerNames() const;
+
+	std::string		respondRequest(Request const & rqst);	
+	std::string		processGet(LocationConfig& location, std::string& path);
 };
+
+std::ostream&	operator<<(std::ostream& o, const ServerConfig& me);
