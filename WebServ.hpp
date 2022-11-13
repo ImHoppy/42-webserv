@@ -18,6 +18,9 @@
 void	sig_handler(int sig);
 
 /*
+	En fait on aurait du faire une liste de pending requests tout simplement. Et
+l'objet Request contient un client socket assosice, et une server_name associe.
+Cest tout.
 	Listen sockets:
 		POLLIN =>	accept connection = Server(lsocket).addClient()
 		POLLOUT (pas possible)

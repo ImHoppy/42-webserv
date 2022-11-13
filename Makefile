@@ -9,7 +9,7 @@ endif
 
 SRCS		=	main.cpp GeneralConfig.cpp ServerConfig.cpp \
 				LocationConfig.cpp Parsing.cpp FillConfig.cpp \
-				Utils.cpp Trim.cpp Request.cpp AEntity.cpp
+				Utils.cpp Trim.cpp Request.cpp AEntity.cpp Response.cpp
 # Request.cpp Response.cpp \
 # Utils.cpp Server.cpp
 

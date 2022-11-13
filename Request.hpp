@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:37 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/13 15:42:09 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/13 19:11:55 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ typedef struct s_uri
 class Request
 {
 	public:
-		typedef std::map<std::string, std::string>		map_t;
+		typedef std::map<std::string, std::string>		headers_t;
 		typedef std::string::iterator					siterator_t;
 		typedef std::string::const_iterator				scstiterator_t;
 
@@ -48,7 +48,7 @@ class Request
 		int										_statusCode;
 		std::string								_rawRqst;
 		t_uri									_uri;
-		std::map<std::string, std::string>		_msgFields; // contient aussi la status line
+		std::map<std::string, std::string>		_headers;
 		std::string								_body;
 		/* Private default constructor */
 		Request(void);
@@ -61,11 +61,11 @@ class Request
 		Request(const Request& src);
 
 		/* Getteurs */
-		const std::string&		getRawRequest(void) const;
-		const map_t&			getMap(void) const;
-		const t_uri&			getUri(void) const;
-		/* Public Member functions */
-		std::string	method(void);
+		const std::string&			getRawRequest(void) const;
+		const headers_t&			getHeaders(void) const;
+		const t_uri&				getUri(void) const;
+		std::string					getMethod(void);
+		std::string					getHost(void);
 	private:
 		int		check_host_header(void); // TODO: a finir qd URI parsing OK
 		int		set_Request_line(void);

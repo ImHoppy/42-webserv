@@ -6,14 +6,14 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/11 23:10:59 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/13 19:11:37 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Request.hpp"
 
 /* Default constructor (private) */
-Request::Request(void) : _statusCode(200), _rawRqst(), _uri(), _msgFields(), _body() {}
+Request::Request(void) : _statusCode(200), _rawRqst(), _uri(), _headers(), _body() {}
 
 /* Destructor */
 Request::~Request(void) {}
@@ -21,14 +21,14 @@ Request::~Request(void) {}
 /* Copy constructor */
 Request::Request(const Request& src) : _statusCode(src._statusCode),
 _rawRqst(src._rawRqst),
-_uri(src._uri), _msgFields(src._msgFields), _body(src._body) {}
+_uri(src._uri), _headers(src._headers), _body(src._body) {}
 
 /* Assignment operator */
 Request&	Request::operator=(const Request& src)
 {
 	_rawRqst.assign(src._rawRqst);
-	_msgFields.clear();
-	_msgFields = src._msgFields;
+	_headers.clear();
+	_headers = src._headers;
 	_body.assign(src._body);
 	_statusCode = src._statusCode;
 	_uri.scheme = src._uri.scheme;
@@ -41,7 +41,7 @@ Request&	Request::operator=(const Request& src)
 
 /* ATTENTION: str MUST NOT be empty! */
 /* Parametric construcotr */
-Request::Request(std::string str) : _statusCode(200), _rawRqst(str), _uri(), _msgFields(), _body()
+Request::Request(std::string str) : _statusCode(200), _rawRqst(str), _uri(), _headers(), _body()
 {
 	siterator_t		curr;
 	if (_statusCode == 200)
@@ -62,9 +62,9 @@ Request::Request(std::string str) : _statusCode(200), _rawRqst(str), _uri(), _ms
 //void	Request::check_body_headers(void)
 //{
 //	std::string::size_type	size = _body.size();
-//	map_t::iterator			te_hdr = _msgFields.find("Transfer-Encoding");
-//	map_t::iterator			cl_hdr = _msgFields.find("Content-Length");
-//	map_t::iterator			notfound = _msgFields.end();
+//	headers_t::iterator			te_hdr = _headers.find("Transfer-Encoding");
+//	headers_t::iterator			cl_hdr = _headers.find("Content-Length");
+//	headers_t::iterator			notfound = _headers.end();
 //
 //}
 
@@ -86,11 +86,11 @@ status code and then close the connection. (RFC 7230 page 32)
 */
 bool		Request::message_body_presence(void)
 {
-	map_t::iterator		found_cl;
-	map_t::iterator		found_te;
-	map_t::iterator		notfound = _msgFields.end();
-	found_cl = _msgFields.find("Content-Length");
-	found_te = _msgFields.find("Transfer-Encoding");
+	headers_t::iterator		found_cl;
+	headers_t::iterator		found_te;
+	headers_t::iterator		notfound = _headers.end();
+	found_cl = _headers.find("Content-Length");
+	found_te = _headers.find("Transfer-Encoding");
 	
 	if (found_te != notfound && found_cl != notfound)
 		return (_statusCode = 400, perror("Request: both Content-Length and Transfer-Encoding present"), false);
@@ -123,7 +123,7 @@ Remplit la structure t_uri avec les composants de la Request target.
 */
 int		Request::parse_Request_target(void)
 {
-	std::string		target = _msgFields["Request_target"];
+	std::string		target = _headers["Request_target"];
 	if (target.empty())
 		return (_statusCode = 400, perror("Request: empty target"), -1);
 	if (target[0] == '/') // origin form
@@ -131,7 +131,7 @@ int		Request::parse_Request_target(void)
 	else
 	{
 		parse_absolute_form(target);
-		if (_uri.authority != _msgFields["Host"])
+		if (_uri.authority != _headers["Host"])
 		{
 			perror("Request: uri authority mismatch Host header field");
 			_statusCode = 400;
@@ -179,8 +179,8 @@ int		Request::parse_absolute_form(const std::string& target)
 int		Request::parse_origin_form(const std::string& target)
 {
 	_uri.scheme = "http://";
-	map_t::iterator		host = _msgFields.find("Host");
-	if (host != _msgFields.end())
+	headers_t::iterator		host = _headers.find("Host");
+	if (host != _headers.end())
 		_uri.authority.assign(host->second);
 	std::string::size_type	path_end = target.find('?');
 	if (path_end == std::string::npos)
@@ -217,7 +217,7 @@ in split_header() fct.
 */
 int		Request::check_host_header(void)
 {
-	if (_msgFields.find("Host") == _msgFields.end()) // si pas trouve
+	if (_headers.find("Host") == _headers.end()) // si pas trouve
 	{
 		perror("Request: missing Host header field");
 		this->_statusCode = 400;
@@ -257,7 +257,7 @@ int		Request::set_Request_line(void)
 	siterator_t	end = start;
 	while (end != _rawRqst.end() && *end != ' ')
 		++end;
-	_msgFields["method"] = std::string(start, end);
+	_headers["method"] = std::string(start, end);
 	if (end == _rawRqst.end() || ++end == _rawRqst.end())
 		return (_statusCode = 400, perror("Request: line imcomplete"), -1);
 	start = end;
@@ -265,14 +265,14 @@ int		Request::set_Request_line(void)
 		++end;
 	if (end == _rawRqst.end())
 		return (_statusCode = 400, perror("Request: line imcomplete"), -1);
-	_msgFields["Request_target"] = std::string(start, end);
+	_headers["Request_target"] = std::string(start, end);
 	if (end == _rawRqst.end() || ++end == _rawRqst.end())
 		return (_statusCode = 400, perror("Request: line imcomplete"), -1);
 	start = end;
 	end = find_crlf(end, _rawRqst.end());
 	if (end == _rawRqst.end())
 		return (_statusCode = 400, perror("Request: line imcomplete (need CRLF)"), -1);
-	_msgFields["http_version"] = std::string(start, end);
+	_headers["http_version"] = std::string(start, end);
 	if (end + 2 == _rawRqst.end())
 		return (_statusCode = 400, perror("Request: missing message fields"), -1);
 	end += 2;
@@ -319,7 +319,7 @@ int	Request::split_header(siterator_t start, siterator_t end)
 	while (value_start != end && *value_start == ' ')
 		++value_start;
 	std::string		name(start, name_end);
-	if (_msgFields.find("Host") != _msgFields.end() && name == "Host")
+	if (_headers.find("Host") != _headers.end() && name == "Host")
 	{
 		perror("Request: double Host header fields found");
 		_statusCode = 400;
@@ -331,7 +331,7 @@ int	Request::split_header(siterator_t start, siterator_t end)
 		_statusCode = 431;
 		return (-1);
 	}
-	_msgFields[std::string(start, name_end)] = std::string(value_start, end);
+	_headers[std::string(start, name_end)] = std::string(value_start, end);
 	return (0);
 }
 
@@ -368,16 +368,16 @@ const std::string&		Request::getRawRequest(void) const
 	return this->_rawRqst;
 }
 
-const Request::map_t&			Request::getMap(void) const
+const Request::headers_t&			Request::getHeaders(void) const
 {
-	return this->_msgFields;
+	return this->_headers;
 }
 
 std::ostream&	operator<<(std::ostream& o, const Request& me)
 {
-	Request::map_t		meMap = me.getMap();
+	Request::headers_t		meMap = me.getHeaders();
 	o << "______ REQUEST MAP CONTAINS:" << std::endl;
-	for (Request::map_t::iterator it = meMap.begin(); it != meMap.end(); ++it)
+	for (Request::headers_t::iterator it = meMap.begin(); it != meMap.end(); ++it)
 	{
 		o << "HF name =\'" << it->first << "\' value =\'" << it->second << "\'"<< std::endl;
 	}
@@ -385,9 +385,19 @@ std::ostream&	operator<<(std::ostream& o, const Request& me)
 	return o;
 }
 
-std::string		Request::method(void)
+std::string		Request::getMethod(void)
 {
-	if (_msgFields.find("method") != _msgFields.end())
-		return _msgFields["method"];
+	headers_t::iterator	it = _headers.find("method");
+	if (it != _headers.end())
+		return it->second;
+	return (std::string("UNDEFINED"));
+}
+
+//TODO: provide a case insensitive comparator to the headers map
+std::string			Request::getHost(void)
+{
+	headers_t::iterator	it = _headers.find("Host");
+	if (it != _headers.end())
+		return it->second;
 	return (std::string("UNDEFINED"));
 }

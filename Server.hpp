@@ -15,6 +15,7 @@
 #include <vector>
 #include <set>
 #include "Base.hpp"
+#include "Response.hpp"
 
 #ifndef CONSTRUC
 # define CONSTRUC
@@ -38,6 +39,7 @@ class Server : public Base {
 		std::vector<ServerConfig>	_configs;
 		std::set<Client*>			_clients;
 		int							_epollInstance;
+		ServerConfig*	getConfigForRequest(Request* rqst);
 	public:
 		/* Coplien */
 		Server(void);
@@ -135,7 +137,10 @@ void	Server::respond(Client* client)
 {
 	if (client == NULL) return;
 	Request*	rqst = client->getFirstRequest();
-	if (rqst != NULL && rqst->method() == "GET")
+	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
+	Response	rsp(chosen_conf, rqst);
+	std::cout << rsp << std::endl;
+	if (rqst != NULL && rqst->getMethod() == "GET")
 	{
 		socket_t	socket = client->getSocket();
 		std::cout << "POLLOUT event on client fd " << socket <<std::endl;
@@ -151,6 +156,31 @@ void	Server::respond(Client* client)
 	}
 }
 
+/* Cherche parmis les configs de ce server (en gros parmis ses virtuals servers)
+lequel a le meme server_name que le Host header de la requete. 
+Return:
+	1) Si aucun Host header n'est present, on return le VServer par default (en
+	gros le premier). Celui-ci se chargera de respond 400 bad request.
+	2) Return le bon VServer qui a un server_names == host header value.
+	3) Si la requete a bien un Host header, mais qu'aucun VServer name ne 
+	correpond a celui-ci, le default VServer se chargera de servir la rqst.
+*/
+ServerConfig*	Server::getConfigForRequest(Request* rqst)
+{
+	std::string		host_header = rqst->getHost();
+	if (host_header == "UNDEFINED")
+		return &_configs[0];
+	for (std::vector<ServerConfig>::iterator conf_it = _configs.begin(); conf_it != _configs.end(); ++conf_it)
+	{
+		std::vector<std::string>	names = conf_it->getServerNames();
+		for (std::vector<std::string>::iterator names_it = names.begin(); names_it != names.end(); ++names_it)
+		{
+			if (*names_it == host_header)
+				return &(*conf_it);
+		}
+	}
+	return &_configs[0];
+}
 
 /* Terminates connection with the 'client': deletes it frome the epoll fds,
 close the connected socket, delete its memory and removes it from the set 
