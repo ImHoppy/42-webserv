@@ -14,8 +14,8 @@ class Response
 		typedef std::map<std::string, std::string>	headers_t;
 	private:
 		ServerConfig*						_config;
+		LocationConfig*						_location;
 		Request*							_rqst;
-		std::map<std::string, std::string>	_headers;
 		std::string							_response;
 
 	public:
@@ -24,11 +24,10 @@ class Response
 		~Response(void);
 		Response(const Response& src);
 		Response&	operator=(const Response& src);
-		Response(ServerConfig* config, Request* request);
+		Response(ServerConfig* config, LocationConfig* loc, Request* req);
 		/* Getteurs */
 		std::string		getResponse(void) const;
 		/* Public Member functions */
-		bool	requestedMethodIsAllowed(void) const;
 	
 }; // end class Response
 

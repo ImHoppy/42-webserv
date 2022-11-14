@@ -77,21 +77,28 @@ std::string	const &	ServerConfig::getRootPath() const {
 	"matche le plus". La comparaison se fait par "troncon": commence au premier "/" 
 	jusqu'au prochain '/' non inclus.
 	3) Si Rien ne match, return NULL.*/
-LocationConfig*	ServerConfig::getLocation(const std::string &path) const {
-//	std::cout << " PATH IS = \'" << path << "\'\n MAP LOC PATHS ARE:" << std::endl; 
-//	for (map_locs::const_iterator it = _location.begin(); it != _location.end(); ++it)
-//	{
-//		std::cout << "\'" << it->first << "\'" << std::endl;
-//	}
-//	std::cout << "______END LOCA PATH" << std::endl;
+LocationConfig*	ServerConfig::getLocationFromPath(const std::string &path) const {
 	map_locs::iterator	it = _location.find(path);
+	
 	if (it != _location.end())
 		return &(*it);
-	else
+	else // parcours toutes les locations 
 	{
+		std::list<LocationConfig*>	matches; //list de locations qui matchent
+		std::string		loc_path = locs.getPath();
+		size_t		pos;
+		for (std::string::reverse_iterator rit = path.rbegin(); rit != rend(); )
+		{
+			for (map_locs::iterator locs = _location.begin(); locs != _location.end(); ++locs)
+			{
+				
+			}
+
+			rit += 
+		}
 
 	}
-	return it;
+	return NULL;
 }
 ServerConfig::map_locs	const & ServerConfig::getLocations() const {
 	return _location;
@@ -129,7 +136,7 @@ std::ostream&	operator<<(std::ostream& o, const ServerConfig& me)
 	return o;
 }
 
-bool	ServerConfig::endsWithSlash(const std::string & path)
+bool	endsWithSlash(const std::string & path)
 {
 	std::string::size_type	pos;
 	pos = path.find_last_of('/');
@@ -139,7 +146,7 @@ bool	ServerConfig::endsWithSlash(const std::string & path)
 }
 
 
-std::string	ServerConfig::getFileBody(const LocationConfig & loc, const std::string & rqst_path)
+std::string	getFileBody(const LocationConfig & loc, const std::string & rqst_path)
 {
 	std::string		filePathname;
 	filePathname = loc.getRootPath() + rqst_path;
@@ -201,7 +208,7 @@ std::string		ServerConfig::respondRequest(Request const & rqst)
 		return response;
 	}
 	std::string		path = rqst.getUri().path;
-	LocationConfig*	location = getLocation(path);
+	LocationConfig*	location = getLocationFromPath(path);
 	std::string		method = rqst.getMethod();
 	if (location->methodIsAllowed(method) == false)
 	{
