@@ -2,7 +2,7 @@
 #include <map>
 #include "Parsing.hpp"
 #include "GeneralConfig.hpp"
-
+#include "Logger.hpp"
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -84,8 +84,10 @@ int main(int ac, char **av)
 	Server serv;
 	serv.addConfig(generalConfig.getServers()[0]);
 	serv.InitServer();
-
+	Logger::Info("Server started");
 	webserv.addServer(serv);
 	webserv.StartLoop();
+	Logger::Info("Server end");
+
 }
 
