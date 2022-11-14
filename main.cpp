@@ -30,6 +30,42 @@ std::vector<std::string>	listFiles(std::string const & path)
 	return vec_files;
 }
 
+bool	startsWith(std::string const & str, std::string const & start)
+{
+	if (str.length() < start.length())
+		return false;
+	return (str.compare(0, start.length(), start) == 0);
+}
+
+std::string	GenerateHtmlDirectory(std::string const & path)
+{
+	std::vector<std::string>	vec_files = listFiles(path);
+	std::string					htmlPage;
+	std::vector<std::string>::iterator it;
+
+	htmlPage = "<html><head>";
+	htmlPage += "<title> /" + path + "</title>";
+	htmlPage += "<style type=\"text/css\"> a {display: block; padding: .5em .75em; text-decoration: none; color: #363636; border-bottom: 1px solid #ededed;} a:hover { color: black; background-color: #a6a6a6;}</style>";
+	htmlPage += "</head><body bgcolor=\"white\">";
+	htmlPage += "<h1>Index of " + path + "</h1>";
+	htmlPage += "<a href=\"../\">Parent Directory</a>\n";
+
+	for (it = vec_files.begin(); it != vec_files.end(); it++)
+	{
+		if (startsWith(*it, "."))
+			continue;
+		htmlPage += "<a href=\""+ *it +"\">" + *it + "</a>\n";
+	}
+	htmlPage += "</body></html>";
+	return htmlPage;
+}
+
+int main()
+{
+	std::cout << GenerateHtmlDirectory(".") << std::endl;
+	return 0;
+}
+
 #define hw "hi"
 void parseConf(GeneralConfig &, std::string const & path );
 /*class A {

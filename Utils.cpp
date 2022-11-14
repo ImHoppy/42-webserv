@@ -65,3 +65,11 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
 	}
 	return elems;
 }
+
+std::string getExtension(std::string const & filename)
+{
+	std::string::size_type pos = filename.find_last_of('.');
+	if (pos == std::string::npos)
+		return "";
+	return filename.substr(pos + 1);
+}

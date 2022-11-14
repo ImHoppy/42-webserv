@@ -12,3 +12,5 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
 
 std::string &	trim_quote(std::string & s, int lineNumber = -1);
 std::string &	trim(std::string& s, const char* t = SpaceChar);
+
+std::string getExtension(std::string const & filename);
