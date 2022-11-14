@@ -142,6 +142,7 @@ void	WebServ::StartLoop(void)
 			if (base->getType() == "Server")
 			{
 				Server*	server = dynamic_cast<Server*>(base);
+				//TODO: check is POLLIN ou POLLER
 				server->AcceptNewClient();
 			}
 			else if (base->getType() == "Client")
@@ -164,7 +165,7 @@ void	WebServ::StartLoop(void)
 						events[i].events = 0; // pour pas passer ds le pollou suivant alors qu'on a delete le client
 					}
 				}
-				if (events[i].events & EPOLLOUT)
+				else if (events[i].events & EPOLLOUT)
 				{
 					client->getServer()->respond(client);
 				}

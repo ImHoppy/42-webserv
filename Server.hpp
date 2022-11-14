@@ -139,12 +139,10 @@ void	Server::respond(Client* client)
 	if (rqst == NULL)
 		return ;
 	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
-	Response	rsp(chosen_conf, rqst);
-	std::cout << "______ RESPONSE MAP CONTAINS:" << std::endl;
-	std::cout << rsp << std::endl;
-	std::cout << "\n_______END RESPONSE" << std::endl;
 	std::cout << "_______Chosen config is: \n";
 	std::cout << *chosen_conf;
+	std::string	response = chosen_conf->respondRequest(*rqst);
+	std::cout << "_____RESPONSE FROM CONFIG IS:\n\'" << response << "\'\n____ EnD RESPONSE CONF."<< std::endl;
 	std::cout << "\n_______END chosen conf" << std::endl;
 	if (rqst != NULL && rqst->getMethod() == "GET")
 	{

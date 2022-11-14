@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:37 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/13 19:11:55 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/14 10:31:48 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,8 +64,8 @@ class Request
 		const std::string&			getRawRequest(void) const;
 		const headers_t&			getHeaders(void) const;
 		const t_uri&				getUri(void) const;
-		std::string					getMethod(void);
-		std::string					getHost(void);
+		std::string					getMethod(void) const;
+		std::string					getHost(void) const;
 	private:
 		int		check_host_header(void); // TODO: a finir qd URI parsing OK
 		int		set_Request_line(void);

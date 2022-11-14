@@ -6,7 +6,9 @@
 #include "LocationConfig.hpp"
 #include <stdint.h>
 #include <iostream>
+#include <fstream> // file stream
 #include "Request.hpp"
+#include <sstream>
 
 //TODO: class Config nested in Server
 class ServerConfig {
@@ -21,6 +23,9 @@ class ServerConfig {
 	int32_t						_maxBodySize;
 	map_locs					_location;
 	std::map<int, std::string>	_errorPages;
+
+	bool	endsWithSlash(const std::string & path);
+	std::string	getFileBody(const LocationConfig & loc, const std::string & rqst_path);
 
 	public:
 	
@@ -41,13 +46,13 @@ class ServerConfig {
 	int16_t									getPort() const;
 	int32_t									getMaxBodySize() const;
 	std::string	const &						getRootPath() const;
-	LocationConfig							getLocation(const std::string &path) const;
+	LocationConfig*							getLocation(const std::string &path) const;
 	map_locs	const &						getLocations() const;
 	std::map<int, std::string>	const &		getErrorPages() const;
 	std::vector<std::string> const &		getServerNames() const;
 
 	std::string		respondRequest(Request const & rqst);	
-	std::string		processGet(LocationConfig& location, std::string& path);
+	std::string		processGet(LocationConfig* location, std::string& path);
 };
 
 std::ostream&	operator<<(std::ostream& o, const ServerConfig& me);

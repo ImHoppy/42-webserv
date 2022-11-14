@@ -133,11 +133,11 @@ bool	LocationConfig::isEmpty() const
 
 bool	LocationConfig::methodIsAllowed(std::string method)
 {
-	if (method == "GET" && (_methods & GET))
+	if (method == "GET" && _methods.test(GET))
 		return true;
-	if (method == "POST" && (_methods & POST))
+	if (method == "POST" && _methods.test(POST))
 		return true;
-	if (method == "DELETE" && (_methods & DELETE))
+	if (method == "DELETE" && _methods.test(DELETE))
 		return true;
 	return false;
 }

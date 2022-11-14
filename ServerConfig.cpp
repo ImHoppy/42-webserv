@@ -70,8 +70,28 @@ int32_t			ServerConfig::getMaxBodySize() const {
 std::string	const &	ServerConfig::getRootPath() const {
 	return _root;
 }
-LocationConfig	ServerConfig::getLocation(const std::string &path) const {
-	return _location.at(path);
+
+/* Doit retourner la location la plus longue qui match avec path.
+	1) Si perfect match est trouve, return it.
+	2) Parcourt toutes les locations et compare leur path pour trouver celle qui
+	"matche le plus". La comparaison se fait par "troncon": commence au premier "/" 
+	jusqu'au prochain '/' non inclus.
+	3) Si Rien ne match, return NULL.*/
+LocationConfig*	ServerConfig::getLocation(const std::string &path) const {
+//	std::cout << " PATH IS = \'" << path << "\'\n MAP LOC PATHS ARE:" << std::endl; 
+//	for (map_locs::const_iterator it = _location.begin(); it != _location.end(); ++it)
+//	{
+//		std::cout << "\'" << it->first << "\'" << std::endl;
+//	}
+//	std::cout << "______END LOCA PATH" << std::endl;
+	map_locs::iterator	it = _location.find(path);
+	if (it != _location.end())
+		return &(*it);
+	else
+	{
+
+	}
+	return it;
 }
 ServerConfig::map_locs	const & ServerConfig::getLocations() const {
 	return _location;
@@ -109,22 +129,66 @@ std::ostream&	operator<<(std::ostream& o, const ServerConfig& me)
 	return o;
 }
 
-std::string		ServerConfig::processGet(LocationConfig& location, std::string& path)
+bool	ServerConfig::endsWithSlash(const std::string & path)
 {
-	if (location.isFile(path) == true)
+	std::string::size_type	pos;
+	pos = path.find_last_of('/');
+	if (pos != std::string::npos && pos == path.size() - 1)
+		return true;
+	return false;
+}
+
+
+std::string	ServerConfig::getFileBody(const LocationConfig & loc, const std::string & rqst_path)
+{
+	std::string		filePathname;
+	filePathname = loc.getRootPath() + rqst_path;
+	if (endsWithSlash(rqst_path) == true)
+		filePathname += loc.getIndexFile();
+	std::cout << "File path result = " << filePathname << std::endl;
+	std::ifstream	file(filePathname.c_str());
+	std::string		response;
+	if (file.is_open() == false)
 	{
-		
-	}
-	else if (location.isDirList() == true)
-	{
-		//TODO: print dir list;
-		return (std::string("HTTP/1.1 200 OK"));
+//		//TODO: return l'error page correspondante au 404
+		std::cout << "file not open => not found" << std::endl;
+		response = "HTTP/1.1 404 File Not Found\r\n";
 	}
 	else
 	{
-		response = "HTTP/1.1 404 File Not Found";
-		return response;
+		//TODO: check si redirection 301
+		std::cout << "file FOUND" << std::endl;
+		response = "HTTP/1.1 200 OK\r\n";
+		std::string		buff;
+		std::string		body;
+		while (getline(file, buff))
+		{
+			body += buff + "\n";
+		}
+		//TODO: faire une fct buildResponse() qui append ds le bon ordre les diff hdrs.
+		std::stringstream	ss;
+		ss << body.size();
+		response += "Content-Length: " + ss.str() + "\r\n";
+		response += "Content-Type: text/html\r\n";
+		response += "Connection: Closed\r\n";
+		response += body;
 	}
+	return response;
+}
+
+std::string		ServerConfig::processGet(LocationConfig* location, std::string& path)
+{
+	std::string		response;
+	if (endsWithSlash(path) == true && location->isDirList() == true)
+	{
+		//TODO: print dir list; getDirList()
+		response = "HTTP/1.1 200 OK\r\n";
+	}
+	else
+	{
+		response = getFileBody(location, path);
+	}
+	return response;
 }
 
 std::string		ServerConfig::respondRequest(Request const & rqst)
@@ -137,8 +201,9 @@ std::string		ServerConfig::respondRequest(Request const & rqst)
 		return response;
 	}
 	std::string		path = rqst.getUri().path;
-	LocationConfig	location = getLocation(path);
-	if (location.methodIsAllowed(method) == false)
+	LocationConfig*	location = getLocation(path);
+	std::string		method = rqst.getMethod();
+	if (location->methodIsAllowed(method) == false)
 	{
 		response = "HTTP/1.1 405 Method Not Allowed\r\n";
 		return response;
@@ -149,5 +214,5 @@ std::string		ServerConfig::respondRequest(Request const & rqst)
 		return response;
 	}
 //	return response;
-	return (std::string("HTTP/1.1 200 OK"));
+	return (std::string("HTTP/1.1 200 OK\r\n"));
 }

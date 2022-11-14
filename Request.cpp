@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/13 19:11:37 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/14 12:26:40 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -385,18 +385,18 @@ std::ostream&	operator<<(std::ostream& o, const Request& me)
 	return o;
 }
 
-std::string		Request::getMethod(void)
+std::string		Request::getMethod(void) const
 {
-	headers_t::iterator	it = _headers.find("method");
+	headers_t::const_iterator	it = _headers.find("method");
 	if (it != _headers.end())
 		return it->second;
 	return (std::string("UNDEFINED"));
 }
 
 //TODO: provide a case insensitive comparator to the headers map
-std::string			Request::getHost(void)
+std::string			Request::getHost(void) const
 {
-	headers_t::iterator	it = _headers.find("Host");
+	headers_t::const_iterator	it = _headers.find("Host");
 	if (it != _headers.end())
 		return it->second;
 	return (std::string("UNDEFINED"));

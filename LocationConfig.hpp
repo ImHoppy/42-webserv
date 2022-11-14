@@ -10,9 +10,9 @@ class LocationConfig {
 	public:
 
 	typedef enum {
-		GET = 1,
-		POST = 2,
-		DELETE = 4
+		GET = 0,
+		POST = 1,
+		DELETE = 2
 	} http_methods;
 
 	private:

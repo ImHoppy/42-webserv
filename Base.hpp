@@ -11,3 +11,4 @@ class Base {
 
 	virtual std::string const & getType() const = 0;
 };
+
