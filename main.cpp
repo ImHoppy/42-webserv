@@ -80,7 +80,8 @@ int main(int ac, char **av)
 		std::cerr << e.what() << '\n';
 		int line = e.whatLine();
 		if (line != -1)
-			std::cerr << "At line: " << line << '\n'; 
+			std::cerr << "At line: " << line << '\n';
+		exit(1);
 	}
 	WebServ webserv;
 	Server* serv = new Server;
