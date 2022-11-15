@@ -139,9 +139,10 @@ void	Server::respond(Client* client)
 	if (rqst == NULL)
 		return ;
 	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
-	LocationConfig*	chosen_loc = chosen_conf.getLocationFromPath(rqst.getUri().path);
-	Response	rep(chosen_conf, chosen_loc, rqst);
-	std::cout << rep << std::endl;
+	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
+	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
+//	Response	rep(chosen_conf, chosen_loc, rqst);
+//	std::cout << rep << std::endl;
 	if (rqst != NULL && rqst->getMethod() == "GET")
 	{
 		socket_t	socket = client->getSocket();
