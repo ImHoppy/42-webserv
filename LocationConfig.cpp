@@ -122,7 +122,7 @@ std::bitset<3>	LocationConfig::getMethods() const
 {
 	return _methods;
 }
-bool			LocationConfig::getMethod(http_methods method) const
+bool			LocationConfig::methodIsAllowed(http_methods method) const
 {
 	return _methods.test(method);
 }
@@ -131,7 +131,7 @@ bool	LocationConfig::isEmpty() const
 	return (_dirList == false && _CGIActive == false && _CGIPath.empty() && _indexFile.empty() && _root.empty() && _methods.none());
 }
 
-bool	LocationConfig::methodIsAllowed(std::string method)
+bool	LocationConfig::methodIsAllowed(std::string method) const
 {
 	if (method == "GET" && _methods.test(GET))
 		return true;
@@ -140,4 +140,24 @@ bool	LocationConfig::methodIsAllowed(std::string method)
 	if (method == "DELETE" && _methods.test(DELETE))
 		return true;
 	return false;
+}
+
+std::ostream&	operator<<(std::ostream& o, const LocationConfig& me)
+{
+	o << std::boolalpha << "Directory list active = " << me.isDirList() << std::endl;
+	o << std::boolalpha << "CGI active = " << me.isCGIActive() << std::endl;
+	o << "Path = " << me.getPath() << std::endl;
+	o << "Root = " << me.getRootPath() << std::endl;
+	o << "Index file = " << me.getIndexFile() << std::endl;
+	o << "Redir URL = " << me.getRedirUrl() << std::endl;
+	o << "CGI path = " << me.getCGIPath() << std::endl;
+	o << "Methods = ";
+	if (me.methodIsAllowed(LocationConfig::GET) == true)
+		o << "GET ";
+	if (me.methodIsAllowed(LocationConfig::POST) == true)
+		o << "POST ";
+	if (me.methodIsAllowed(LocationConfig::DELETE) == true)
+		o << "DELETE ";
+	o << std::endl;
+	return o;
 }

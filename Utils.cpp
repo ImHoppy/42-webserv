@@ -3,6 +3,15 @@
 #include <vector>
 #include "Utils.hpp"
 
+bool	endsWithSlash(const std::string & path)
+{
+	std::string::size_type	pos;
+	pos = path.find_last_of('/');
+	if (pos != std::string::npos && pos == path.size() - 1)
+		return true;
+	return false;
+}
+
 std::string	nbToString(int nb)
 {
 	std::stringstream	ss;
