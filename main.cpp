@@ -60,11 +60,11 @@ std::string	GenerateHtmlDirectory(std::string const & path)
 	return htmlPage;
 }
 
-int main()
-{
-	std::cout << GenerateHtmlDirectory(".") << std::endl;
-	return 0;
-}
+//int main()
+//{
+//	std::cout << GenerateHtmlDirectory(".") << std::endl;
+//	return 0;
+//}
 
 #define hw "hi"
 void parseConf(GeneralConfig &, std::string const & path );

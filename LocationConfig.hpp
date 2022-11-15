@@ -59,9 +59,8 @@ class LocationConfig {
 	std::string		getRedirUrl() const;
 	std::string 	getIndexFile() const;
 	std::bitset<3>	getMethods() const;
-	bool			getMethod(http_methods method) const;
-
-	bool	methodIsAllowed(std::string method);
+	bool			methodIsAllowed(http_methods method) const;
+	bool			methodIsAllowed(std::string method) const;
 };
 
 std::ostream&	operator<<(std::ostream& o, const LocationConfig& me);

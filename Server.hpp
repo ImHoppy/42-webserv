@@ -121,44 +121,6 @@ void	Server::setEpollInstance(int inst)
 	_epollInstance = inst;
 }
 
-/* Une response est fct de la requete evidemment, et de la config:
-	1) Trouver la bonne config: check le host header pour avoir le server name
-	ou l'URI
-	2) Bah regarder ce qu'on nous demande dessus
-Dans nginx default:
-	location / {
-		try_files $uri $uri/ =404
-	} 
-ils expliquent = Firs attempt to serve request as file, then as directory, then
-fallback to displaying a 404
-*/
-void	Server::respond(Client* client)
-{
-	if (client == NULL) return;
-	Request*	rqst = client->getFirstRequest();
-	if (rqst == NULL)
-		return ;
-	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
-	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
-	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
-//	Response	rep(chosen_conf, chosen_loc, rqst);
-//	std::cout << rep << std::endl;
-	if (rqst != NULL && rqst->getMethod() == "GET")
-	{
-		socket_t	socket = client->getSocket();
-		std::cout << "POLLOUT event on client fd " << socket <<std::endl;
-		ssize_t		bytes;
-		std::string buf("HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Keep-Alive\r\n\r\nHello, world!");
-		bytes = send(socket, buf.c_str(), buf.size(), 0);
-		if (bytes == -1)
-		{
-			throw std::runtime_error("send failed");
-		}
-		std::cout << bytes << " send to client " << socket << std::endl;
-		client->popOutRequest();
-	}
-}
-
 /* Cherche parmis les configs de ce server (en gros parmis ses virtuals servers)
 lequel a le meme server_name que le Host header de la requete. 
 Return:
@@ -280,4 +242,38 @@ socket_t	 Server::AcceptNewClient(void)
 	displayTime();
 	std::cout << "Server #" << ": accepted new client " << client_socket << std::endl;
 	return (client_socket);
+}
+
+/*	1) Find la bonne config grace au host header
+	2) Find la bonne location grace a l'URL
+	3) Cree une Resposne avec ces donees
+	4) Send la Response
+*/
+void	Server::respond(Client* client)
+{
+	if (client == NULL) return;
+	Request*	rqst = client->getFirstRequest();
+	if (rqst == NULL)
+		return ;
+	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
+	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
+	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
+	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
+	Response	rep(chosen_conf, chosen_loc, rqst);
+	std::cerr << "____ RESPONSE:\n" << rep << "______END REPONSE" << std::endl;
+
+//	if (rqst != NULL && rqst->getMethod() == "GET")
+//	{
+//		socket_t	socket = client->getSocket();
+//		std::cout << "POLLOUT event on client fd " << socket <<std::endl;
+//		ssize_t		bytes;
+//		std::string buf("HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Keep-Alive\r\n\r\nHello, world!");
+//		bytes = send(socket, buf.c_str(), buf.size(), 0);
+//		if (bytes == -1)
+//		{
+//			throw std::runtime_error("send failed");
+//		}
+//		std::cout << bytes << " send to client " << socket << std::endl;
+//		client->popOutRequest();
+//	}
 }

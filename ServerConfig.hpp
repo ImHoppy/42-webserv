@@ -49,8 +49,6 @@ class ServerConfig {
 	std::vector<std::string> const &		getServerNames() const;
 
 	LocationConfig*	getLocationFromUrl(const std::string &url);
-//	std::string		respondRequest(Request const & rqst);	
-//	std::string		processGet(LocationConfig* location, std::string& path);
 };
 
 std::ostream&	operator<<(std::ostream& o, const ServerConfig& me);
