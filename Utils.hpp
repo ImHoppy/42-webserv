@@ -4,6 +4,7 @@
 
 #define SpaceChar " \t\n\r\f\v"
 
+bool	endsWithSlash(const std::string & path);
 std::string	nbToString(int nb);
 int32_t		StrToInt(std::string const & str);
 int32_t		StrToIp(std::string const & ip);
