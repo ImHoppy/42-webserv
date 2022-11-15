@@ -1,5 +1,6 @@
 #include "Response.hpp"
 #include "Logger.hpp"
+#include <string>
 
 /* Default constructor */
 Response::Response(void) : _config(), _location(), _rqst(), _response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n") {}
@@ -60,7 +61,9 @@ bool	Response::tryFile(void)
 {
 	//TODO: check si redirection 301
 	std::string		filePathname;
-	filePathname = _location->getRootPath() + _rqst->getUri().path;
+	std::string		uri(_rqst->getUri().path);
+	filePathname =  uri.replace(0, _location->getPath().size(), _location->getRootPath());
+	Logger::Info("Replace path = %s", filePathname.c_str());
 	if (endsWithSlash(_rqst->getUri().path) == true)
 		filePathname += _location->getIndexFile();
 
@@ -80,7 +83,7 @@ bool	Response::tryFile(void)
 		ss << body.size();
 		_response += "Content-Length: " + ss.str() + "\r\n";
 		_response += "Content-Type: text/html\r\n";
-		_response += "Connection: Keep-Alive\r\n";
+		_response += "Connection: keep-alive\r\n";
 		_response += "\r\n";
 		_response += body;
 	}
@@ -91,7 +94,11 @@ void		Response::doGET(void)
 {
 	if (endsWithSlash(_rqst->getUri().path) == true && _location->isDirList() == true)
 	{
-		std::string body = GenerateHtmlDirectory(_location->getRootPath() + _rqst->getUri().path);
+		std::string		filePathname;
+		std::string		uri(_rqst->getUri().path);
+		filePathname =  uri.replace(0, _location->getPath().size(), _location->getRootPath());
+		std::string body = GenerateHtmlDirectory(filePathname);
+		Logger::Info("%s %s %s", uri.c_str(), filePathname.c_str(), _location->getRootPath().c_str());
 		_response = generateResponse(body);
 	}
 	else if (tryFile() == false)

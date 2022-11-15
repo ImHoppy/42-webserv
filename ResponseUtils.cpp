@@ -15,7 +15,7 @@ std::string generateResponse(std::string fileContent)
 	response = "HTTP/1.1 200 OK\r\n"
 		"Content-Type: text/html\r\n"
 		"Content-Length: " + nbToString(fileContent.length()) + "\r\n"
-		"Connection: close\r\n"
+		"Connection: Keep-Alive\r\n"
 		"\r\n"
 		+ fileContent;
 	return response;
@@ -28,7 +28,7 @@ std::string generateResponse(int code, std::string codeMsg, std::string fileCont
 	response = "HTTP/1.1 " + nbToString(code) + " " + codeMsg + "\r\n"
 		"Content-Type: text/html\r\n"
 		"Content-Length: " + nbToString(fileContent.length()) + "\r\n"
-		"Connection: close\r\n"
+		"Connection: Keep-Alive\r\n"
 		"\r\n"
 		+ fileContent;
 	return response;
@@ -78,7 +78,10 @@ std::vector<std::string>	listFiles(std::string const & path)
 	{
 		while ((en = readdir(dr)) != NULL)
 		{
-			vec_files.push_back(en->d_name);
+			if (en->d_type == DT_DIR)
+				vec_files.push_back(std::string(en->d_name) + "/");
+			else
+				vec_files.push_back(en->d_name);
 		}
 		closedir(dr);
 	}
