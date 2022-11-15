@@ -4,6 +4,8 @@
 #include <bitset>
 #include "Path.hpp"
 #include "CGI.hpp"
+#include <iostream>
+#include <iomanip>
 
 
 class LocationConfig {
@@ -61,3 +63,5 @@ class LocationConfig {
 
 	bool	methodIsAllowed(std::string method);
 };
+
+std::ostream&	operator<<(std::ostream& o, const LocationConfig& me);

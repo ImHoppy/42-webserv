@@ -141,3 +141,23 @@ bool	LocationConfig::methodIsAllowed(std::string method)
 		return true;
 	return false;
 }
+
+std::ostream&	operator<<(std::ostream& o, const LocationConfig& me)
+{
+	o << std::boolalpha << "Directory list active = " << me.isDirList() << std::endl;
+	o << std::boolalpha << "CGI active = " << me.isCGIActive() << std::endl;
+	o << "Path = " << me.getPath() << std::endl;
+	o << "Root = " << me.getRootPath() << std::endl;
+	o << "Index file = " << me.getIndexFile() << std::endl;
+	o << "Redir URL = " << me.getRedirUrl() << std::endl;
+	o << "CGI path = " << me.getCGIPath() << std::endl;
+	o << "Methods = ";
+	if (me.getMethod(LocationConfig::GET) == true)
+		o << "GET ";
+	if (me.getMethod(LocationConfig::POST) == true)
+		o << "POST ";
+	if (me.getMethod(LocationConfig::DELETE) == true)
+		o << "DELETE ";
+	o << std::endl;
+	return o;
+}
