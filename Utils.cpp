@@ -3,6 +3,19 @@
 #include <vector>
 #include "Utils.hpp"
 
+std::string		getFileExtension(const std::string & filename)
+{
+	std::string		extension;
+	size_t	posDot = filename.find_last_of('.', filename.find_last_of('/'));
+	if (posDot == std::string::npos)
+	{
+		extension = "text";
+		return extension;
+	}
+	extension = filename.substr(posDot + 1);
+	return extension;
+}
+
 bool	endsWithSlash(const std::string & path)
 {
 	std::string::size_type	pos;

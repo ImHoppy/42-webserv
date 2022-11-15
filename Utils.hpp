@@ -5,6 +5,7 @@
 
 #define SpaceChar " \t\n\r\f\v"
 
+std::string		getFileExtension(const std::string & filename);
 std::string	generateErrorBody(std::string title, std::string body);
 std::string	generateErrorBody(std::string body);
 std::string generateResponse(std::string fileContent);

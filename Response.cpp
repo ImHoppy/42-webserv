@@ -82,7 +82,8 @@ bool	Response::tryFile(void)
 		std::stringstream	ss;
 		ss << body.size();
 		_response += "Content-Length: " + ss.str() + "\r\n";
-		_response += "Content-Type: text/text\r\n";
+		//TODO: MIME 
+		_response += "Content-Type: text/" + getFileExtension(filePathname) + "\r\n";
 		_response += "Connection: keep-alive\r\n";
 		_response += "\r\n";
 		_response += body;
