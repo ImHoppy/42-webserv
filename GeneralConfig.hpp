@@ -9,7 +9,7 @@
 class GeneralConfig {
 	private:
 	std::vector<ServerConfig>	_servers;
-	static std::map<int, std::string>	_error_status;
+	static std::map<int, std::string>	_errorPages;
 
 	public:
 	GeneralConfig();
@@ -17,6 +17,7 @@ class GeneralConfig {
 	GeneralConfig &operator=(const GeneralConfig &other);
 	~GeneralConfig();
 
+	static const std::map<int, std::string>		getErrors(void);
 	void	addServer(const ServerConfig &server);
 	void printConfig() {
 		for (std::vector<ServerConfig>::iterator it = _servers.begin(); it != _servers.end(); it++) {

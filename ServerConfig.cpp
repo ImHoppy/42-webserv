@@ -71,13 +71,6 @@ std::string	const &	ServerConfig::getRootPath() const {
 	return _root;
 }
 
-std::string		ServerConfig::getErrorBodyFromCode(int code) const
-{
-	if (_errorPages.find(code) == _errorPages.edn())
-		return ("Error");
-	return _errorPages
-}
-
 /* Doit retourner la location la plus longue qui match avec url.
 	1) Si perfect match est trouve, return it.
 	2) Parcourt toutes les locations et compare leur url pour trouver celle qui

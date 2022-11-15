@@ -5,7 +5,7 @@
 #include <sstream>
 
 GeneralConfig::GeneralConfig() {
-	if (GeneralConfig::_error_status.empty())
+	if (GeneralConfig::_errorPages.empty())
 	{
 		std::fstream error_name("error.conf", std::fstream::in);
 		if (error_name.is_open()) {
@@ -13,12 +13,16 @@ GeneralConfig::GeneralConfig() {
 			while (std::getline(error_name, line)) {
 				
 				std::istringstream ss(line);
-				std::string key;
-				std::string value;
-				std::getline(ss, key, '\t');
-				std::getline(ss, value);
+				std::string code;
+				std::string phrase;
+				std::getline(ss, code, '\t');
+				std::getline(ss, phrase);
+				std::stringstream	html;
+				html << "<!DOCTYPE html>\n<html>\n\t<body>\n<h1>";
+				html << code << ": " << phrase << "</h1>\n";
+				html << "/body>\n</html>\n";
 
-				GeneralConfig::_error_status.insert(std::make_pair(StrToInt(key), value));
+				GeneralConfig::_errorPages.insert(std::make_pair(StrToInt(code), phrase));
 			}
 		}
 	}
@@ -46,4 +50,9 @@ std::vector<ServerConfig> const &	GeneralConfig::getServers() const {
 	return _servers;
 }
 
-std::map<int, std::string>	GeneralConfig::_error_status;
+std::map<int, std::string>	GeneralConfig::_errorPages;
+
+const std::map<int, std::string>		GeneralConfig::getErrors(void)
+{
+	return GeneralConfig::_errorPages;
+}

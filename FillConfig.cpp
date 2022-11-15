@@ -117,11 +117,15 @@ void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
 			++it;
 			while (it->first != "}")
 			{
-				std::stringstream	html;
-				html << "<!DOCTYPE html>\n<html>\n\t<body>\n<h1>";
-				html << it->first << ": " << it->second << "</h1>\n";
-				html << "/body>\n</html>\n";
-				server.addErrorPage(StrToInt(it->first), html.str());
+				//TODO: return true ou false si fail open fichier
+				std::ifstream	errfile(it->second.c_str());
+//				if (errfile.is_open() == false)
+//					return false;
+				std::string	buff;
+				std::string	body;
+				while (getline(errfile, buff))
+					body += buff;
+				server.addErrorPage(StrToInt(it->first), body);
 				++it;
 			}
 		}

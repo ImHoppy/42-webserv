@@ -257,6 +257,11 @@ void	Server::respond(Client* client)
 		return ;
 	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
 	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
+	std::cerr << "CONFIG ERROR PAGES:\n";
+	for (std::map<int, std::string>::const_iterator it = chosen_conf->getErrorPages().begin(); it != chosen_conf->getErrorPages().end(); ++it)
+	{
+		std::cerr << "code " << it->first << std::endl;
+	}
 	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
 	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
 	Response	rep(chosen_conf, chosen_loc, rqst);
