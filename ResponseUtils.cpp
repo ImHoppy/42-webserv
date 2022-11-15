@@ -114,6 +114,6 @@ std::string	GenerateHtmlDirectory(std::string const & path)
 			continue;
 		htmlPage += "<a href=\""+ *it +"\">" + *it + "</a>\n";
 	}
-	htmlPage += "</body></html>";
+	htmlPage += "</body></html>\n";
 	return htmlPage;
 }

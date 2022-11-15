@@ -82,7 +82,7 @@ bool	Response::tryFile(void)
 		std::stringstream	ss;
 		ss << body.size();
 		_response += "Content-Length: " + ss.str() + "\r\n";
-		_response += "Content-Type: text/html\r\n";
+		_response += "Content-Type: text/text\r\n";
 		_response += "Connection: keep-alive\r\n";
 		_response += "\r\n";
 		_response += body;
