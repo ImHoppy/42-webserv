@@ -7,6 +7,7 @@
 # include "ServerConfig.hpp"
 # include "Request.hpp"
 # include "Utils.hpp"
+# include "GeneralConfig.hpp"
 
 class Response
 {

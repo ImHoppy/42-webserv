@@ -10,7 +10,6 @@
 #include "Request.hpp"
 #include <sstream>
 
-//TODO: class Config nested in Server
 class ServerConfig {
 	private:
 	
@@ -26,6 +25,7 @@ class ServerConfig {
 
 	public:
 	
+	typedef std::map<int, std::string>	errors_t;
 	ServerConfig();
 	ServerConfig(const ServerConfig &other);
 	ServerConfig &operator=(const ServerConfig &other);
@@ -46,7 +46,6 @@ class ServerConfig {
 	LocationConfig*							getLocation(const std::string &path) const;
 	map_locs	const &						getLocations() const;
 	std::map<int, std::string>	const &		getErrorPages() const;
-	std::string								getErrorBodyFromCode(int code) const;
 	std::vector<std::string> const &		getServerNames() const;
 
 	LocationConfig*	getLocationFromUrl(const std::string &url);

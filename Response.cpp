@@ -79,7 +79,7 @@ bool	Response::tryFile(void)
 		ss << body.size();
 		_response += "Content-Length: " + ss.str() + "\r\n";
 		_response += "Content-Type: text/html\r\n";
-		_response += "Connection: Closed\r\n";
+		_response += "Connection: Keep-Alive\r\n";
 		_response += "\r\n";
 		_response += body;
 	}
@@ -96,8 +96,17 @@ void		Response::doGET(void)
 	else if (tryFile() == false)
 	{
 		//TODO: return l'error page correspondante au 404
-		_response = "HTTP/1.1 404 File Not Found\r\n";
-		_response = _config->getErrorBodyFromCode(404);
+		_response = "HTTP/1.1 404 File Not Found\r\n\r\n";
+		ServerConfig::errors_t::const_iterator	it = _config->getErrorPages().find(404);
+		if (it == _config->getErrorPages().end())
+		{
+			if (GeneralConfig::getErrors().find(404) == GeneralConfig::getErrors().end())
+				_response += "<!DOCTYPE html><html><body><h1>ERROR</h1></body></html>\n";
+			else
+				_response += GeneralConfig::getErrors().at(404);
+		}
+		else
+			_response += it->second;
 	}
 }
 
