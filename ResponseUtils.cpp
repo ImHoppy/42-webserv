@@ -26,3 +26,19 @@ std::string GenerateResponse(int code, std::string codeMsg, std::string fileCont
 		+ fileContent;
 	return response;
 }
+
+std::string	GenerateHtml(std::string title, std::string body)
+{
+	std::string html;
+
+	html = "<!DOCTYPE html>"
+		"<html>"
+		"<head>"
+		"<title>" + title + "</title>"
+		"</head>"
+		"<body>"
+		+ body + ""
+		"</body>"
+		"</html>";
+	return html;
+}
