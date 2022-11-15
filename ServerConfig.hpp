@@ -24,9 +24,6 @@ class ServerConfig {
 	map_locs					_location;
 	std::map<int, std::string>	_errorPages;
 
-	bool	endsWithSlash(const std::string & path);
-	std::string	getFileBody(const LocationConfig & loc, const std::string & rqst_path);
-
 	public:
 	
 	ServerConfig();
@@ -51,8 +48,9 @@ class ServerConfig {
 	std::map<int, std::string>	const &		getErrorPages() const;
 	std::vector<std::string> const &		getServerNames() const;
 
-	std::string		respondRequest(Request const & rqst);	
-	std::string		processGet(LocationConfig* location, std::string& path);
+	LocationConfig*	getLocationFromUrl(const std::string &url);
+//	std::string		respondRequest(Request const & rqst);	
+//	std::string		processGet(LocationConfig* location, std::string& path);
 };
 
 std::ostream&	operator<<(std::ostream& o, const ServerConfig& me);
