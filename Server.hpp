@@ -262,18 +262,14 @@ void	Server::respond(Client* client)
 	Response	rep(chosen_conf, chosen_loc, rqst);
 	std::cerr << "____ RESPONSE:\n" << rep << "______END REPONSE" << std::endl;
 
-//	if (rqst != NULL && rqst->getMethod() == "GET")
-//	{
-//		socket_t	socket = client->getSocket();
-//		std::cout << "POLLOUT event on client fd " << socket <<std::endl;
-//		ssize_t		bytes;
-//		std::string buf("HTTP/1.1 200 OK\r\nContent-Length: 13\r\nConnection: Keep-Alive\r\n\r\nHello, world!");
-//		bytes = send(socket, buf.c_str(), buf.size(), 0);
-//		if (bytes == -1)
-//		{
-//			throw std::runtime_error("send failed");
-//		}
-//		std::cout << bytes << " send to client " << socket << std::endl;
-//		client->popOutRequest();
-//	}
+	socket_t	socket = client->getSocket();
+	std::cout << "POLLOUT event on client fd " << socket <<std::endl;
+	ssize_t		bytes;
+	bytes = send(socket, rep.getResponse().c_str(), rep.getResponse().size(), 0);
+	if (bytes == -1)
+	{
+		throw std::runtime_error("send failed");
+	}
+	std::cout << bytes << " send to client " << socket << std::endl;
+	client->popOutRequest();
 }
