@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <deque>
+#include <unistd.h>
 
 #ifndef BUFFSIZE
 # define BUFFSIZE 3000

@@ -117,15 +117,9 @@ void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
 			++it;
 			while (it->first != "}")
 			{
-				//TODO: return true ou false si fail open fichier
-				std::ifstream	errfile(it->second.c_str());
 //				if (errfile.is_open() == false)
 //					return false;
-				std::string	buff;
-				std::string	body;
-				while (getline(errfile, buff))
-					body += buff;
-				server.addErrorPage(StrToInt(it->first), body);
+				server.addErrorPaths(StrToInt(it->first), it->second);
 				++it;
 			}
 		}

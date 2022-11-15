@@ -30,7 +30,7 @@ class GeneralConfig {
 			}
 			std::cout << "MaxBodySize: " << it->getMaxBodySize() << std::endl;
 			std::cout << "ErrorPages: " << std::endl;
-			for (std::map<int, std::string>::const_iterator it2 = it->getErrorPages().begin(); it2 != it->getErrorPages().end(); it2++) {
+			for (std::map<int, std::string>::const_iterator it2 = it->getErrorPaths().begin(); it2 != it->getErrorPaths().end(); it2++) {
 				std::cout << "\t" << it2->first << " " << it2->second << std::endl;
 			}
 			std::cout << "Locations: " << std::endl;

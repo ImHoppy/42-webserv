@@ -21,7 +21,7 @@ class ServerConfig {
 	std::vector<std::string>	_server_names;
 	int32_t						_maxBodySize;
 	map_locs					_location;
-	std::map<int, std::string>	_errorPages;
+	std::map<int, std::string>	_errorPath;
 
 	public:
 	
@@ -36,7 +36,7 @@ class ServerConfig {
 	void	setRootPath(const std::string &root);
 	void	setMaxBodySize(int32_t maxBodySize);
 	void	addLocation(const std::string &path, const LocationConfig &loc);
-	void	addErrorPage(int code, const std::string &page);
+	void	addErrorPaths(int code, const std::string &page);
 	void	setServerNames(const std::vector<std::string> &server_names);
 
 	int32_t									getHost() const;
@@ -45,7 +45,7 @@ class ServerConfig {
 	std::string	const &						getRootPath() const;
 	LocationConfig*							getLocation(const std::string &path) const;
 	map_locs	const &						getLocations() const;
-	std::map<int, std::string>	const &		getErrorPages() const;
+	std::map<int, std::string>	const &		getErrorPaths() const;
 	std::vector<std::string> const &		getServerNames() const;
 
 	LocationConfig*	getLocationFromUrl(const std::string &url);

@@ -13,16 +13,13 @@ GeneralConfig::GeneralConfig() {
 			while (std::getline(error_name, line)) {
 				
 				std::istringstream ss(line);
-				std::string code;
+				std::string StrCode;
 				std::string phrase;
-				std::getline(ss, code, '\t');
+				std::getline(ss, StrCode, '\t');
 				std::getline(ss, phrase);
-				std::stringstream	html;
-				html << "<!DOCTYPE html>\n<html>\n\t<body>\n<h1>";
-				html << code << ": " << phrase << "</h1>\n";
-				html << "/body>\n</html>\n";
-
-				GeneralConfig::_errorPages.insert(std::make_pair(StrToInt(code), phrase));
+				int code = StrToInt(StrCode);
+				std::string response =  generateResponse(code, phrase, generateErrorBody(StrCode + " | " + phrase, phrase));
+				GeneralConfig::_errorPages.insert(std::make_pair(code, response));
 			}
 		}
 	}

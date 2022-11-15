@@ -1,4 +1,5 @@
 #include "Response.hpp"
+#include "Logger.hpp"
 
 /* Default constructor */
 Response::Response(void) : _config(), _location(), _rqst(), _response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n") {}
@@ -90,23 +91,36 @@ void		Response::doGET(void)
 {
 	if (endsWithSlash(_rqst->getUri().path) == true && _location->isDirList() == true)
 	{
-		//TODO: print dir list; getDirList()
-		_response = "HTTP/1.1 200 OK\r\n\r\n";
+		std::string body = GenerateHtmlDirectory(_location->getRootPath() + _rqst->getUri().path);
+		_response = generateResponse(body);
 	}
 	else if (tryFile() == false)
 	{
 		//TODO: return l'error page correspondante au 404
-		_response = "HTTP/1.1 404 File Not Found\r\n\r\n";
-		ServerConfig::errors_t::const_iterator	it = _config->getErrorPages().find(404);
-		if (it == _config->getErrorPages().end())
+		ServerConfig::errors_t::const_iterator	it = _config->getErrorPaths().find(404);
+		if (it == _config->getErrorPaths().end())
 		{
 			if (GeneralConfig::getErrors().find(404) == GeneralConfig::getErrors().end())
-				_response += "<!DOCTYPE html><html><body><h1>ERROR</h1></body></html>\n";
-			else
-				_response += GeneralConfig::getErrors().at(404);
+			{
+				_response = generateResponse(404, "Not Found", "File Not Found (default)");
+			Logger::Info("Im here");
+				return;
+			}
+			_response = GeneralConfig::getErrors().at(404);
+			return;
 		}
-		else
-			_response += it->second;
+		std::ifstream	errFile(it->second.c_str());
+		if (!errFile.is_open())
+		{
+			Logger::Warning("Here :)");
+			_response = generateResponse(404, "Not Found", "File Not Found (default)");
+			return;
+		}
+		std::string		buff;
+		std::string		body;
+		while (std::getline(errFile, buff))
+			body += buff + "\n";
+		_response = generateResponse(404, "File Not Found", body);
 	}
 }
 
@@ -121,3 +135,4 @@ bool	Response::checkMethod(void) const
 {
 	return _location->methodIsAllowed(_rqst->getMethod());
 }
+

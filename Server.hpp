@@ -258,7 +258,7 @@ void	Server::respond(Client* client)
 	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
 	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
 	std::cerr << "CONFIG ERROR PAGES:\n";
-	for (std::map<int, std::string>::const_iterator it = chosen_conf->getErrorPages().begin(); it != chosen_conf->getErrorPages().end(); ++it)
+	for (std::map<int, std::string>::const_iterator it = chosen_conf->getErrorPaths().begin(); it != chosen_conf->getErrorPaths().end(); ++it)
 	{
 		std::cerr << "code " << it->first << std::endl;
 	}

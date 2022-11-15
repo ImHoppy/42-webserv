@@ -7,7 +7,7 @@ ServerConfig::ServerConfig() :
 	_server_names(),
 	_maxBodySize(1024),
 	_location(),
-	_errorPages()
+	_errorPath()
 {}
 ServerConfig::ServerConfig(const ServerConfig &other) {
 	*this = other;
@@ -20,7 +20,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
 		_server_names = other._server_names;
 		_maxBodySize = other._maxBodySize;
 		_location = other._location;
-		_errorPages = other._errorPages;
+		_errorPath = other._errorPath;
 	}
 	return *this;
 }
@@ -48,8 +48,8 @@ void	ServerConfig::setMaxBodySize(int32_t maxBodySize) {
 void	ServerConfig::addLocation(const std::string &path, const LocationConfig &loc) {
 	_location[path] = loc;
 }
-void	ServerConfig::addErrorPage(int code, const std::string &page) {
-	_errorPages[code] = page;
+void	ServerConfig::addErrorPaths(int code, const std::string &page) {
+	_errorPath[code] = page;
 }
 void	ServerConfig::setServerNames(const std::vector<std::string> &server_names) {
 	_server_names = server_names;
@@ -98,8 +98,8 @@ LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 ServerConfig::map_locs	const & ServerConfig::getLocations() const {
 	return _location;
 }
-std::map<int, std::string>	const & ServerConfig::getErrorPages() const {
-	return _errorPages;
+std::map<int, std::string>	const & ServerConfig::getErrorPaths() const {
+	return _errorPath;
 }
 std::vector<std::string> const & ServerConfig::getServerNames() const {
 	return _server_names;
@@ -116,7 +116,7 @@ std::ostream&	operator<<(std::ostream& o, const ServerConfig& me)
 	}
 	o << "MaxBodySize: " << me.getMaxBodySize() << std::endl;
 	o << "ErrorPages: " << std::endl;
-	for (std::map<int, std::string>::const_iterator it2 = me.getErrorPages().begin(); it2 != me.getErrorPages().end(); it2++) {
+	for (std::map<int, std::string>::const_iterator it2 = me.getErrorPaths().begin(); it2 != me.getErrorPaths().end(); it2++) {
 		o << "\t" << it2->first << " " << it2->second << std::endl;
 	}
 	o << "Locations: " << std::endl;
