@@ -1,7 +1,7 @@
 #include "Response.hpp"
 
 /* Default constructor */
-Response::Response(void) : _config(), _location(), _rqst(), _response("DEFAULT RESPONSE") {}
+Response::Response(void) : _config(), _location(), _rqst(), _response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n") {}
 
 /* Destructor */
 Response::~Response(void) {}
@@ -28,12 +28,14 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 	_config(config),
 	_location(loc),
 	_rqst(request),
-	_response("DEFAULT RESPONSE")
+	_response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n")
 {
+	if (config == NULL || loc == NULL || request == NULL)
+		return ;
 	if (checkHost() == false)
-		_response = "HTTP/1.1 400 Bad Request\r\n";
+		_response = "HTTP/1.1 400 Bad Request\r\n\r\n";
 	if (checkMethod() == false)
-		_response = "HTTP/1.1 405 Method Not Allowed\r\n";
+		_response = "HTTP/1.1 405 Method Not Allowed\r\n\r\n";
 	if (_rqst->getMethod() == "GET")
 		doGET();
 }
@@ -78,6 +80,7 @@ bool	Response::tryFile(void)
 		_response += "Content-Length: " + ss.str() + "\r\n";
 		_response += "Content-Type: text/html\r\n";
 		_response += "Connection: Closed\r\n";
+		_response += "\r\n";
 		_response += body;
 	}
 	return true;
@@ -88,12 +91,13 @@ void		Response::doGET(void)
 	if (endsWithSlash(_rqst->getUri().path) == true && _location->isDirList() == true)
 	{
 		//TODO: print dir list; getDirList()
-		_response = "HTTP/1.1 200 OK\r\n";
+		_response = "HTTP/1.1 200 OK\r\n\r\n";
 	}
 	else if (tryFile() == false)
 	{
 		//TODO: return l'error page correspondante au 404
 		_response = "HTTP/1.1 404 File Not Found\r\n";
+		_response = _config->getErrorBodyFromCode(404);
 	}
 }
 

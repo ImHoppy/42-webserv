@@ -46,6 +46,7 @@ class ServerConfig {
 	LocationConfig*							getLocation(const std::string &path) const;
 	map_locs	const &						getLocations() const;
 	std::map<int, std::string>	const &		getErrorPages() const;
+	std::string								getErrorBodyFromCode(int code) const;
 	std::vector<std::string> const &		getServerNames() const;
 
 	LocationConfig*	getLocationFromUrl(const std::string &url);
