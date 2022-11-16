@@ -9,7 +9,7 @@ std::string		getFileExtension(const std::string & filename)
 	size_t	posDot = filename.find_last_of('.', filename.find_last_of('/'));
 	if (posDot == std::string::npos)
 	{
-		extension = "text";
+		extension = "plain";
 		return extension;
 	}
 	extension = filename.substr(posDot + 1);

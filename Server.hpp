@@ -1,27 +1,24 @@
-#pragma once
+#ifndef SERVER_HPP
+# define SERVER_HPP
 
-#include <iostream>
-#include <sys/socket.h>
-#include <cstring>
-#include <netinet/in.h>
-#include <limits>
-#include <stdlib.h>
-#include <sys/epoll.h>
-#include <stdio.h> // perror
-#include "Client.hpp"
-#include <ctime> //time
-#include <iomanip>
-#include <unistd.h>
-#include <vector>
-#include <set>
-#include "Base.hpp"
-#include "Response.hpp"
+# include <iostream>
+# include <sys/socket.h>
+# include <cstring>
+# include <netinet/in.h>
+# include <limits>
+# include <stdlib.h>
+# include <sys/epoll.h>
+# include <stdio.h> // perror
+# include "Client.hpp"
+# include <ctime> //time
+# include <iomanip>
+# include <unistd.h>
+# include <vector>
+# include <set>
+# include "Base.hpp"
+# include "Response.hpp"
+# include <errno.h>
 
-#ifndef CONSTRUC
-# define CONSTRUC
-#endif
-
-#include <errno.h>
 typedef int socket_t;
 
 typedef struct s_polldata
@@ -39,7 +36,7 @@ class Server : public Base {
 		std::vector<ServerConfig>	_configs;
 		std::set<Client*>			_clients;
 		int							_epollInstance;
-		ServerConfig*	getConfigForRequest(Request* rqst);
+		ServerConfig*				getConfigForRequest(Request* rqst);
 	public:
 		/* Coplien */
 		Server(void);
@@ -60,7 +57,19 @@ class Server : public Base {
 		socket_t	 AcceptNewClient(void);
 		/* Logs */
 		void	displayTime(void) const;
+		bool	hasSameHostPort(int32_t host, int16_t port) const;
 };
+
+/* Return true if one of the _configs has the same HOST::PORT pairs. */
+bool	Server::hasSameHostPort(int32_t host, int16_t port) const
+{
+	for (std::vector<ServerConfig>::const_iterator conf_it = _configs.begin(); conf_it != _configs.end(); ++conf_it)
+	{
+		if (conf_it->getPort() == port && conf_it->getHost() == host)
+			return true;
+	}
+	return false;
+}
 	
 /* Default Constructor */
 Server::Server(void) : Base("Server"), _socket(-1), _configs(),
@@ -140,8 +149,10 @@ ServerConfig*	Server::getConfigForRequest(Request* rqst)
 		std::vector<std::string>	names = conf_it->getServerNames();
 		for (std::vector<std::string>::iterator names_it = names.begin(); names_it != names.end(); ++names_it)
 		{
+			std::cerr << "NAME IT = " << *names_it << " and host = " << host_header;
 			if (*names_it == host_header)
 				return &(*conf_it);
+			std::cerr << " NOK" << std::endl;
 		}
 	}
 	return &_configs[0];
@@ -257,11 +268,6 @@ void	Server::respond(Client* client)
 		return ;
 	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
 	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
-	std::cerr << "CONFIG ERROR PAGES:\n";
-	for (std::map<int, std::string>::const_iterator it = chosen_conf->getErrorPaths().begin(); it != chosen_conf->getErrorPaths().end(); ++it)
-	{
-		std::cerr << "code " << it->first << std::endl;
-	}
 	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
 	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
 	Response	rep(chosen_conf, chosen_loc, rqst);
@@ -277,4 +283,8 @@ void	Server::respond(Client* client)
 	}
 	std::cout << bytes << " send to client " << socket << std::endl;
 	client->popOutRequest();
+	//TODO: if _pendingRqst du client is empty, epollCTL MODify events to POLLIN only,
+	// et pas oublier de remettre POLLOUT a reception de la premiere request
 }
+
+#endif

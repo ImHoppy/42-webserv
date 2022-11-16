@@ -1,4 +1,4 @@
-NAME		=	webserv
+NAME		=	haha
 
 CC			=	c++
 
@@ -9,19 +9,11 @@ endif
 
 SRCS		=	main.cpp GeneralConfig.cpp ServerConfig.cpp \
 				LocationConfig.cpp Parsing.cpp FillConfig.cpp \
-				Utils.cpp Trim.cpp Request.cpp AEntity.cpp Response.cpp \
-				Logger.cpp ResponseUtils.cpp
-# Request.cpp Response.cpp \
-# Utils.cpp Server.cpp
+				Utils.cpp Trim.cpp Request.cpp Response.cpp \
+				Logger.cpp ResponseUtils.cpp WebServ.cpp
 
 OBJS		=	$(SRCS:.cpp=.o)
 DEPS		=	$(OBJS:.o=.d)
-
-RQST_NAME = rqst
-RQST_SRCS = request_tests.cpp Request.cpp
-RQST_HDRS = Request.hpp
-RQST_OBJS = $(RQST_SRCS:.cpp=.o)
-RQST_DEPS = $(RQST_OBJS:.o=.d)
 
 I = 0
 ifndef MAX_I
@@ -49,14 +41,11 @@ endef
 $(NAME)		:	$(OBJS)
 				$(call compil,$(CC) $(CFLAGS) $(OBJS) -o $(NAME),Linking, $@)
 				@printf "$(RED)[%i/%i] (%i%%)\t$(GREEN)$(BOLD)$@$(RESET)$(GREEN) is ready!\n" $(I) $(MAX_I) `expr $(I) \* 100 / $(MAX_I)`
-$(RQST_NAME)	:	$(RQST_OBJS)
-				$(CC) $(CFLAGS) $(CFLAGS) -o $(RQST_NAME) $(RQST_OBJS)
-				
 
 all			:	$(NAME)
 
 clean		:
-				rm -rf $(OBJS) $(DEPS) $(RQST_OBJS) $(RQST_DEPS)
+				rm -rf $(OBJS) $(DEPS)
 
 fclean		:	clean
 				rm -f $(NAME)
@@ -68,7 +57,6 @@ debug		:	fclean
 				@$(MAKE) --no-print-directory DEBUG=1
 
 -include $(DEPS)
--include $(RQST_DEPS)
 
 .DEFAULT_GOAL = all
 .PHONY: all clean fclean re debug

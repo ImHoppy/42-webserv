@@ -3,6 +3,7 @@
 #include "Parsing.hpp"
 #include "GeneralConfig.hpp"
 #include "Logger.hpp"
+#include "WebServ.hpp"
 
 #define CONSTRUC
 
@@ -29,8 +30,6 @@ class B : public std::string {
 	};
 };
  */
-#include "Server.hpp"
-#include "WebServ.hpp"
 int main(int ac, char **av)
 {
 
@@ -66,12 +65,28 @@ int main(int ac, char **av)
 		exit(1);
 	}
 	WebServ webserv;
-	Server* serv = new Server;
-	serv->addConfig(generalConfig.getServers()[0]);
-	serv->InitServer();
+	//TODO:: generalConf rename Servers en configs
+	std::vector<ServerConfig>	configs = generalConfig.getServers();
+	// check for HOST::PORT pairs (dispatching virtual servers en gros)
+	for (std::vector<ServerConfig>::const_iterator confs = configs.begin(); confs != configs.end(); ++confs)
+	{
+		std::vector<Server*>::iterator	checkForSamePort = webserv.checkIpPort(*confs);
+		if (checkForSamePort == webserv.getServers().end()) // pas trouve
+		{
+			Server* serv = new Server;
+			serv->addConfig(*confs);
+			webserv.addServer(serv);
+		}
+		else
+		{
+			(*checkForSamePort)->addConfig(*confs);
+		}
+	}
 
+	// initialisation de tous les Servers* 
+	for (std::vector<Server*>::const_iterator servers = webserv.getServers().begin(); servers != webserv.getServers().end(); ++servers)
+		(*servers)->InitServer();
 	Logger::Info("Server started");
-	webserv.addServer(serv);
 	webserv.StartLoop();
 	Logger::Info("Server end");
 

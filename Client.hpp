@@ -1,20 +1,17 @@
-#pragma once
+#ifndef CLIENT_HPP
+# define CLIENT_HPP
 
-#ifndef CONSTRUC
-# define CONSTRUC
-#endif
+# include "Server.hpp"
+# include "Request.hpp"
+# include "Base.hpp"
 
-#include "Server.hpp"
-#include "Request.hpp"
-#include "Base.hpp"
+# include <iostream>
+# include <deque>
+# include <unistd.h>
 
-#include <iostream>
-#include <deque>
-#include <unistd.h>
-
-#ifndef BUFFSIZE
-# define BUFFSIZE 3000
-#endif
+# ifndef BUFFSIZE
+#  define BUFFSIZE 3000
+# endif
 
 /*
 Une request est associee a un client_fd, qui est associe a un listen_socket,
@@ -194,3 +191,5 @@ void	Client::askForResponse(void)
 
 
 std::string const & Client::getType() const { return _type; }
+
+#endif

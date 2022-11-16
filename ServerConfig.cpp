@@ -81,10 +81,8 @@ LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 {
 	std::string::size_type found;
 	std::string::size_type start_search = url.size();
-	std::cerr << "url = " << url << std::endl;
 	while (start_search != std::string::npos)
 	{
-		std::cerr << "start search=" << start_search << std::endl;
 		for (map_locs::iterator locs = _location.begin(); locs != _location.end(); ++locs)
 		{
 			found = url.rfind(locs->second.getPath(), start_search);

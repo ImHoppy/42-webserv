@@ -1,11 +1,12 @@
-#pragma once
+#ifndef LOCATIONCONFIG_HPP
+# define LOCATIONCONFIG_HPP
 
-#include <string>
-#include <bitset>
-#include "Path.hpp"
-#include "CGI.hpp"
-#include <iostream>
-#include <iomanip>
+# include <string>
+# include <bitset>
+# include "Path.hpp"
+# include "CGI.hpp"
+# include <iostream>
+# include <iomanip>
 
 
 class LocationConfig {
@@ -64,3 +65,5 @@ class LocationConfig {
 };
 
 std::ostream&	operator<<(std::ostream& o, const LocationConfig& me);
+
+#endif

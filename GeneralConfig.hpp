@@ -8,7 +8,7 @@
 
 class GeneralConfig {
 	private:
-	std::vector<ServerConfig>	_servers;
+	std::vector<ServerConfig>			_servers;
 	static std::map<int, std::string>	_errorPages;
 
 	public:

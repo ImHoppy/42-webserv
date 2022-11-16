@@ -1,185 +1,53 @@
-#pragma once
+#ifndef WEBSERV_HPP
+# define WEBSERV_HPP
 
-#include "ServerConfig.hpp"
-#include "Server.hpp"
+# include "ServerConfig.hpp"
+# include "Server.hpp"
 
-#include <vector>
-#include <sys/epoll.h>
-#include <unistd.h>
-#include "Request.hpp"
-#include "Client.hpp"
-#include <csignal>
-#include "AEntity.hpp"
+# include <vector>
+# include <sys/epoll.h>
+# include <unistd.h>
+# include <csignal>
 
 #define MAX_EVENTS 100 // NOTE: 4096
 
-//bool	endServer = false;
-
 void	sig_handler(int sig);
 
-/*
-	En fait on aurait du faire une liste de pending requests tout simplement. Et
-l'objet Request contient un client socket assosice, et une server_name associe.
-Cest tout.
-	Listen sockets:
-		POLLIN =>	accept connection = Server(lsocket).addClient()
-		POLLOUT (pas possible)
-	Client sockets:
-		POLLIN =>	Client[csocket].addRequest() => Server[csocket].addRequest(csocket) 
-					=> Mettre la map de Client dans Server
-		POLLOUT =>	Server[csocket].respondClient(csocket);
-*/
+class WebServ
+{
+	public:
+		typedef std::vector<Server*>				vec_servers;
 
-
-
-class WebServ {
 	private:
 		std::vector<Server*>				_servers;
-		socket_t								_epollInstance;
+		socket_t							_epollInstance;
+	
 	public:
-		static bool								_isRunning;
-		typedef std::vector<Server*>		vec_servers;
-		static std::map<socket_t, std::string>	error_status;
+		static bool									_isRunning;
+		// pourquoi socket_t ?? 
+		static std::map<socket_t, std::string>		error_status;
 
-	WebServ(): _servers(), _epollInstance(-1) 
-	{
-	};
+		void	addServer(Server *serv);
+		void	InitEpoll(void);
+		void	StartLoop(void);
+		void	EndLoop(void);
+		const std::vector<Server*> &				getServers(void) const;
+		std::vector<Server*>::iterator		checkIpPort(const ServerConfig& toAdd);
 
-	WebServ(WebServ const & other) {
-		*this = other;
-	};
+		/* Coplien */
+		WebServ(void);
+		WebServ(WebServ const & other);
+		WebServ & operator=(WebServ const & other);
+		~WebServ(void);
 
-	WebServ & operator=(WebServ const & other) {
-		if (this != &other) {
-			_servers = other._servers;
-			_epollInstance = other._epollInstance;
-		}
-		return *this;
-	};
-
-	~WebServ() {
-		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
-			const socket_t socket = (*it)->getSocket();
-
-			if (_epollInstance > 0)
-			{ 
-				if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, socket, NULL) < 0) {
-					throw std::runtime_error("epoll_ctl del failed");
-				}
-			}
-			if (socket >= 0)
-				close(socket);
-			delete *it;
-		}
-		if (_epollInstance > 0)
-			close(_epollInstance);
-	};
-
-	void addServer(Server *serv) {
-		if (serv->getSocket() != -1)
-		{
-			_servers.push_back(serv);
-		}
-	};
-
-	void	EndLoop(void)
-	{
-		WebServ::_isRunning = false;
-	}
-
-	void	InitEpoll(void);
-	void StartLoop(void);
 };// end class WebServ
 
-void	WebServ::InitEpoll(void)
-{
-	if (_servers.size() == 0)
-		throw std::runtime_error("No servers to listen to");
-	_epollInstance = epoll_create(_servers.size());
-	if (_epollInstance < 0)
-		throw std::runtime_error("epoll_create failed");
-	struct epoll_event event = {};
-	for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it)
-	{
-		Server*	server = *it;
-		server->setEpollInstance(_epollInstance);
-		event.data.ptr = server; 
-		event.events = EPOLLIN;
-		if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, server->getSocket(), &event) < 0) {
-			   throw std::runtime_error("epoll_ctl add failed");
-		}
-	}
-}
-
-void	WebServ::StartLoop(void)
-{
-	if (_epollInstance < 0)
-		InitEpoll();
-	if (WebServ::_isRunning)
-		return;
-	WebServ::_isRunning = true;
-	struct epoll_event events[MAX_EVENTS];
-	int nfds = 0;
-	std::signal(SIGINT, sig_handler);
-	while (WebServ::_isRunning)
-	{
-		nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, -1);
-		if (nfds < 0)
-		{
-//			throw std::runtime_error("epoll_wait failed");
-			perror("WebServ: epoll_wait failed");
-			WebServ::_isRunning = false;
-			continue ;
-		}
-		for (int i = 0; i < nfds; ++i)
-		{
-			Base *base = static_cast<Base*>(events[i].data.ptr);
-			if (base == NULL)
-			{
-				std::cout << "base is null" << std::endl;
-				continue ;
-			}
-			if (base->getType() == "Server")
-			{
-				Server*	server = dynamic_cast<Server*>(base);
-				//TODO: check is POLLIN ou POLLER
-				server->AcceptNewClient();
-			}
-			else if (base->getType() == "Client")
-			{
-				Client*	client= dynamic_cast<Client*>(base);
-				if (events[i].events & EPOLLERR)
-				{
-					std::cout << "ERROR on socket " << client->getSocket() <<std::endl;
-				}
-				if (events[i].events & EPOLLRDHUP)
-				{
-					std::cout << "POLLRDHUP on socket " << client->getSocket()  <<std::endl;
-				}
-				if (events[i].events & EPOLLIN)
-				{
-					int readSize = client->recvRequest();
-					if (readSize == 0)
-					{
-						client->getServer()->removeClient(client);
-						events[i].events = 0; // pour pas passer ds le pollou suivant alors qu'on a delete le client
-					}
-				}
-				else if (events[i].events & EPOLLOUT)
-				{
-					client->getServer()->respond(client);
-				}
-			} 
-		}
-	}
-}
-
-
-bool WebServ::_isRunning = false;
-
+//TODO: a deplacer
 void	sig_handler(int sig)
 {
 	(void)sig;
 	std::cout << "SIG HANDLER REACHED" << std::endl;
 	WebServ::_isRunning = false;
 }
+
+#endif

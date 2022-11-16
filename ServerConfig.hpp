@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SERVERCONFIG_HPP
+# define SERVERCONFIG_HPP
 
 #include <string>
 #include <vector>
@@ -7,7 +8,6 @@
 #include <stdint.h>
 #include <iostream>
 #include <fstream> // file stream
-#include "Request.hpp"
 #include <sstream>
 
 class ServerConfig {
@@ -52,3 +52,5 @@ class ServerConfig {
 };
 
 std::ostream&	operator<<(std::ostream& o, const ServerConfig& me);
+
+#endif

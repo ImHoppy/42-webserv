@@ -13,7 +13,7 @@ std::string generateResponse(std::string fileContent)
 	std::string response;
 
 	response = "HTTP/1.1 200 OK\r\n"
-		"Content-Type: text/html\r\n"
+//		"Content-Type: text/html\r\n"
 		"Content-Length: " + nbToString(fileContent.length()) + "\r\n"
 		"Connection: Keep-Alive\r\n"
 		"\r\n"
@@ -26,7 +26,7 @@ std::string generateResponse(int code, std::string codeMsg, std::string fileCont
 	std::string response;
 
 	response = "HTTP/1.1 " + nbToString(code) + " " + codeMsg + "\r\n"
-		"Content-Type: text/html\r\n"
+//		"Content-Type: text/html\r\n"
 		"Content-Length: " + nbToString(fileContent.length()) + "\r\n"
 		"Connection: Keep-Alive\r\n"
 		"\r\n"

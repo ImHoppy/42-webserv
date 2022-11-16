@@ -63,10 +63,10 @@ bool	Response::tryFile(void)
 	std::string		filePathname;
 	std::string		uri(_rqst->getUri().path);
 	filePathname =  uri.replace(0, _location->getPath().size(), _location->getRootPath());
-	Logger::Info("Replace path = %s", filePathname.c_str());
 	if (endsWithSlash(_rqst->getUri().path) == true)
 		filePathname += _location->getIndexFile();
 
+	Logger::Info("Response::tryFile() path = %s", filePathname.c_str());
 	std::ifstream	file(filePathname.c_str());
 	if (file.is_open() == false)
 		return false;
@@ -83,7 +83,7 @@ bool	Response::tryFile(void)
 		ss << body.size();
 		_response += "Content-Length: " + ss.str() + "\r\n";
 		//TODO: MIME 
-		_response += "Content-Type: text/" + getFileExtension(filePathname) + "\r\n";
+//		_response += "Content-Type: text/plain\r\n";// + getFileExtension(filePathname) + "\r\n";
 		_response += "Connection: keep-alive\r\n";
 		_response += "\r\n";
 		_response += body;
