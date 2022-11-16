@@ -1,7 +1,6 @@
 #include <iostream>
 #include <map>
 #include "Parsing.hpp"
-#include "GeneralConfig.hpp"
 #include "Logger.hpp"
 #include "WebServ.hpp"
 
@@ -71,7 +70,7 @@ int main(int ac, char **av)
 	for (std::vector<ServerConfig>::const_iterator confs = configs.begin(); confs != configs.end(); ++confs)
 	{
 		std::vector<Server*>::iterator	checkForSamePort = webserv.checkIpPort(*confs);
-		if (checkForSamePort == webserv.getServers().end()) // pas trouve
+		if (webserv.getServers().empty() == true || checkForSamePort == webserv.getServers().end()) // pas trouve
 		{
 			Server* serv = new Server;
 			serv->addConfig(*confs);

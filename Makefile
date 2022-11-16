@@ -1,4 +1,4 @@
-NAME		=	haha
+NAME		=	webserv
 
 CC			=	c++
 
@@ -10,7 +10,7 @@ endif
 SRCS		=	main.cpp GeneralConfig.cpp ServerConfig.cpp \
 				LocationConfig.cpp Parsing.cpp FillConfig.cpp \
 				Utils.cpp Trim.cpp Request.cpp Response.cpp \
-				Logger.cpp ResponseUtils.cpp WebServ.cpp
+				Logger.cpp ResponseUtils.cpp
 
 OBJS		=	$(SRCS:.cpp=.o)
 DEPS		=	$(OBJS:.o=.d)

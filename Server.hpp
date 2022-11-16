@@ -19,6 +19,8 @@
 # include "Response.hpp"
 # include <errno.h>
 
+# define CONSTRUC
+
 typedef int socket_t;
 
 typedef struct s_polldata
@@ -57,11 +59,11 @@ class Server : public Base {
 		socket_t	 AcceptNewClient(void);
 		/* Logs */
 		void	displayTime(void) const;
-		bool	hasSameHostPort(int32_t host, int16_t port) const;
+		bool	isSameHostPort(int32_t host, int16_t port) const;
 };
 
 /* Return true if one of the _configs has the same HOST::PORT pairs. */
-bool	Server::hasSameHostPort(int32_t host, int16_t port) const
+bool	Server::isSameHostPort(int32_t host, int16_t port) const
 {
 	for (std::vector<ServerConfig>::const_iterator conf_it = _configs.begin(); conf_it != _configs.end(); ++conf_it)
 	{
@@ -144,15 +146,16 @@ ServerConfig*	Server::getConfigForRequest(Request* rqst)
 	std::string		host_header = rqst->getHost();
 	if (host_header == "UNDEFINED")
 		return &_configs[0];
+	size_t		dotPort = host_header.find(':');
+	if (dotPort != std::string::npos)
+		host_header.erase(dotPort);
 	for (std::vector<ServerConfig>::iterator conf_it = _configs.begin(); conf_it != _configs.end(); ++conf_it)
 	{
 		std::vector<std::string>	names = conf_it->getServerNames();
 		for (std::vector<std::string>::iterator names_it = names.begin(); names_it != names.end(); ++names_it)
 		{
-			std::cerr << "NAME IT = " << *names_it << " and host = " << host_header;
 			if (*names_it == host_header)
 				return &(*conf_it);
-			std::cerr << " NOK" << std::endl;
 		}
 	}
 	return &_configs[0];
@@ -236,6 +239,7 @@ socket_t	 Server::AcceptNewClient(void)
 	socket_t client_socket = accept(_socket, (struct sockaddr *)&client_addr, &client_addr_len);
 	if (client_socket < 0 && (errno != EAGAIN && errno != EWOULDBLOCK))
 	{
+		//TODO: pb quand HOST different de 0.0.0.0
 		throw std::runtime_error("accept() failed");
 	}
 	else if (client_socket < 0)
