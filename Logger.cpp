@@ -52,5 +52,5 @@ namespace Logger
 	LogFunc(std::cerr, 2, "\033[93m", "WARNING")
 
 	void	Error(std::string const message, ...)
-	LogFunc(std::cerr, 2, "\033[91m", "WARNING")
+	LogFunc(std::cerr, 2, "\033[91m", "ERROR")
 }
