@@ -73,30 +73,35 @@ void	Response::setTargetPath(void)
 //if _targetPath is a directory, remove all files/dir within before remove it
 void	Response::doDELETE(const std::string &path)
 {
-	Logger::Info("Response::doDELETE() file = %s", path.c_str());
 	if (path == "./" || path == "../")
 		return ;
 	if (endsWithSlash(path) == false) // si is file, remove it and stop.
 	{
 		if (std::remove(path.c_str()) != 0)
-			perror("LALALALALA");
+		{
+			Logger::Error("Response::doDELETE(): remove file '%s' failed", path.c_str());
+			return ;
+		}
+		Logger::Info("Response::doDELETE(): file '%s' deleted", path.c_str());
 		return ;
 	}
-	std::vector<std::string>	contains = listFiles(path);
+	std::vector<std::string>	contains = listFiles(path, false);
 	for (std::vector<std::string>::iterator it = contains.begin(); it != contains.end(); ++it)
 	{
-		*it += _targetPath;
+		it->insert(0, _targetPath);
 	}
 	for (std::vector<std::string>::iterator it = contains.begin(); it != contains.end(); ++it)
 	{
-		doDELETE(*it); // recursion sur tous les contenus (files && dir)
+		doDELETE(*it);
 	}
-	if (contains.empty())
+	std::string		dirPath(path.begin(), path.end() - 1);
+	if (std::remove(dirPath.c_str()) != 0)
 	{
-		std::string		dirPath(path.begin(), path.end() - 1);
-		std::remove(dirPath.c_str()); // rm dir car empty
+		Logger::Error("Response::doDELETE(): remove directory '%s' failed", dirPath.c_str());
 		return ;
 	}
+	Logger::Info("Response::doDELETE(): directory '%s' deleted", dirPath.c_str());
+	return ;
 }
 
 void	Response::doPOST(void)

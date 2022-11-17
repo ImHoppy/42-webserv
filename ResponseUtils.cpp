@@ -67,7 +67,7 @@ std::string	generateErrorBody(std::string body)
 }
 
 
-std::vector<std::string>	listFiles(std::string const & path)
+std::vector<std::string>	listFiles(std::string const & path, bool withDot)
 {
 	DIR							*dr;
 	struct dirent				*en;
@@ -78,10 +78,14 @@ std::vector<std::string>	listFiles(std::string const & path)
 	{
 		while ((en = readdir(dr)) != NULL)
 		{
+			std::string	name(en->d_name);
 			if (en->d_type == DT_DIR)
-				vec_files.push_back(std::string(en->d_name) + "/");
+			{
+				if (withDot == true || (name != "." && name != ".."))
+					vec_files.push_back(name + "/");
+			}
 			else
-				vec_files.push_back(en->d_name);
+				vec_files.push_back(name);
 		}
 		closedir(dr);
 	}
