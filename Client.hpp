@@ -146,7 +146,6 @@ int		Client::getSocket(void) const
 create a Request object with the buf received, and add it int its queued requests. */
 int		Client::recvRequest(void)
 {
-	std::cout << "POLLIN on client " << _csock << std::endl;
 	char buf[BUFFSIZE];
 	memset(&buf, 0, sizeof(buf));
 	ssize_t bytes = recv(_csock, buf, BUFFSIZE, 0);
@@ -154,16 +153,15 @@ int		Client::recvRequest(void)
 		throw std::runtime_error("recv failed");
 	else if (bytes == 0)
 	{
-		std::cout << "EOF received from client " << _csock << std::endl;
+		Logger::Info("Client: EOF received from client %d\n", _csock);
 		return (0);
 	}
 	else
 	{
 		buf[bytes] = 0;
-		std::cout << bytes << "bytes reveived from client " << _csock << ": \n";
+		Logger::Info("Client: new Request received from client %d\n", _csock);
 		Request		new_rqst(buf);
 		_pendingRqst.push_back(new_rqst);
-		std::cout << new_rqst << std::endl;
 		return (bytes);
 	}
 }

@@ -18,6 +18,7 @@
 # include "Base.hpp"
 # include "Response.hpp"
 # include <errno.h>
+# include "Logger.hpp"
 
 # define CONSTRUC
 
@@ -58,7 +59,6 @@ class Server : public Base {
 		void	respond(Client* client);
 		socket_t	 AcceptNewClient(void);
 		/* Logs */
-		void	displayTime(void) const;
 		bool	isSameHostPort(int32_t host, int16_t port) const;
 };
 
@@ -187,12 +187,12 @@ int		Server::InitServer(void)
 
 	if ((_socket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) < 0)
 	{
-		std::cerr << "error: socket()" << std::endl;
+		Logger::Error("Server: socket() failed: %s\n", strerror(errno));
 		return (-1);
 	}
 	if (setsockopt(_socket, SOL_SOCKET,  SO_REUSEADDR | SO_REUSEPORT, &on, sizeof(int)) < 0)
 	{
-		std::cerr << "error: setsockopt() failed" << std::endl;
+		Logger::Error("Server: setsockopt() failed: %s\n", strerror(errno));
 		close(_socket);
 		_socket = -1;
 		return (-1);
@@ -203,7 +203,7 @@ int		Server::InitServer(void)
 	servaddr.sin_port = htons(_configs[0].getPort());
 	if (bind(_socket, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0)
 	{
-		std::cerr << "error: bind() failed" << std::endl;
+		Logger::Error("Server: bind() failed: %s\n", strerror(errno));
 		return (-1);
 	}
 	if (listen(_socket, std::numeric_limits<short>::max()/2) < 0)
@@ -212,21 +212,6 @@ int		Server::InitServer(void)
 		return (-1);
 	}
 	return (0);
-}
-
-void	Server::displayTime(void) const
-{
-	std::time_t time = std::time(0);
-	std::tm *tm = std::localtime(&time);
-	std::cout << std::setfill('0') << "["
-	<< std::setw(4) << (tm->tm_year + 1900)
-	<< std::setw(2) << (tm->tm_mon + 1)
-	<< std::setw(2) << tm->tm_mday
-	<< "_"
-	<< std::setw(2) << tm->tm_hour
-	<< std::setw(2) <<tm->tm_min
-	<< std::setw(2) << tm->tm_sec
-	<< "] ";
 }
 
 /* Create a new client socket with accept, and create a new Client instance with it.
@@ -239,7 +224,7 @@ socket_t	 Server::AcceptNewClient(void)
 	socket_t client_socket = accept(_socket, (struct sockaddr *)&client_addr, &client_addr_len);
 	if (client_socket < 0 && (errno != EAGAIN && errno != EWOULDBLOCK))
 	{
-		//TODO: pb quand HOST different de 0.0.0.0
+		//TODO: pb quand HOST different de 0.0.0.0 AH mais en fait c'est la VM qui est sur 127.0.1.1 je crois à tester
 		throw std::runtime_error("accept() failed");
 	}
 	else if (client_socket < 0)
@@ -254,8 +239,7 @@ socket_t	 Server::AcceptNewClient(void)
 		throw std::runtime_error("epoll_ctl failed");
 	}
 	_clients.insert(client);
-	displayTime();
-	std::cout << "Server #" << ": accepted new client " << client_socket << std::endl;
+	Logger::Info("Server %d accepted new client on fd %d\n", _socket, client_socket);
 	return (client_socket);
 }
 
@@ -275,17 +259,14 @@ void	Server::respond(Client* client)
 	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
 //	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
 	Response	rep(chosen_conf, chosen_loc, rqst);
-//	std::cerr << "____ RESPONSE:\n" << rep << "______END REPONSE" << std::endl;
-
 	socket_t	socket = client->getSocket();
-//	std::cout << "POLLOUT event on client fd " << socket <<std::endl;
 	ssize_t		bytes;
 	bytes = send(socket, rep.getResponse().c_str(), rep.getResponse().size(), 0);
 	if (bytes == -1)
 	{
 		throw std::runtime_error("send failed");
 	}
-//	std::cout << bytes << " send to client " << socket << std::endl;
+	Logger::Info("Request for '%s' respond by %s\n", rqst->getUri().path.c_str(), chosen_conf->getServerNames()[0].c_str());
 	client->popOutRequest();
 	//TODO: if _pendingRqst du client is empty, epollCTL MODify events to POLLIN only,
 	// et pas oublier de remettre POLLOUT a reception de la premiere request
