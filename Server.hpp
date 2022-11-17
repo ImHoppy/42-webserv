@@ -271,21 +271,21 @@ void	Server::respond(Client* client)
 	if (rqst == NULL)
 		return ;
 	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
-	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
+//	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
 	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
-	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
+//	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
 	Response	rep(chosen_conf, chosen_loc, rqst);
-	std::cerr << "____ RESPONSE:\n" << rep << "______END REPONSE" << std::endl;
+//	std::cerr << "____ RESPONSE:\n" << rep << "______END REPONSE" << std::endl;
 
 	socket_t	socket = client->getSocket();
-	std::cout << "POLLOUT event on client fd " << socket <<std::endl;
+//	std::cout << "POLLOUT event on client fd " << socket <<std::endl;
 	ssize_t		bytes;
 	bytes = send(socket, rep.getResponse().c_str(), rep.getResponse().size(), 0);
 	if (bytes == -1)
 	{
 		throw std::runtime_error("send failed");
 	}
-	std::cout << bytes << " send to client " << socket << std::endl;
+//	std::cout << bytes << " send to client " << socket << std::endl;
 	client->popOutRequest();
 	//TODO: if _pendingRqst du client is empty, epollCTL MODify events to POLLIN only,
 	// et pas oublier de remettre POLLOUT a reception de la premiere request

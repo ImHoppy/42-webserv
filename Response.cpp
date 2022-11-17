@@ -45,7 +45,10 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 	if (_rqst->getMethod() == "GET")
 		doGET();
 	else if (_rqst->getMethod() == "DELETE")
-		doDELETE();
+	{
+		doDELETE(_targetPath);
+		_response = "HTTP/1.1 204 No Content\r\n\r\n";
+	}
 	else if (_rqst->getMethod() == "POST")
 		doPOST();
 }
@@ -55,7 +58,7 @@ fonction du root de la config. */
 void	Response::setTargetPath(void)
 {
 	std::string		url(_rqst->getUri().path);
-	if (endsWithSlash(url) == true && _location->isDirList() == true)
+	if (endsWithSlash(url) == true && (_location->isDirList() == true || _rqst->getMethod() == "DELETE"))
 	{
 		_targetPath =  url.replace(0, _location->getPath().size(), _location->getRootPath());
 		return ;
@@ -66,10 +69,34 @@ void	Response::setTargetPath(void)
 		_targetPath += _location->getIndexFile();
 }
 
-void	Response::doDELETE(void)
+
+//if _targetPath is a directory, remove all files/dir within before remove it
+void	Response::doDELETE(const std::string &path)
 {
-	Logger::Info("Response::doDELETE() file = %s", _targetPath.c_str());
-//	std::remove
+	Logger::Info("Response::doDELETE() file = %s", path.c_str());
+	if (path == "./" || path == "../")
+		return ;
+	if (endsWithSlash(path) == false) // si is file, remove it and stop.
+	{
+		if (std::remove(path.c_str()) != 0)
+			perror("LALALALALA");
+		return ;
+	}
+	std::vector<std::string>	contains = listFiles(path);
+	for (std::vector<std::string>::iterator it = contains.begin(); it != contains.end(); ++it)
+	{
+		*it += _targetPath;
+	}
+	for (std::vector<std::string>::iterator it = contains.begin(); it != contains.end(); ++it)
+	{
+		doDELETE(*it); // recursion sur tous les contenus (files && dir)
+	}
+	if (contains.empty())
+	{
+		std::string		dirPath(path.begin(), path.end() - 1);
+		std::remove(dirPath.c_str()); // rm dir car empty
+		return ;
+	}
 }
 
 void	Response::doPOST(void)

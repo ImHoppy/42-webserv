@@ -4,6 +4,7 @@
 # include <iostream>
 # include <string>
 # include <map>
+# include <cstdio> // std::remove (file/dir)
 # include "ServerConfig.hpp"
 # include "Request.hpp"
 # include "Utils.hpp"
@@ -39,7 +40,7 @@ class Response
 		bool	checkHost(void) const;
 		bool	checkMethod(void) const;
 		void	doGET(void);
-		void	doDELETE(void);
+		void	doDELETE(const std::string &path);
 		void	doPOST(void);
 		bool	tryFile(void);
 	
