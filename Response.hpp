@@ -34,6 +34,8 @@ class Response
 		bool	checkHost(void) const;
 		bool	checkMethod(void) const;
 		void	doGET(void);
+		void	doDELETE(void);
+		void	doPOST(void);
 		bool	tryFile(void);
 	
 }; // end class Response

@@ -31,24 +31,12 @@ class B : public std::string {
  */
 int main(int ac, char **av)
 {
-
-	(void)ac;
-	(void)av;
-	int i = 1;
-	std::cout << hw << i << "\n";
-
-	std::cout << std::endl;
-
-//	std::cout << "listFiles: " << std::endl;
-//	for (std::vector<std::string>::iterator it = list.begin(); it != list.end(); it++)
-//	{
-//		struct stat st;
-//		stat(it->c_str(), &st);
-//		std::cout << *it << " : " << st.st_size <<  "\n";
-//	}
-//	std::cout << std::endl << list.size() << std::endl;
-//	std::cout << std::endl << std::endl;
-
+	std::string		confFile;
+	if (ac == 1)
+		confFile = "template.conf";
+	else
+		confFile = av[0];
+		
 	GeneralConfig generalConfig; // NOTE: Maybe delete this class and put all vector<ServerConfig> in WebServ class or main
 	try
 	{
@@ -82,7 +70,7 @@ int main(int ac, char **av)
 		}
 	}
 
-	// initialisation de tous les Servers* 
+	// initialisation de tous les Servers* (mise en listen state)
 	for (std::vector<Server*>::const_iterator servers = webserv.getServers().begin(); servers != webserv.getServers().end(); ++servers)
 		(*servers)->InitServer();
 	Logger::Info("Server started");

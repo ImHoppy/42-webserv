@@ -38,8 +38,24 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 		_response = "HTTP/1.1 400 Bad Request\r\n\r\n";
 	if (checkMethod() == false)
 		_response = "HTTP/1.1 405 Method Not Allowed\r\n\r\n";
+	//TODO: vraiment process la rqst dans la construction?
 	if (_rqst->getMethod() == "GET")
 		doGET();
+	else if (_rqst->getMethod() == "DELETE")
+		doDELETE();
+	else if (_rqst->getMethod() == "POST")
+		doPOST();
+}
+
+void	Response::doDELETE(void)
+{
+	Logger::info
+//	std::remove
+}
+
+void	Response::doPOST(void)
+{
+	//TODO
 }
 
 std::string	Response::getResponse(void) const
@@ -99,12 +115,10 @@ void		Response::doGET(void)
 		std::string		uri(_rqst->getUri().path);
 		filePathname =  uri.replace(0, _location->getPath().size(), _location->getRootPath());
 		std::string body = GenerateHtmlDirectory(filePathname);
-		Logger::Info("%s %s %s", uri.c_str(), filePathname.c_str(), _location->getRootPath().c_str());
 		_response = generateResponse(body);
 	}
 	else if (tryFile() == false)
 	{
-		//TODO: return l'error page correspondante au 404
 		ServerConfig::errors_t::const_iterator	it = _config->getErrorPaths().find(404);
 		if (it == _config->getErrorPaths().end())
 		{
