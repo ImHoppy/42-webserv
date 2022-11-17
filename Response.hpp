@@ -40,7 +40,7 @@ class Response
 		bool	checkHost(void) const;
 		bool	checkMethod(void) const;
 		void	doGET(void);
-		void	doDELETE(const std::string &path);
+		int		doDELETE(const std::string &path);
 		void	doPOST(void);
 		bool	tryFile(void);
 	
