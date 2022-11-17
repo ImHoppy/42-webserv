@@ -134,10 +134,10 @@ void	parseConf(GeneralConfig & config, std::string const & path )
 			continue;
 		if (depth < 0)
 			throw ParsingError("Cant close not open bracket");
-		std::cout << std::string(depth, '\t') << key;
-		if (!value.empty())
-			std::cout << " | " << value;
-		std::cout << "\n";
+//		std::cout << std::string(depth, '\t') << key;
+//		if (!value.empty())
+//			std::cout << " | " << value;
+//		std::cout << "\n";
 		if (value == "{")
 			++depth;
 
