@@ -70,7 +70,7 @@ void	Response::setTargetPath(void)
 }
 
 
-//if _targetPath is a directory, remove all files/dir within before remove it
+/* Delete a file, or if its a directy: delete all elements in it before rmdir. */
 void	Response::doDELETE(const std::string &path)
 {
 	if (path == "./" || path == "../")
@@ -88,7 +88,7 @@ void	Response::doDELETE(const std::string &path)
 	std::vector<std::string>	contains = listFiles(path, false);
 	for (std::vector<std::string>::iterator it = contains.begin(); it != contains.end(); ++it)
 	{
-		it->insert(0, _targetPath);
+		it->insert(0, path);
 	}
 	for (std::vector<std::string>::iterator it = contains.begin(); it != contains.end(); ++it)
 	{
