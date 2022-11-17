@@ -3,14 +3,14 @@
 #include <string>
 
 /* Default constructor */
-Response::Response(void) : _config(), _location(), _rqst(), _response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n") {}
+Response::Response(void) : _config(), _location(), _rqst(), _response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"), _targetPath() {}
 
 /* Destructor */
 Response::~Response(void) {}
 
 /* Copy constructor */
 Response::Response(const Response& src) : _config(src._config), _location(src._location),
-	_rqst(src._rqst),_response(src._response) {}
+	_rqst(src._rqst), _response(src._response), _targetPath(src._targetPath) {}
 
 /* Assignement operator */
 Response &	Response::operator=(const Response& src)
@@ -21,6 +21,7 @@ Response &	Response::operator=(const Response& src)
 		_location = src._location;
 		_rqst = src._rqst;
 		_response = src._response;
+		_targetPath = src._targetPath;
 	}
 	return *this;
 }
@@ -30,7 +31,8 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 	_config(config),
 	_location(loc),
 	_rqst(request),
-	_response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n")
+	_response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"),
+	_targetPath()
 {
 	if (config == NULL || loc == NULL || request == NULL)
 		return ;
@@ -38,6 +40,7 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 		_response = "HTTP/1.1 400 Bad Request\r\n\r\n";
 	if (checkMethod() == false)
 		_response = "HTTP/1.1 405 Method Not Allowed\r\n\r\n";
+	setTargetPath();
 	//TODO: vraiment process la rqst dans la construction?
 	if (_rqst->getMethod() == "GET")
 		doGET();
@@ -47,9 +50,25 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 		doPOST();
 }
 
+/* Set le private attribut _targetPath en fonction du path de l'URI de la request et en
+fonction du root de la config. */
+void	Response::setTargetPath(void)
+{
+	std::string		url(_rqst->getUri().path);
+	if (endsWithSlash(url) == true && _location->isDirList() == true)
+	{
+		_targetPath =  url.replace(0, _location->getPath().size(), _location->getRootPath());
+		return ;
+	}
+	//TODO: check si redirection 301
+	_targetPath =  url.replace(0, _location->getPath().size(), _location->getRootPath());
+	if (endsWithSlash(url) == true)
+		_targetPath += _location->getIndexFile();
+}
+
 void	Response::doDELETE(void)
 {
-	Logger::info
+	Logger::Info("Response::doDELETE() file = %s", _targetPath.c_str());
 //	std::remove
 }
 
@@ -69,21 +88,14 @@ std::ostream&	operator<<(std::ostream& o, const Response& me)
 	return o;
 }
 
-/*	1) Reconstitue le file pathname (loca root + URL [+ index file])
-	2) Essai d'ouvrir le fichier : return false si fail (file not found)
-	3) Remplit le _response body avec le contenu du fichier, et set le bon Content-Lenght
+/*
+	1) Essai d'ouvrir le fichier : return false si fail (file not found)
+	2) Remplit le _response body avec le contenu du fichier, et set le bon Content-Lenght
 */
 bool	Response::tryFile(void)
 {
-	//TODO: check si redirection 301
-	std::string		filePathname;
-	std::string		uri(_rqst->getUri().path);
-	filePathname =  uri.replace(0, _location->getPath().size(), _location->getRootPath());
-	if (endsWithSlash(_rqst->getUri().path) == true)
-		filePathname += _location->getIndexFile();
-
-	Logger::Info("Response::tryFile() path = %s", filePathname.c_str());
-	std::ifstream	file(filePathname.c_str());
+	Logger::Info("Response::tryFile() path = %s", _targetPath.c_str());
+	std::ifstream	file(_targetPath.c_str());
 	if (file.is_open() == false)
 		return false;
 	else
@@ -99,7 +111,7 @@ bool	Response::tryFile(void)
 		ss << body.size();
 		_response += "Content-Length: " + ss.str() + "\r\n";
 		//TODO: MIME 
-//		_response += "Content-Type: text/plain\r\n";// + getFileExtension(filePathname) + "\r\n";
+//		_response += "Content-Type: text/plain\r\n";// + getFileExtension(_targetPath) + "\r\n";
 		_response += "Connection: keep-alive\r\n";
 		_response += "\r\n";
 		_response += body;
@@ -109,12 +121,9 @@ bool	Response::tryFile(void)
 
 void		Response::doGET(void)
 {
-	if (endsWithSlash(_rqst->getUri().path) == true && _location->isDirList() == true)
+	if (endsWithSlash(_targetPath) == true && _location->isDirList() == true)
 	{
-		std::string		filePathname;
-		std::string		uri(_rqst->getUri().path);
-		filePathname =  uri.replace(0, _location->getPath().size(), _location->getRootPath());
-		std::string body = GenerateHtmlDirectory(filePathname);
+		std::string body = GenerateHtmlDirectory(_targetPath);
 		_response = generateResponse(body);
 	}
 	else if (tryFile() == false)

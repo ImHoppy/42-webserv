@@ -9,6 +9,9 @@
 # include "Utils.hpp"
 # include "GeneralConfig.hpp"
 
+/*
+	_targetPath: path to file or directory. Function request URI path and config root
+*/
 class Response
 {
 	public:
@@ -19,7 +22,9 @@ class Response
 		LocationConfig*						_location;
 		Request*							_rqst;
 		std::string							_response;
+		std::string							_targetPath;
 		/* Private member fcts */
+		void		setTargetPath(void);
 
 	public:
 		/* COplien */
