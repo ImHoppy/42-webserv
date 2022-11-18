@@ -29,16 +29,21 @@ Response &	Response::operator=(const Response& src)
 void	Response::setAllowHeader(void)
 {
 	_response = "HTTP/1.1 405 Method Not Allowed\r\n";
-	_response += "Allow: "
+	_response += "Allow: ";
 
 	std::string		allowed;
-	if (_location.methodIsAllowed(LocationConfig::GET)
-		allowed += "GET ";
-	if (_location.methodIsAllowed(LocationConfig::POST)
-		allowed += "POST ";
-	if (_location.methodIsAllowed(LocationConfig::DELETE)
+	if (_location->methodIsAllowed(LocationConfig::GET))
+		allowed += "GET, ";
+	if (_location->methodIsAllowed(LocationConfig::POST))
+		allowed += "POST, ";
+	if (_location->methodIsAllowed(LocationConfig::DELETE))
 		allowed += "DELETE";
-	_response += allowed + "\r\n\r\n";
+	if (*(allowed.end() - 1) == ' ')
+		allowed.erase(allowed.end() - 2, allowed.end());
+	_response += allowed + "\r\n";
+	std::string		body = generateErrorBody("Not allowed", "Method not allowed!");
+	_response += "Content-Length: " + nbToString(body.size()) + "\r\n\r\n";
+	_response += body;
 }
 
 /* Parametric constructor */
