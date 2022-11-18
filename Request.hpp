@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:37 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/18 12:49:51 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/18 19:02:00 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 # include <stdio.h> // perror
 # include <errno.h> // perror
 # include <cctype> // isspace
+# include "Utils.hpp" // pour findCRLF
 # ifndef STATUS_LINE_MAX_LENGTH
 #  define STATUS_LINE_MAX_LENGTH 8000 // en octets RFC7230 page 22
 # endif
@@ -29,11 +30,10 @@
 
 typedef struct s_uri
 {
-	std::string		scheme;
-	std::string		authority;
-	std::string		path;
-	std::string		query;
-	std::string		total;
+	std::string		scheme; // http://
+	std::string		authority; // domain name ou IP [:port]
+	std::string		path; // file ou directory 
+	std::string		query; // query string (voif html form / CGI
 }				t_uri;
 
 class Request
@@ -45,39 +45,44 @@ class Request
 
 	private:
 		/* Attributs */
-		int										_statusCode;
 		std::string								_rawRqst;
+		std::string								_rqstLine; // for debug/info printings
+		std::string								_method;
+		std::string								_target;
 		t_uri									_uri;
 		std::map<std::string, std::string>		_headers;
 		std::string								_body;
-		std::string								_rqstLine; // for debug/info printings
 		/* Private default constructor */
 		Request(void);
 
 	public:
 		~Request(void);
-		/* Parametric constructor */
 		Request&	operator=(const Request& src);
-		Request(std::string str);
 		Request(const Request& src);
+		/* Parametric constructor */
+		Request(const std::string& str);
 
 		/* Getteurs */
-		const std::string&			getRawRequest(void) const;
-		const headers_t&			getHeaders(void) const;
-		const t_uri&				getUri(void) const;
-		std::string					getMethod(void) const;
-		std::string					getHost(void) const;
+		const std::string &			getRawRequest(void) const;
 		const std::string &			getRequestLine(void) const;
+		const std::string &			getMethod(void) const;
+		const std::string &			getTarget(void) const;
+		const t_uri &				getUri(void) const;
+		const headers_t &			getHeaders(void) const;
+		const std::string &			getHost(void) const;
+		const std::string &			getBody(void) const;
 	private:
-		int				checkHostHeader(void); // TODO: a finir qd URI parsing OK
-		int				splitRequestLine(void);
-		int				splitHeaders(siterator_t start, siterator_t end);
+		/* Setteurs */
+		void			setRqstLine(void);
+		void			setMethod(void);
+		void			setTarget(void);
+		int				setURI(void);
 		siterator_t		setHeaders(void);
-		siterator_t		findCRLF(siterator_t start, siterator_t end);
-		int				parse_Request_target(void);
-		int				parse_absolute_form(const std::string& target);
-		int				parse_origin_form(const std::string& target);
-		bool			message_body_presence(void);
+		void			setBody(siterator_t start);
+		/* Private member fcts (utils) */
+		int				splitHeaders(siterator_t start, siterator_t end);
+		int				parse_origin_form(void);
+		int				parse_absolute_form(void);
 
 }; // end class Request
 
