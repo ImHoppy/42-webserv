@@ -12,11 +12,11 @@
 class LocationConfig {
 	public:
 
-	typedef enum {
+	typedef enum { // ATTENTION little endian?? see bitset<N>::set() 
 		GET = 0,
 		POST = 1,
 		DELETE = 2
-	} http_methods;
+	} http_methods; // represente la position du bit correspondant (pas la valeur)
 
 	private:
 	bool			_dirList;

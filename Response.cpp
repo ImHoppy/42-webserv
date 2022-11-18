@@ -26,6 +26,21 @@ Response &	Response::operator=(const Response& src)
 	return *this;
 }
 
+void	Response::setAllowHeader(void)
+{
+	_response = "HTTP/1.1 405 Method Not Allowed\r\n";
+	_response += "Allow: "
+
+	std::string		allowed;
+	if (_location.methodIsAllowed(LocationConfig::GET)
+		allowed += "GET ";
+	if (_location.methodIsAllowed(LocationConfig::POST)
+		allowed += "POST ";
+	if (_location.methodIsAllowed(LocationConfig::DELETE)
+		allowed += "DELETE";
+	_response += allowed + "\r\n\r\n";
+}
+
 /* Parametric constructor */
 Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) :
 	_config(config),
@@ -43,9 +58,8 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 	}
 	if (checkMethod() == false)
 	{
-		//TODO: finish bien le Allow header
 		//TODO: et pue la merde passe jamais ici pour cdefone/ DELETE wtf mb root redir??
-		_response = "HTTP/1.1 405 Method Not Allowed\r\nAllow: GET, POST\r\n\r\n";
+		setAllowHeader();
 		return ;
 	}
 	setTargetPath();

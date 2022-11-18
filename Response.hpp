@@ -26,6 +26,7 @@ class Response
 		std::string							_targetPath;
 		/* Private member fcts */
 		void		setTargetPath(void);
+		void		setAllowHeader(void);
 
 	public:
 		/* COplien */
