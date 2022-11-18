@@ -182,17 +182,18 @@ void	Server::removeClient(Client* client)
 /* Create, bind, and set in listen state its _socket. */
 int		Server::InitServer(void)
 {
-	int on = 1;
 	struct sockaddr_in servaddr;
 
 	if ((_socket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) < 0)
 	{
-		Logger::Error("Server: socket() failed: %s\n", strerror(errno));
+		Logger::Error("Server: socket() failed: %s", strerror(errno));
 		return (-1);
 	}
+	//TODO: launch 2 webserv avec les meme host:port marche a cause de REUSE etc
+	int on = 1;
 	if (setsockopt(_socket, SOL_SOCKET,  SO_REUSEADDR | SO_REUSEPORT, &on, sizeof(int)) < 0)
 	{
-		Logger::Error("Server: setsockopt() failed: %s\n", strerror(errno));
+		Logger::Error("Server: setsockopt() failed: %s", strerror(errno));
 		close(_socket);
 		_socket = -1;
 		return (-1);
@@ -203,7 +204,7 @@ int		Server::InitServer(void)
 	servaddr.sin_port = htons(_configs[0].getPort());
 	if (bind(_socket, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0)
 	{
-		Logger::Error("Server: bind() failed: %s\n", strerror(errno));
+		Logger::Error("Server: bind() failed: %s", strerror(errno));
 		return (-1);
 	}
 	if (listen(_socket, std::numeric_limits<short>::max()/2) < 0)
@@ -239,7 +240,7 @@ socket_t	 Server::AcceptNewClient(void)
 		throw std::runtime_error("epoll_ctl failed");
 	}
 	_clients.insert(client);
-	Logger::Info("Server %d accepted new client on fd %d\n", _socket, client_socket);
+	Logger::Info("Server %d accepted new client on fd %d", _socket, client_socket);
 	return (client_socket);
 }
 
@@ -255,10 +256,11 @@ void	Server::respond(Client* client)
 	if (rqst == NULL)
 		return ;
 	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
-//	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
+	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
 	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
-//	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
+	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
 	Response	rep(chosen_conf, chosen_loc, rqst);
+	std::cerr << "____ RESPONSE:\n" << rep << "______END RESPONSE" << std::endl;
 	socket_t	socket = client->getSocket();
 	ssize_t		bytes;
 	bytes = send(socket, rep.getResponse().c_str(), rep.getResponse().size(), 0);
@@ -266,7 +268,7 @@ void	Server::respond(Client* client)
 	{
 		throw std::runtime_error("send failed");
 	}
-	Logger::Info("Request for '%s' respond by %s\n", rqst->getUri().path.c_str(), chosen_conf->getServerNames()[0].c_str());
+	Logger::Info("Request for '%s' respond by %s", rqst->getRequestLine().c_str(), chosen_conf->getServerNames()[0].c_str());
 	client->popOutRequest();
 	//TODO: if _pendingRqst du client is empty, epollCTL MODify events to POLLIN only,
 	// et pas oublier de remettre POLLOUT a reception de la premiere request
