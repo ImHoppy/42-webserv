@@ -49,6 +49,8 @@ void	locationBlock(ServerConfig & server, key_value_t::iterator & it)
 				location.setRedirUrl(it->second);
 			else if (it->first == "cgi_cmd")
 				location.setCGICmd(it->second);
+			else if (it->first == "cgi_path")
+				location.setCGIPath(it->second);
 			else if (it->first == "method")
 			{
 				// split space separated methods and check if they are valid
