@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/18 19:02:23 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/18 19:44:51 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,11 +52,11 @@ Request::Request(const std::string& str) : _rawRqst(str)
 	setRqstLine();
 	setMethod();
 	setTarget();
-	setURI();
 	siterator_t	bodyStart;
 	bodyStart = setHeaders();
 	if (bodyStart != _rawRqst.end())
 		setBody(bodyStart);
+	setURI();
 }
 
 /* Enregistre le body: prend un iterator qui pointe sur le premier caractere, i.e le
@@ -91,7 +91,7 @@ void	Request::setTarget(void)
 		if (*it == ' ')
 		{
 			if (tBegin == crlf)
-				tBegin = it;
+				tBegin = ++it;
 			else
 			{
 				tEnd = it;
@@ -99,7 +99,7 @@ void	Request::setTarget(void)
 			}
 		}
 	}
-	_target.assign(tBegin, tEnd + 1);
+	_target.assign(tBegin, tEnd);
 }
 
 /*
@@ -108,8 +108,6 @@ void	Request::setTarget(void)
 */
 int		Request::setURI(void)
 {
-	if (_target.empty())
-		return (perror("Request: empty target"), -1);
 	if (_target[0] == '/') // origin form
 		parse_origin_form();
 	else
@@ -130,8 +128,6 @@ int		Request::setURI(void)
 */
 int		Request::parse_absolute_form(void)
 {
-	if (_target.size() <= 8)
-		return (perror("Request: wrong scheme"), -1);
 	_uri.scheme.assign(_target.begin(), _target.begin() + 7);
 	if (_uri.scheme != "http://")
 		return (perror("Request: wrong scheme"), -1);
@@ -220,7 +216,7 @@ int	Request::splitHeaders(siterator_t start, siterator_t end)
 Request::siterator_t		Request::setHeaders(void)
 {
 	siterator_t		eof = _rawRqst.end();
-	siterator_t		start = _rawRqst.begin();
+	siterator_t		start = _rawRqst.begin() + _rawRqst.find("\r\n") + 2;
 	while (start < eof)
 	{
 		siterator_t		hdr_end = findCRLF(start, eof);
@@ -277,13 +273,13 @@ const t_uri&		Request::getUri(void) const
 
 std::ostream&	operator<<(std::ostream& o, const Request& me)
 {
-	Request::headers_t		meMap = me.getHeaders();
-	o << "______ REQUEST MAP CONTAINS:" << std::endl;
-	for (Request::headers_t::iterator it = meMap.begin(); it != meMap.end(); ++it)
-	{
-		o << "HF name =\'" << it->first << "\' value =\'" << it->second << "\'"<< std::endl;
-	}
-	o << "______ REQUEST TARGET IS: \'" << me.getTarget() << "\'" << std::endl;
+	o << "Request Line = \'" << me.getRequestLine() << "\'" << std::endl;
+	o << "Method = \'" << me.getMethod() << "'\'" << std::endl;
+	o << "Target = \'" << me.getTarget() << "\'" << std::endl;
+	o << "URI scheme = \'" << me.getUri().scheme << "\'" << std::endl;
+	o << "URI auth = \'" << me.getUri().authority << "\'" << std::endl;
+	o << "URI path = \'" << me.getUri().path << "\'" << std::endl;
+	o << "URI query = \'" << me.getUri().query << "\'" << std::endl;
 	return o;
 }
 

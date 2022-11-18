@@ -95,3 +95,18 @@ std::string getExtension(std::string const & filename)
 		return "";
 	return filename.substr(pos + 1);
 }
+
+/*
+Find in the range [first, last) the first occurence of CRLF ("\r\n"). Return an iterator
+to '\r' if found, end otherwise.
+*/
+std::string::iterator	findCRLF(std::string::iterator start, std::string::iterator end)
+{
+	while (start != end)
+	{
+		if (*start == '\r' && (start + 1) != end && *(start + 1) == '\n')
+			return start;
+		++start;
+	}
+	return end;
+}

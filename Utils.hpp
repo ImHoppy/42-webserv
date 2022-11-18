@@ -5,6 +5,7 @@
 
 #define SpaceChar " \t\n\r\f\v"
 
+std::string::iterator	findCRLF(std::string::iterator start, std::string::iterator end);
 std::vector<std::string>	listFiles(std::string const & path, bool withDot = true);
 std::string		getFileExtension(const std::string & filename);
 std::string	generateErrorBody(std::string title, std::string body);
