@@ -255,8 +255,11 @@ void	Server::respond(Client* client)
 	Request*	rqst = client->getFirstRequest();
 	if (rqst == NULL)
 		return ;
+	std::cerr << " REQUEST IS:\n" << *rqst << "_____ END REQUEST" << std::endl;
+	std::cerr << "Request body:\n" << rqst->getBody() << std::endl;
+	std::cerr << "RAW RQST:\n" << rqst->getRawRequest() << std::endl;
 	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
-	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
+//	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
 	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
 	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
 	Response	rep(chosen_conf, chosen_loc, rqst);
@@ -268,10 +271,19 @@ void	Server::respond(Client* client)
 	{
 		throw std::runtime_error("send failed");
 	}
-	Logger::Info("Request for '%s' respond by %s", rqst->getRequestLine().c_str(), chosen_conf->getServerNames()[0].c_str());
+//	Logger::Info("Request for '%s' respond by %s", rqst->getRequestLine().c_str(), chosen_conf->getServerNames()[0].c_str());
 	client->popOutRequest();
 	//TODO: if _pendingRqst du client is empty, epollCTL MODify events to POLLIN only,
 	// et pas oublier de remettre POLLOUT a reception de la premiere request
 }
+
+/* CGI:
+	execve php-cgi filepath (ATTENTION need export variable REDIRECT_STATUS=true)
+	balise 'action': permet de preciser quel programme doit etre execve 
+	ex:		<form action="/cgi-bin/test.cgi" method="get"> 
+	attention, le script doit avoir les droit d'exec pour tous
+	pour passer la query string (les "arguments/donnes du form) au program: faut set
+	une variable d'environnement called QUERY_STRING avec elle (body d'une POST request)
+*/
 
 #endif
