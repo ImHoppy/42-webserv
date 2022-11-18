@@ -72,7 +72,10 @@ int main(int ac, char **av)
 
 	// initialisation de tous les Servers* (mise en listen state)
 	for (std::vector<Server*>::const_iterator servers = webserv.getServers().begin(); servers != webserv.getServers().end(); ++servers)
-		(*servers)->InitServer();
+	{
+		if ((*servers)->InitServer() == -1)
+			return (-1);
+	}
 	Logger::Info("Server started");
 	webserv.StartLoop();
 	Logger::Info("Server end");
