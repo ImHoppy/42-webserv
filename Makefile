@@ -12,7 +12,8 @@ SRCS		=	main.cpp GeneralConfig.cpp ServerConfig.cpp \
 				Utils.cpp Trim.cpp Request.cpp Response.cpp \
 				Logger.cpp ResponseUtils.cpp
 
-OBJS		=	$(SRCS:.cpp=.o)
+OBJS_DIR	=	obj/
+OBJS		=	$(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))
 DEPS		=	$(OBJS:.o=.d)
 
 I = 0
@@ -34,8 +35,9 @@ define compil
 	$(eval I = $(shell echo $$(($(I)+1))))
 endef
 
-%.o			:	%.cpp
-				$(call compil,$(CC) $(CFLAGS) -MMD -MP -c $< -o $@,Compiling, $<)
+$(OBJS_DIR)%.o :		%.cpp
+			@mkdir -p $(OBJS_DIR)
+			$(call compil,$(CC) $(CFLAGS) -MMD -MP -c $< -o $@,Compiling, $<)
 				
 
 $(NAME)		:	$(OBJS)
