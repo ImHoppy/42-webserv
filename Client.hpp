@@ -158,13 +158,13 @@ int		Client::recvRequest(void)
 		throw std::runtime_error("recv failed");
 	else if (bytes == 0)
 	{
-		Logger::Info("Client: EOF received from client %d\n", _csock);
+		Logger::Info("Client: EOF received from client %d", _csock);
 		return (0);
 	}
 	else
 	{
 		buf[bytes] = 0;
-		Logger::Info("Client: new Request received from client %d\n", _csock);
+		Logger::Info("Client: new Request received from client %d", _csock);
 		Request*		new_rqst = new Request(buf);
 		_pendingRqst.push_back(new_rqst);
 		return (bytes);

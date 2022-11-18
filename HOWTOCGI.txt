@@ -1,0 +1,4 @@
+REDIRECT_STATUS=200 REQUEST_METHOD=POST SCRIPT_FILENAME=/mnt/nfs/homes/cdefonte/webserv/cgi-bin/lala.php SCRIPT_NAME=/lala.php PATH_INFO=/ SERVER_NAME=site.tld SERVER_PROTOCOL=HTTP/1.1 REQUEST_URI=/nl/page HTTP_HOST=site.tld php-cgi
+
+
+
