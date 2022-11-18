@@ -31,7 +31,7 @@ class Client : public Base
 {
 	socket_t		_csock; // client socket, the one returned by accept() calls
 	Server*			_myServer;
-	std::deque<Request>		_pendingRqst; // deque of requests from this clientwhich havn't been respond yet
+	std::deque<Request*>		_pendingRqst; // deque of requests from this clientwhich havn't been respond yet
 	public:
 		Client(void);
 		~Client(void);
@@ -40,11 +40,11 @@ class Client : public Base
 		Client(socket_t csock, Server* serv);
 		int		getSocket(void) const;
 		void	addRequest(std::string raw_rqst);
-		void	addRequest(const Request& rqst);
+		void	addRequest(Request* rqst);
 		void	popOutRequest(void);
 		Request*	getFirstRequest(void);
-		const std::deque<Request>&	getPendingRequests(void) const;
-		int		recvRequest(void);
+		const std::deque<Request*>&	getPendingRequests(void) const;
+		int			recvRequest(void);
 		Server*		getServer(void);
 
 		std::string const & getType() const;
@@ -65,6 +65,8 @@ Client::~Client(void)
 	#ifdef CONSTRUC
 	std::cerr << "Client Destructor" << std::endl;
 	#endif
+	for (std::deque<Request*>::iterator it = _pendingRqst.begin(); it != _pendingRqst.end(); ++it)
+		delete *it;
 	if (_csock >= 0)
 		close(_csock);
 }
@@ -110,18 +112,21 @@ Client&		Client::operator=(const Client& src)
 /* Add a new Request to the pending queue of requests to be respond. */
 void	Client::addRequest(std::string raw_rqst)
 {
-	Request	rqst(raw_rqst);
+	Request*	rqst = new Request(raw_rqst);
 	this->_pendingRqst.push_back(rqst);
 }
 
 /* Add a new Request to the pending queue of request to be respond. */
-void	Client::addRequest(const Request& rqst)
+void	Client::addRequest(Request* rqst)
 {
 	this->_pendingRqst.push_back(rqst);
 }
 
 void	Client::popOutRequest(void)
 {
+	if (_pendingRqst.empty())
+		return ;
+	delete *(_pendingRqst.begin());
 	this->_pendingRqst.pop_front();
 }
 
@@ -129,10 +134,10 @@ Request*	Client::getFirstRequest(void)
 {
 	if (_pendingRqst.empty())
 		return NULL;
-	return &(this->_pendingRqst.front());
+	return this->_pendingRqst.front();
 }
 
-const std::deque<Request>&	Client::getPendingRequests(void) const
+const std::deque<Request*>&	Client::getPendingRequests(void) const
 {
 	return this->_pendingRqst;
 }
@@ -160,7 +165,7 @@ int		Client::recvRequest(void)
 	{
 		buf[bytes] = 0;
 		Logger::Info("Client: new Request received from client %d\n", _csock);
-		Request		new_rqst(buf);
+		Request*		new_rqst = new Request(buf);
 		_pendingRqst.push_back(new_rqst);
 		return (bytes);
 	}
