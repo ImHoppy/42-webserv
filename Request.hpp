@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:37 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/14 10:31:48 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/18 12:49:51 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ class Request
 		t_uri									_uri;
 		std::map<std::string, std::string>		_headers;
 		std::string								_body;
+		std::string								_rqstLine; // for debug/info printings
 		/* Private default constructor */
 		Request(void);
 
@@ -66,16 +67,17 @@ class Request
 		const t_uri&				getUri(void) const;
 		std::string					getMethod(void) const;
 		std::string					getHost(void) const;
+		const std::string &			getRequestLine(void) const;
 	private:
-		int		check_host_header(void); // TODO: a finir qd URI parsing OK
-		int		set_Request_line(void);
-		int		split_header(siterator_t start, siterator_t end);
-		siterator_t		set_header_fields(void);
-		siterator_t		find_crlf(siterator_t start, siterator_t end);
-		int		parse_Request_target(void);
-		int		parse_absolute_form(const std::string& target);
-		int		parse_origin_form(const std::string& target);
-		bool		message_body_presence(void);
+		int				checkHostHeader(void); // TODO: a finir qd URI parsing OK
+		int				splitRequestLine(void);
+		int				splitHeaders(siterator_t start, siterator_t end);
+		siterator_t		setHeaders(void);
+		siterator_t		findCRLF(siterator_t start, siterator_t end);
+		int				parse_Request_target(void);
+		int				parse_absolute_form(const std::string& target);
+		int				parse_origin_form(const std::string& target);
+		bool			message_body_presence(void);
 
 }; // end class Request
 

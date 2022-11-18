@@ -6,14 +6,14 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/14 12:26:40 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/18 12:51:32 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Request.hpp"
 
 /* Default constructor (private) */
-Request::Request(void) : _statusCode(200), _rawRqst(), _uri(), _headers(), _body() {}
+Request::Request(void) : _statusCode(200), _rawRqst(), _uri(), _headers(), _body(), _rqstLine() {}
 
 /* Destructor */
 Request::~Request(void) {}
@@ -21,7 +21,7 @@ Request::~Request(void) {}
 /* Copy constructor */
 Request::Request(const Request& src) : _statusCode(src._statusCode),
 _rawRqst(src._rawRqst),
-_uri(src._uri), _headers(src._headers), _body(src._body) {}
+_uri(src._uri), _headers(src._headers), _body(src._body), _rqstLine(src._rqstLine) {}
 
 /* Assignment operator */
 Request&	Request::operator=(const Request& src)
@@ -36,22 +36,28 @@ Request&	Request::operator=(const Request& src)
 	_uri.path = src._uri.path;
 	_uri.query = src._uri.query;
 	_uri.total = src._uri.total;
+	_rqstLine = src._rqstLine;
 	return *this;
+}
+
+const std::string &		Request::getRequestLine(void) const
+{
+	return _rqstLine;
 }
 
 /* ATTENTION: str MUST NOT be empty! */
 /* Parametric construcotr */
-Request::Request(std::string str) : _statusCode(200), _rawRqst(str), _uri(), _headers(), _body()
+Request::Request(std::string str) : _statusCode(200), _rawRqst(str), _uri(), _headers(), _body(), _rqstLine()
 {
 	siterator_t		curr;
 	if (_statusCode == 200)
-		set_Request_line();
+		splitRequestLine();
 	if (_statusCode == 200)
-		curr = set_header_fields();
+		curr = setHeaders();
 	if (_statusCode == 200)
 		parse_Request_target();
 	if (_statusCode == 200)
-		check_host_header();
+		checkHostHeader();
 	if (_statusCode == 200 && curr < _rawRqst.end())
 	{
 		_body.assign(curr, _rawRqst.end());
@@ -215,7 +221,7 @@ Host header field with an invalid field-value. (RFC 7230 page 44)
 Doesn't check if there is more than one Host header field, because already checked
 in split_header() fct.
 */
-int		Request::check_host_header(void)
+int		Request::checkHostHeader(void)
 {
 	if (_headers.find("Host") == _headers.end()) // si pas trouve
 	{
@@ -242,17 +248,17 @@ TODO: ERROR 501 if method not implemented by the origin server
 TODO: ERROR 405 if method known but not allowed for the Requested resource.
 (RFC 2616 page 36)
 */
-int		Request::set_Request_line(void)
+int		Request::splitRequestLine(void)
 {
 	siterator_t	start = _rawRqst.begin();
 	/* ignore and remove firsts CRLF if any */
-	while (start != _rawRqst.end() && start == find_crlf(start, _rawRqst.end()))
+	while (start != _rawRqst.end() && start == findCRLF(start, _rawRqst.end()))
 		start += 2;
 	if (start == _rawRqst.end())
 		return (_statusCode = 400, perror("Request: status line empty"), -1);
 	_rawRqst.erase(_rawRqst.begin(), start);
 	start = _rawRqst.begin();
-	if ((find_crlf(start, _rawRqst.end()) - start) > STATUS_LINE_MAX_LENGTH)
+	if ((findCRLF(start, _rawRqst.end()) - start) > STATUS_LINE_MAX_LENGTH)
 		return (_statusCode = 414, perror("Request: status line too long"), -1);
 	siterator_t	end = start;
 	while (end != _rawRqst.end() && *end != ' ')
@@ -269,13 +275,14 @@ int		Request::set_Request_line(void)
 	if (end == _rawRqst.end() || ++end == _rawRqst.end())
 		return (_statusCode = 400, perror("Request: line imcomplete"), -1);
 	start = end;
-	end = find_crlf(end, _rawRqst.end());
+	end = findCRLF(end, _rawRqst.end());
 	if (end == _rawRqst.end())
 		return (_statusCode = 400, perror("Request: line imcomplete (need CRLF)"), -1);
 	_headers["http_version"] = std::string(start, end);
 	if (end + 2 == _rawRqst.end())
 		return (_statusCode = 400, perror("Request: missing message fields"), -1);
 	end += 2;
+	_rqstLine.assign(_rawRqst.begin(), end - 2);
 	_rawRqst.erase(_rawRqst.begin(), end);
 	return (0);
 }
@@ -284,7 +291,7 @@ int		Request::set_Request_line(void)
 Find in the range [first, last) the first occurence of CRLF ("\r\n"). Return an iterator
 to '\r' if found, end otherwise.
 */
-Request::siterator_t	Request::find_crlf(siterator_t start, siterator_t end)
+Request::siterator_t	Request::findCRLF(siterator_t start, siterator_t end)
 {
 	while (start != end)
 	{
@@ -304,7 +311,7 @@ A server MUST reject any received Request message that contains
 whitespace between a header field-name and colon with a response code
 of 400 (Bad Request). (RFC 2616 pqge 25)
 */
-int	Request::split_header(siterator_t start, siterator_t end)
+int	Request::splitHeaders(siterator_t start, siterator_t end)
 {
 	if (start == end)
 		return (0);
@@ -341,13 +348,13 @@ All
 Internet-based HTTP/1.1 servers MUST respond with a 400 (Bad Request)
 status code to any HTTP/1.1 Request message which lacks a Host header
 field. (RFC 2616 page 129)*/
-Request::siterator_t		Request::set_header_fields(void)
+Request::siterator_t		Request::setHeaders(void)
 {
 	siterator_t		eof = _rawRqst.end();
 	siterator_t		start = _rawRqst.begin();
 	while (start < eof)
 	{
-		siterator_t		hdr_end = find_crlf(start, eof);
+		siterator_t		hdr_end = findCRLF(start, eof);
 		if (hdr_end == eof) // CRLF pas trouve
 		{
 			perror("Request: missing CRLF to end message field");
@@ -356,7 +363,7 @@ Request::siterator_t		Request::set_header_fields(void)
 		}
 		else if (hdr_end == start) // fin header field
 			return (start + 2);
-		else if (split_header(start, hdr_end) == -1)
+		else if (splitHeaders(start, hdr_end) == -1)
 			return eof;
 		start = hdr_end + 2;
 	}
