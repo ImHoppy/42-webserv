@@ -54,6 +54,7 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 	_response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"),
 	_targetPath()
 {
+	std::cout << "param constructor response" << std::endl;
 	if (config == NULL || loc == NULL || request == NULL)
 	{
 		_response = "HTTP/1.1 400 Bad Request\r\n\r\n";
@@ -86,23 +87,25 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 			_response = "HTTP/1.1 204 No Content\r\n\r\n";
 	}
 	else if (_rqst->getMethod() == "POST")
-		doPOST();
+	{
+		setAllowHeader();
+//		doPOST();
+	}
 }
 
+	//TODO: check si redirection 301
 /* Set le private attribut _targetPath en fonction du path de l'URI de la request et en
 fonction du root de la config. */
 void	Response::setTargetPath(void)
 {
 	std::string		url(_rqst->getUri().path);
-	if (ends_with(url, '/') == true && (_location->isDirList() == true || _rqst->getMethod() == "DELETE"))
-	{
-		_targetPath =  url.replace(0, _location->getPath().size(), _location->getRootPath());
-		return ;
-	}
-	//TODO: check si redirection 301
 	_targetPath =  url.replace(0, _location->getPath().size(), _location->getRootPath());
 	if (ends_with(url, '/') == true)
+	{
+		if (_location->isDirList() == true || _rqst->getMethod() == "DELETE")
+			return ;
 		_targetPath += _location->getIndexFile();
+	}
 }
 
 
@@ -179,8 +182,6 @@ bool	Response::tryFile(void)
 		std::stringstream	ss;
 		ss << body.size();
 		_response += "Content-Length: " + ss.str() + "\r\n";
-		//TODO: MIME 
-//		_response += "Content-Type: text/plain\r\n";// + getFileExtension(_targetPath) + "\r\n";
 		_response += "Connection: keep-alive\r\n";
 		_response += "\r\n";
 		_response += body;
@@ -188,37 +189,55 @@ bool	Response::tryFile(void)
 	return true;
 }
 
-void		Response::doGET(void)
+void	Response::getFile(void)
 {
-	if (ends_with(_targetPath, '/') == true && _location->isDirList() == true)
+	if (tryFile() == true)
+		return ;
+	ServerConfig::errors_t::const_iterator	it = _config->getErrorPaths().find(404);
+	if (it == _config->getErrorPaths().end())
 	{
-		std::string body = GenerateHtmlDirectory(_targetPath);
-		_response = generateResponse(body);
-	}
-	else if (tryFile() == false)
-	{
-		ServerConfig::errors_t::const_iterator	it = _config->getErrorPaths().find(404);
-		if (it == _config->getErrorPaths().end())
-		{
-			if (GeneralConfig::getErrors().find(404) == GeneralConfig::getErrors().end())
-			{
-				_response = generateResponse(404, "Not Found", "File Not Found (default)");
-				return;
-			}
-			_response = GeneralConfig::getErrors().at(404);
-			return;
-		}
-		std::ifstream	errFile(it->second.c_str());
-		if (!errFile.is_open())
+		if (GeneralConfig::getErrors().find(404) == GeneralConfig::getErrors().end())
 		{
 			_response = generateResponse(404, "Not Found", "File Not Found (default)");
 			return;
 		}
-		std::string		buff;
-		std::string		body;
-		while (std::getline(errFile, buff))
-			body += buff + "\n";
-		_response = generateResponse(404, "File Not Found", body);
+		_response = GeneralConfig::getErrors().at(404);
+		return;
+	}
+	std::ifstream	errFile(it->second.c_str());
+	if (!errFile.is_open())
+	{
+		_response = generateResponse(404, "Not Found", "File Not Found (default)");
+		return;
+	}
+	std::string		buff;
+	std::string		body;
+	while (std::getline(errFile, buff))
+		body += buff + "\n";
+	_response = generateResponse(404, "File Not Found", body);
+}
+
+void		Response::getCgi(void)
+{
+	
+}
+
+void		Response::doGET(void)
+{
+	if (targetIsDir() && _location->isDirList() == true)
+	{
+		std::string body = GenerateHtmlDirectory(_targetPath);
+		_response = generateResponse(body);
+		return ;
+	}
+	else if (targetIsFile())
+	{
+		getFile();
+		return ;
+	}
+	else // targetIsCgi()
+	{
+		getCgi();
 	}
 }
 
@@ -234,3 +253,18 @@ bool	Response::checkMethod(void) const
 	return _location->methodIsAllowed(_rqst->getMethod());
 }
 
+
+bool		Response::targetIsDir(void) const
+{
+	return (ends_with(_targetPath, '/'));
+}
+
+bool		Response::targetIsFile(void) const
+{
+	return !(targetIsDir() || targetIsFile());
+}
+
+bool		Response::targetIsCgi(void) const
+{
+	return (ends_with(_targetPath, ".php"));
+}

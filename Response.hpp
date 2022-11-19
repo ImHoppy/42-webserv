@@ -27,6 +27,11 @@ class Response
 		/* Private member fcts */
 		void		setTargetPath(void);
 		void		setAllowHeader(void);
+		//TODO: ameliorer avec des private static bitset<3> file dit cgi ?
+		bool		targetIsDir(void) const;
+		bool		targetIsFile(void) const;
+		bool		targetIsCgi(void) const;
+		void		getFile(void);
 
 	public:
 		/* COplien */
