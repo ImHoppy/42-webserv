@@ -200,7 +200,7 @@ int		Server::InitServer(void)
 	}
 	std::memset((char*)&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = _configs[0].getHost();
+	servaddr.sin_addr.s_addr = htonl(_configs[0].getHost());
 	servaddr.sin_port = htons(_configs[0].getPort());
 	if (bind(_socket, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0)
 	{
@@ -284,6 +284,13 @@ void	Server::respond(Client* client)
 	attention, le script doit avoir les droit d'exec pour tous
 	pour passer la query string (les "arguments/donnes du form) au program: faut set
 	une variable d'environnement called QUERY_STRING avec elle (body d'une POST request)
+	0) getConfFromUrl a changer: check dabord si fini par .php
+	1) append cgi_path + nom du script envoye dans "action" form.
+	2)
+	3) set les environnements variables (std::vector add les bonnes)
+	X) execve la cgi_cmd avec la string(cgi_path+action val) comme 1st arg, et le
+	vector.data comme environnement
+	X) Recevoir la sortie dans le main: dup2 ou pipe stdout ?
 */
 
 #endif
