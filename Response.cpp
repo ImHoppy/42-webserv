@@ -55,7 +55,14 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 	_targetPath()
 {
 	if (config == NULL || loc == NULL || request == NULL)
+	{
+		_response = "HTTP/1.1 400 Bad Request\r\n\r\n";
 		return ;
+	}
+	if (request->getUri().path.size() + request->getUri().query.size() > 1024)
+	{
+		_response = "HTTP/1.1 414 Request URI too Long\r\n\r\n";
+	}
 	if (checkHost() == false)
 	{
 		_response = "HTTP/1.1 400 Bad Request\r\n\r\n";
@@ -87,14 +94,14 @@ fonction du root de la config. */
 void	Response::setTargetPath(void)
 {
 	std::string		url(_rqst->getUri().path);
-	if (endsWithSlash(url) == true && (_location->isDirList() == true || _rqst->getMethod() == "DELETE"))
+	if (ends_with(url, '/') == true && (_location->isDirList() == true || _rqst->getMethod() == "DELETE"))
 	{
 		_targetPath =  url.replace(0, _location->getPath().size(), _location->getRootPath());
 		return ;
 	}
 	//TODO: check si redirection 301
 	_targetPath =  url.replace(0, _location->getPath().size(), _location->getRootPath());
-	if (endsWithSlash(url) == true)
+	if (ends_with(url, '/') == true)
 		_targetPath += _location->getIndexFile();
 }
 
@@ -107,7 +114,7 @@ int		Response::doDELETE(const std::string &path)
 	typedef std::vector<std::string>	strVec;
 	if (path == "./" || path == "../")
 		return 204;
-	if (endsWithSlash(path) == false) // si is file, remove it and stop.
+	if (ends_with(path, '/') == false) // si is file, remove it and stop.
 	{
 		if (std::remove(path.c_str()) != 0)
 		{
@@ -183,7 +190,7 @@ bool	Response::tryFile(void)
 
 void		Response::doGET(void)
 {
-	if (endsWithSlash(_targetPath) == true && _location->isDirList() == true)
+	if (ends_with(_targetPath, '/') == true && _location->isDirList() == true)
 	{
 		std::string body = GenerateHtmlDirectory(_targetPath);
 		_response = generateResponse(body);
