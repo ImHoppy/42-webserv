@@ -5,6 +5,8 @@
 
 #define SpaceChar " \t\n\r\f\v"
 
+bool	ends_with(const std::string& str, const std::string& extension);
+bool	ends_with(const std::string& str, const char c);
 std::string::iterator	findCRLF(std::string::iterator start, std::string::iterator end);
 std::vector<std::string>	listFiles(std::string const & path, bool withDot = true);
 std::string		getFileExtension(const std::string & filename);
@@ -13,7 +15,6 @@ std::string	generateErrorBody(std::string body);
 std::string generateResponse(std::string fileContent);
 std::string generateResponse(int code, std::string codeMsg, std::string fileContent);
 std::string	GenerateHtmlDirectory(std::string const & path);
-bool	endsWithSlash(const std::string & path);
 std::string	nbToString(int nb);
 int32_t		StrToInt(std::string const & str);
 int32_t		StrToIp(std::string const & ip);

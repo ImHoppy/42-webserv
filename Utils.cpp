@@ -16,11 +16,20 @@ std::string		getFileExtension(const std::string & filename)
 	return extension;
 }
 
-bool	endsWithSlash(const std::string & path)
+bool	ends_with(const std::string& str, const char c)
 {
 	std::string::size_type	pos;
-	pos = path.find_last_of('/');
-	if (pos != std::string::npos && pos == path.size() - 1)
+	pos = str.find_last_of(c);
+	if (pos != std::string::npos && pos == str.size() - 1)
+		return true;
+	return false;
+}
+
+bool	ends_with(const std::string& str, const std::string& extension)
+{
+	std::string::size_type	pos;
+	pos = str.rfind(extension);
+	if (pos != std::string::npos && pos == str.size() - extension.size())
 		return true;
 	return false;
 }
