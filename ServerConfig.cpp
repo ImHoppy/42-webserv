@@ -72,6 +72,7 @@ std::string	const &	ServerConfig::getRootPath() const {
 }
 
 /* Doit retourner la location la plus longue qui match avec url.
+	0) Si extension == ".php" on cherche la loc .php
 	1) Si perfect match est trouve, return it.
 	2) Parcourt toutes les locations et compare leur url pour trouver celle qui
 	"matche le plus". La comparaison se fait par "troncon": commence au premier "/" 
@@ -79,6 +80,15 @@ std::string	const &	ServerConfig::getRootPath() const {
 	3) Si Rien ne match, return NULL.*/
 LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 {
+	if (ends_with(url, ".php") == true)
+	{
+		for (map_locs::iterator locs = _location.begin(); locs != _location.end(); ++locs)
+		{
+			if (locs->first == ".php")
+				return &(locs->second);
+		}
+		return NULL;
+	}
 	std::string::size_type found;
 	std::string::size_type start_search = url.size();
 	while (start_search != std::string::npos)

@@ -1,18 +1,19 @@
 #ifndef SERVERCONFIG_HPP
 # define SERVERCONFIG_HPP
 
-#include <string>
-#include <vector>
-#include <map>
-#include "LocationConfig.hpp"
-#include <stdint.h>
-#include <iostream>
-#include <fstream> // file stream
-#include <sstream>
+# include <string>
+# include <vector>
+# include <map>
+# include "LocationConfig.hpp"
+# include <stdint.h>
+# include <iostream>
+# include <fstream> // file stream
+# include <sstream>
+# include "Utils.hpp" // ends_with()
 
 class ServerConfig {
 	private:
-	
+	//TODO: map inutile, puisque key = LocationConfig.getPath() (remplacer par vector)
 	typedef std::map<std::string, LocationConfig> map_locs;
 	
 	int32_t						_host;
