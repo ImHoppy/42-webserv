@@ -9,6 +9,11 @@
 # include "Request.hpp"
 # include "Utils.hpp"
 # include "GeneralConfig.hpp"
+# include <sys/types.h> // fork(), waitpid()
+# include <unistd.h> // fork()
+# include <sys/wait.h> // waitpid()
+# include <cstring> // memcpy()
+# include <unistd.h> // pipe()
 
 /*
 	_targetPath: path to file or directory. Function request URI path and config root
@@ -32,6 +37,7 @@ class Response
 		bool		targetIsFile(void) const;
 		bool		targetIsCgi(void) const;
 		void		getFile(void);
+		void		phpCgiGet(void);
 
 	public:
 		/* COplien */

@@ -54,7 +54,6 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 	_response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"),
 	_targetPath()
 {
-	std::cout << "param constructor response" << std::endl;
 	if (config == NULL || loc == NULL || request == NULL)
 	{
 		_response = "HTTP/1.1 400 Bad Request\r\n\r\n";
@@ -78,7 +77,10 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 	setTargetPath();
 	//TODO: vraiment process la rqst dans la construction?
 	if (_rqst->getMethod() == "GET")
+	{
 		doGET();
+		return ;
+	}
 	else if (_rqst->getMethod() == "DELETE")
 	{
 		if (doDELETE(_targetPath) == 404)
@@ -217,13 +219,104 @@ void	Response::getFile(void)
 	_response = generateResponse(404, "File Not Found", body);
 }
 
-void		Response::getCgi(void)
+void		Response::phpCgiGet(void)
 {
-	
+	pid_t	pid;
+	int		pipefd[2]; //0 == read end 1 == write end
+
+	if (pipe(pipefd) == -1)
+	{
+		Logger::Error("Response::phpCgiGet() pipe() failed");
+		return ;
+	}
+	pid = fork();
+	if (pid == -1)
+	{
+		Logger::Error("Response::phpCgiGet() fork() failed");
+		return ;
+	}
+	if (pid == 0) // child
+	{
+		//TODO: faire mieux
+		close(pipefd[0]);
+		std::vector<std::string>		vecEnv;
+		int i = 0;
+		while (environ && environ[i])
+		{
+			vecEnv.push_back(environ[i]);
+			++i;
+		}
+		vecEnv.push_back("REDIRECT_STATUS=true");
+		vecEnv.push_back("REQUEST_METHOD=GET");
+		vecEnv.push_back("SCRIPT_NAME=" + _rqst->getUri().path);
+		vecEnv.push_back("SCRIPT_FILENAME=/home/cdefonte/webserv/cgi-bin" + _rqst->getUri().path);
+		vecEnv.push_back("PATH_INFO=/");
+		vecEnv.push_back("SERVER_PROTOCOL=HTTP/1.1");
+		vecEnv.push_back("QUERY_STRING=" + _rqst->getUri().query);
+
+
+		if (dup2(pipefd[1], 1) == -1)
+		{
+			Logger::Error("Response::phpCgiGet() dup2() failed: errno = %d, \
+			strerror=%s", errno, strerror(errno));
+			
+		}
+		close(pipefd[1]);
+
+		std::string	pathname = "/usr/bin/php-cgi";
+
+		char **argv;
+		argv = (char **)malloc(sizeof(char *) * 2);
+		argv[0] = (char*)malloc(pathname.size() + 1);
+		argv[0] = (char*)memcpy(argv[0], pathname.c_str(), pathname.size());
+		argv[0][pathname.size()] = '\0';
+		argv[1] = NULL;
+		char **env;
+		env = (char **)malloc(sizeof(char *) * vecEnv.size() + 1);
+		int	j = 0;
+		for (std::vector<std::string>::iterator it = vecEnv.begin(); it != vecEnv.end(); ++it)
+		{
+			env[j] = (char *)malloc(it->size() + 1);
+			env[j] = (char*)memcpy(env[j], it->c_str(), it->size());
+			env[j][it->size()] = '\0';
+			++j;
+		}
+		env[j] = NULL;
+		if (execve(argv[0], argv, env) == -1)
+		{
+			Logger::Error("Response::phpCgiGet() execve() failed");
+			std::cout << "ERRNO = " << errno << std::endl;
+			perror("NIEH");
+			exit(-1);
+		}
+	}
+	else
+	{
+		int		status = 0;
+		int w = waitpid(pid, &status, 0);
+		if (w == -1)
+		{
+			Logger::Error("Response::phpCgiGet() waitpid() failed");
+			return ;
+		}
+		if (WIFEXITED(status))
+			Logger::Info("php child exited with %d", WEXITSTATUS(status));
+		if (WIFSIGNALED(status))
+		{
+			Logger::Info("php child signaled with %d", WTERMSIG(status));
+			return ;
+		}
+		std::cout << "LALALA " << pipefd[0] << std::endl;
+
+		close(pipefd[0]);
+		close(pipefd[1]);
+
+	}
 }
 
 void		Response::doGET(void)
 {
+	
 	if (targetIsDir() && _location->isDirList() == true)
 	{
 		std::string body = GenerateHtmlDirectory(_targetPath);
@@ -237,7 +330,7 @@ void		Response::doGET(void)
 	}
 	else // targetIsCgi()
 	{
-		getCgi();
+		phpCgiGet();
 	}
 }
 
@@ -261,7 +354,7 @@ bool		Response::targetIsDir(void) const
 
 bool		Response::targetIsFile(void) const
 {
-	return !(targetIsDir() || targetIsFile());
+	return !(targetIsDir() || targetIsCgi());
 }
 
 bool		Response::targetIsCgi(void) const
