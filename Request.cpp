@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/18 20:12:17 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/20 15:36:48 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,7 +143,7 @@ int		Request::parse_absolute_form(void)
 	else
 	{
 		_uri.path.assign(_target.begin() + auth_end, _target.begin() + path_end);
-		_uri.query.assign(_target.begin() + path_end, _target.end());
+		_uri.query.assign(_target.begin() + path_end + 1, _target.end());
 	}
 	return (0);
 }
@@ -165,7 +165,7 @@ int		Request::parse_origin_form(void)
 	else
 	{
 		_uri.path.assign(_target.begin(), _target.begin() + path_end);
-		_uri.query.assign(_target.begin() + path_end, _target.end());
+		_uri.query.assign(_target.begin() + 1 + path_end, _target.end());
 	}
 	return (0);
 }
