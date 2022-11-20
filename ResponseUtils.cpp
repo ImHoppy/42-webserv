@@ -8,6 +8,18 @@
 #include <unistd.h>
 #include <iostream>
 
+std::string generateResponseCgi(std::string cgiRes)
+{
+	std::string response;
+
+	response = "HTTP/1.1 200 OK\r\n"
+		"Content-Length: "
+		+ nbToString(cgiRes.length() - cgiRes.find("\r\n\r\n") - 4) + "\r\n"
+		"Connection: Keep-Alive\r\n"
+		+ cgiRes; // Contient le content type et \r\n
+	return response;
+}
+
 std::string generateResponse(std::string fileContent)
 {
 	std::string response;

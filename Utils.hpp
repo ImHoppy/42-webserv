@@ -5,6 +5,7 @@
 
 #define SpaceChar " \t\n\r\f\v"
 
+std::string generateResponseCgi(std::string cgiRes);
 bool	ends_with(const std::string& str, const std::string& extension);
 bool	ends_with(const std::string& str, const char c);
 std::string::iterator	findCRLF(std::string::iterator start, std::string::iterator end);

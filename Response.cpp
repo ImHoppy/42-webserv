@@ -292,6 +292,7 @@ void		Response::phpCgiGet(void)
 	}
 	else
 	{
+		close(pipefd[1]);
 		int		status = 0;
 		int w = waitpid(pid, &status, 0);
 		if (w == -1)
@@ -306,10 +307,20 @@ void		Response::phpCgiGet(void)
 			Logger::Info("php child signaled with %d", WTERMSIG(status));
 			return ;
 		}
-		std::cout << "LALALA " << pipefd[0] << std::endl;
-
+		//TODO: alors soit disant faut ajouter les "locaux" fds a epoll, genre
+		// meme pour lire le pipe bah faut passer par epoll... et pour les error files
+		//TODO: check les malloc returns;
+		char *buf;
+		buf = (char*)malloc(_config->getMaxBodySize());
+		ssize_t	nbread = read(pipefd[0], buf, _config->getMaxBodySize() - 1);
+		if (nbread == -1)
+			Logger::Error("Response::phpCgiGet() read() failed");
+		buf[nbread] = 0;
+		
+		std::string	body(buf);
+		_response = generateResponseCgi(body);
 		close(pipefd[0]);
-		close(pipefd[1]);
+		free(buf);
 
 	}
 }
