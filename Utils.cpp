@@ -2,6 +2,7 @@
 #include <sstream>
 #include <vector>
 #include "Utils.hpp"
+#include <iostream> // debug 
 
 std::string		getFileExtension(const std::string & filename)
 {
@@ -18,11 +19,11 @@ std::string		getFileExtension(const std::string & filename)
 
 bool	ends_with(const std::string& str, const char c)
 {
-	std::string::size_type	pos;
-	pos = str.find_last_of(c);
-	if (pos != std::string::npos && pos == str.size() - 1)
-		return true;
-	return false;
+	if (str.empty())
+		return false;
+	if (*(str.end() - 1) != c)
+		return false;
+	return true;
 }
 
 bool	ends_with(const std::string& str, const std::string& extension)
