@@ -1,14 +1,20 @@
 #include "Response.hpp"
 
 /* Default constructor */
-Response::Response(void) : _config(), _location(), _rqst(), _response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"), _targetPath() {}
+Response::Response(void) :
+	_config(), _location(), _rqst(), _client(), 
+	_response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"), _targetPath(), _cgi()
+{}
 
 /* Destructor */
 Response::~Response(void) {}
 
 /* Copy constructor */
-Response::Response(const Response& src) : _config(src._config), _location(src._location),
-	_rqst(src._rqst), _response(src._response), _targetPath(src._targetPath) {}
+Response::Response(const Response& src) :
+	_config(src._config), _location(src._location),
+	_rqst(src._rqst), _client(src._client), _response(src._response),
+	_targetPath(src._targetPath), _cgi(src._cgi)
+{}
 
 /* Assignement operator */
 Response &	Response::operator=(const Response& src)
@@ -18,8 +24,10 @@ Response &	Response::operator=(const Response& src)
 		_config = src._config;
 		_location = src._location;
 		_rqst = src._rqst;
+		_client = src._client;
 		_response = src._response;
 		_targetPath = src._targetPath;
+		_cgi = src._cgi;
 	}
 	return *this;
 }
@@ -45,12 +53,14 @@ void	Response::setAllowHeader(void)
 }
 
 /* Parametric constructor */
-Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) :
+Response::Response(ServerConfig* config, LocationConfig* loc, Request* request, Client* client) :
 	_config(config),
 	_location(loc),
 	_rqst(request),
+	_client(client),
 	_response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"),
-	_targetPath()
+	_targetPath(),
+	_cgi()
 {
 	if (config == NULL || loc == NULL || request == NULL)
 	{
@@ -68,12 +78,10 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request) 
 	}
 	if (checkMethod() == false)
 	{
-		//TODO: et pue la merde passe jamais ici pour cdefone/ DELETE wtf mb root redir??
 		setAllowHeader();
 		return ;
 	}
 	setTargetPath();
-	//TODO: vraiment process la rqst dans la construction?
 	if (_rqst->getMethod() == "GET")
 	{
 		doGET();
@@ -239,109 +247,51 @@ void	Response::getFile(void)
 	_response = generateResponse(404, "File Not Found", body);
 }
 
+/* Set le vector d'environnement variables (RFC 3875) */
+void		Response::setCgiEnv(void)
+{
+	Request::headers_t		headers = _rqst->getHeaders();
+	Request::headers_t::const_iterator	not_found = headers.end();
+
+	Request::headers_t::const_iterator	found = headers.find("Authorization");
+	if (found != not_found)
+	{
+		_cgi.addVarToEnv("AUTH_TYPE" + found->second);
+	}
+	found = headers.find("Content-Type");
+	if (found != not_found)
+	{
+		_cgi.addVarToEnv("CONTENT_TYPE" + found->second);
+	}
+	found = headers.find("Content-Length");
+	if (found != not_found)
+	{
+		_cgi.addVarToEnv("CONTENT_LENGTH" + found->second);
+	}
+	_cgi.addVarToEnv("REDIRECT_STATUS=true");
+	_cgi.addVarToEnv("GATEWAY_INTERFACE=CGI/0.1");
+	_cgi.addVarToEnv("PATH_INFO=/"); // ou si myscript.php/this/is/pathinfo?query
+	_cgi.addVarToEnv("QUERY_STRING=" + _rqst->getUri().query);
+//	_cgi.addVarToEnv("REMOTE_ADDR=" + inet_ntoa(client->addr())); //IP
+	_cgi.addVarToEnv("REQUEST_METHOD=" + _rqst->getMethod());
+	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _location->getCGIPath() + _rqst->getUri().path);
+	_cgi.addVarToEnv("SCRIPT_NAME=" + _rqst->getUri().path);
+	_cgi.addVarToEnv("SERVER_NAME=" + _config.getServerNames()[0]);
+	_cgi.addVarToEnv("SERVER_PORT=" + _config.getPort());
+	_cgi.addVarToEnv("SERVER_PROTOCOL=HTTP/1.1");
+	_cgi.addVarToEnv("SERVER_SOFTWARE=WebServ");
+	//TODO: RFC 3875 parle meta-variables: export tous les headers de la request
+}
+
+/* CGI GET quand par exemple html fomr pour submit une image qu'on veut afficher
+dans le navigateur */
 void		Response::phpCgiGet(void)
 {
-	pid_t	pid;
-	int		pipefd[2]; //0 == read end 1 == write end
-
-	if (pipe(pipefd) == -1)
+	setCgiEnv();
+	if (_cgi.launch() == -1)
 	{
-		Logger::Error("Response::phpCgiGet() pipe() failed");
+		_response = generateResponse(500, "Internal Server Error", "cgi failed");
 		return ;
-	}
-	pid = fork();
-	if (pid == -1)
-	{
-		Logger::Error("Response::phpCgiGet() fork() failed");
-		return ;
-	}
-	if (pid == 0) // child
-	{
-		//TODO: faire mieux
-		close(pipefd[0]);
-		std::vector<std::string>		vecEnv;
-		int i = 0;
-		while (environ && environ[i])
-		{
-			vecEnv.push_back(environ[i]);
-			++i;
-		}
-		vecEnv.push_back("REDIRECT_STATUS=true");
-		vecEnv.push_back("REQUEST_METHOD=GET");
-		vecEnv.push_back("SCRIPT_NAME=" + _rqst->getUri().path);
-		vecEnv.push_back("SCRIPT_FILENAME=/home/cdefonte/webserv/cgi-bin" + _rqst->getUri().path);
-		vecEnv.push_back("PATH_INFO=/");
-		vecEnv.push_back("SERVER_PROTOCOL=HTTP/1.1");
-		vecEnv.push_back("QUERY_STRING=" + _rqst->getUri().query);
-
-
-		if (dup2(pipefd[1], 1) == -1)
-		{
-			Logger::Error("Response::phpCgiGet() dup2() failed: errno = %d, \
-			strerror=%s", errno, strerror(errno));
-			
-		}
-		close(pipefd[1]);
-
-		std::string	pathname = "/usr/bin/php-cgi";
-
-		char **argv;
-		argv = (char **)malloc(sizeof(char *) * 2);
-		argv[0] = (char*)malloc(pathname.size() + 1);
-		argv[0] = (char*)memcpy(argv[0], pathname.c_str(), pathname.size());
-		argv[0][pathname.size()] = '\0';
-		argv[1] = NULL;
-		char **env;
-		env = (char **)malloc(sizeof(char *) * vecEnv.size() + 1);
-		int	j = 0;
-		for (std::vector<std::string>::iterator it = vecEnv.begin(); it != vecEnv.end(); ++it)
-		{
-			env[j] = (char *)malloc(it->size() + 1);
-			env[j] = (char*)memcpy(env[j], it->c_str(), it->size());
-			env[j][it->size()] = '\0';
-			++j;
-		}
-		env[j] = NULL;
-		if (execve(argv[0], argv, env) == -1)
-		{
-			Logger::Error("Response::phpCgiGet() execve() failed");
-			std::cout << "ERRNO = " << errno << std::endl;
-			perror("NIEH");
-			exit(-1);
-		}
-	}
-	else
-	{
-		close(pipefd[1]);
-		int		status = 0;
-		int w = waitpid(pid, &status, 0);
-		if (w == -1)
-		{
-			Logger::Error("Response::phpCgiGet() waitpid() failed");
-			return ;
-		}
-		if (WIFEXITED(status))
-			Logger::Info("php child exited with %d", WEXITSTATUS(status));
-		if (WIFSIGNALED(status))
-		{
-			Logger::Info("php child signaled with %d", WTERMSIG(status));
-			return ;
-		}
-		//TODO: alors soit disant faut ajouter les "locaux" fds a epoll, genre
-		// meme pour lire le pipe bah faut passer par epoll... et pour les error files
-		//TODO: check les malloc returns;
-		char *buf;
-		buf = (char*)malloc(_config->getMaxBodySize());
-		ssize_t	nbread = read(pipefd[0], buf, _config->getMaxBodySize() - 1);
-		if (nbread == -1)
-			Logger::Error("Response::phpCgiGet() read() failed");
-		buf[nbread] = 0;
-		
-		std::string	body(buf);
-		_response = generateResponseCgi(body);
-		close(pipefd[0]);
-		free(buf);
-
 	}
 }
 

@@ -9,14 +9,12 @@
 # include "Request.hpp"
 # include "Utils.hpp"
 # include "GeneralConfig.hpp"
-# include <sys/types.h> // fork(), waitpid()
-# include <unistd.h> // fork()
+# include <sys/types.h> // waitpid()
 # include <sys/wait.h> // waitpid()
-# include <cstring> // memcpy()
-# include <unistd.h> // pipe()
 # include "Response.hpp"
 # include "Logger.hpp"
-
+# include "Client.hpp"
+# include "CGI.hpp"
 
 /*
 	_targetPath: path to file or directory. Function request URI path and config root
@@ -30,8 +28,10 @@ class Response
 		ServerConfig*						_config;
 		LocationConfig*						_location;
 		Request*							_rqst;
+		Client*								_client;
 		std::string							_response;
 		std::string							_targetPath;
+		CGI									_cgi;
 		/* Private member fcts */
 		void		setTargetPath(void);
 		void		setAllowHeader(void);
@@ -42,6 +42,7 @@ class Response
 		void		getFile(void);
 		void		phpCgiGet(void);
 		void		upload(void);
+		void		setCgiEnv(void);
 
 	public:
 		/* COplien */
@@ -49,7 +50,7 @@ class Response
 		~Response(void);
 		Response(const Response& src);
 		Response&	operator=(const Response& src);
-		Response(ServerConfig* config, LocationConfig* loc, Request* request);
+		Response(ServerConfig* config, LocationConfig* loc, Request* request, Client* client);
 		/* Getteurs */
 		std::string		getResponse(void) const;
 		/* Public Member functions */

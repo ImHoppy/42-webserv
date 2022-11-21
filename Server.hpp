@@ -262,7 +262,7 @@ void	Server::respond(Client* client)
 //	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
 	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
 	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
-	Response	rep(chosen_conf, chosen_loc, rqst);
+	Response	rep(chosen_conf, chosen_loc, rqst, client);
 	std::cerr << "____ RESPONSE:\n" << rep << "______END RESPONSE" << std::endl;
 	socket_t	socket = client->getSocket();
 	ssize_t		bytes;

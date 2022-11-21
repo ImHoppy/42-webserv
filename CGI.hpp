@@ -1,22 +1,37 @@
 #ifndef CGI_HPP
 # define CGI_HPP
 
-#include <string>
-#include <vector>
-#include "Request.hpp"
+# include <string>
+# include <vector>
+# include "Request.hpp"
+# include <unistd.h> // fork()
+# include <sys/types.h> // fork()
+# include <cstring> // memcpy()
+# include <unistd.h> // pipe()
 
 class CGI {
 	private:
 		std::vector<std::string>		_env;
+		int								_pipefdRead;
+		int								_pipefdWrite;
+		pid_t							_pid;
+		std::string						_path;
+//		int								_readFrom; // useless for now mais je pense qu'il faut lui mettre le body de la request dedans si c'est du post par exemple?
 	
 	public:
 		CGI(void);
 		~CGI(void);
 		CGI &	operator=(const CGI & src);
 		CGI(const CGI & src);
+		/* GET */
 		const std::vector<std::string> &	getEnv(void) const;
+		/* SET */
+		void	setEnv(std::vector<std::string> & env);
+		void	initEnv(void);
+		void	addVarToEnv(const std::string & varval);
 
-		void	setEnv(const Request & rqst);
+		int		launch(void);
+
 };
 
 #endif
