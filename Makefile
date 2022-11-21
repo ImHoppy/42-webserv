@@ -8,9 +8,9 @@ ifeq ($(DEBUG), 1)
 endif
 
 SRCS		=	main.cpp GeneralConfig.cpp ServerConfig.cpp \
-				LocationConfig.cpp Parsing.cpp FillConfig.cpp \
-				Utils.cpp Trim.cpp Request.cpp Response.cpp \
-				Logger.cpp ResponseUtils.cpp CGI.cpp
+				LocationConfig.cpp Parsing.cpp FillConfig.cpp Server.cpp \
+				Utils.cpp Trim.cpp Client.cpp Request.cpp Response.cpp \
+				Logger.cpp ResponseUtils.cpp CGI.cpp WebServ.cpp
 
 OBJS_DIR	=	obj/
 OBJS		=	$(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))
