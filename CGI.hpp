@@ -3,11 +3,18 @@
 
 # include <string>
 # include <vector>
-# include "Request.hpp"
 # include <unistd.h> // fork()
 # include <sys/types.h> // fork()
+# include <sys/wait.h> // waitpid()
 # include <cstring> // memcpy()
 # include <unistd.h> // pipe()
+# include <cstdlib> // malloc
+
+# include "Logger.hpp"
+
+# ifndef BUFFSIZE
+#  define BUFFSIZE 1500
+# endif
 
 class CGI {
 	private:
@@ -28,6 +35,7 @@ class CGI {
 		/* SET */
 		void	setEnv(std::vector<std::string> & env);
 		void	initEnv(void);
+		int		initPipe(void);
 		void	addVarToEnv(const std::string & varval);
 
 		int		launch(void);

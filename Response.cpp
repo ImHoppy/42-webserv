@@ -276,8 +276,8 @@ void		Response::setCgiEnv(void)
 	_cgi.addVarToEnv("REQUEST_METHOD=" + _rqst->getMethod());
 	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _location->getCGIPath() + _rqst->getUri().path);
 	_cgi.addVarToEnv("SCRIPT_NAME=" + _rqst->getUri().path);
-	_cgi.addVarToEnv("SERVER_NAME=" + _config.getServerNames()[0]);
-	_cgi.addVarToEnv("SERVER_PORT=" + _config.getPort());
+	_cgi.addVarToEnv("SERVER_NAME=" + _config->getServerNames()[0]);
+	_cgi.addVarToEnv("SERVER_PORT=" + _config->getPort());
 	_cgi.addVarToEnv("SERVER_PROTOCOL=HTTP/1.1");
 	_cgi.addVarToEnv("SERVER_SOFTWARE=WebServ");
 	//TODO: RFC 3875 parle meta-variables: export tous les headers de la request
@@ -293,7 +293,26 @@ void		Response::phpCgiGet(void)
 		_response = generateResponse(500, "Internal Server Error", "cgi failed");
 		return ;
 	}
+	//TODO: alors soit disant faut ajouter les "locaux" fds a epoll, genre
+	// meme pour lire le pipe bah faut passer par epoll... et pour les error files
 }
+
+//int		Response::readFromCgi(void)
+//{
+//	char buf[BUFFSIZE];
+//	ssize_t	nbread = read(_pipefdRead, buf, BUFFSIZE - 1);
+//	// if nbread == BUFFSIZE - 1 alors reste des bytes à lire omg
+//	if (nbread == -1)
+//	{
+//		Logger::Error("Response::phpCgiGet() read() failed");
+//		return -1;
+//	}
+//	buf[nbread] = 0;
+//	
+//	std::string	body(buf);
+//	_response = generateResponseCgi(body);
+//	close(_pipefdRead);
+//}
 
 void		Response::doGET(void)
 {

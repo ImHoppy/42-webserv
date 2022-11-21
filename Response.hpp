@@ -5,20 +5,22 @@
 # include <string>
 # include <map>
 # include <cstdio> // std::remove (file/dir)
-# include "ServerConfig.hpp"
-# include "Request.hpp"
-# include "Utils.hpp"
-# include "GeneralConfig.hpp"
 # include <sys/types.h> // waitpid()
 # include <sys/wait.h> // waitpid()
-# include "Response.hpp"
+
+# include "Utils.hpp"
 # include "Logger.hpp"
 # include "Client.hpp"
 # include "CGI.hpp"
+# include "ServerConfig.hpp"
+# include "LocationConfig.hpp"
+# include "Request.hpp"
 
 /*
 	_targetPath: path to file or directory. Function request URI path and config root
 */
+
+class Client;
 class Response
 {
 	public:
