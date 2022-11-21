@@ -41,13 +41,4 @@ class WebServ
 
 };// end class WebServ
 
-
-//TODO: a deplacer
-void	sig_handler(int sig)
-{
-	(void)sig;
-	std::cout << "SIG HANDLER REACHED" << std::endl;
-	WebServ::_isRunning = false;
-}
-
 #endif

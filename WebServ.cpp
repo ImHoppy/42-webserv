@@ -152,3 +152,10 @@ WebServ &	WebServ::operator=(WebServ const & other)
 }
 
 bool WebServ::_isRunning = false;
+
+void	sig_handler(int sig)
+{
+	(void)sig;
+	std::cout << "SIG HANDLER REACHED" << std::endl;
+	WebServ::_isRunning = false;
+}

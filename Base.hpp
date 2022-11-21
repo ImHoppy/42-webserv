@@ -3,6 +3,14 @@
 
 #include <string>
 
+class Server;
+class Client;
+typedef struct s_polldata
+{
+	Server*	server;
+	Client*	client;
+} t_polldata;
+
 class Base {
 	protected:
 	std::string	_type;
