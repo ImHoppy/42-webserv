@@ -34,6 +34,7 @@ class Response
 		std::string							_response;
 		std::string							_targetPath;
 		CGI									_cgi;
+		std::string							_body;
 		/* Private member fcts */
 		void		setTargetPath(void);
 		void		setAllowHeader(void);
@@ -62,6 +63,7 @@ class Response
 		int		doDELETE(const std::string &path);
 		void	doPOST(void);
 		bool	tryFile(void);
+		int		readFromCgi(void);
 	
 }; // end class Response
 

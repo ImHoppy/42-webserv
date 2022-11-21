@@ -127,3 +127,8 @@ void	CGI::initEnv(void)
 		++i;
 	}
 }
+
+int		CGI::getReadPipe(void) const
+{
+	return _pipefdRead;
+}

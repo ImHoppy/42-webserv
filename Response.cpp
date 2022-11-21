@@ -3,7 +3,8 @@
 /* Default constructor */
 Response::Response(void) :
 	_config(), _location(), _rqst(), _client(), 
-	_response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"), _targetPath(), _cgi()
+	_response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"), _targetPath(),
+	_cgi(), _body()
 {}
 
 /* Destructor */
@@ -13,7 +14,7 @@ Response::~Response(void) {}
 Response::Response(const Response& src) :
 	_config(src._config), _location(src._location),
 	_rqst(src._rqst), _client(src._client), _response(src._response),
-	_targetPath(src._targetPath), _cgi(src._cgi)
+	_targetPath(src._targetPath), _cgi(src._cgi), _body(src._body)
 {}
 
 /* Assignement operator */
@@ -28,6 +29,7 @@ Response &	Response::operator=(const Response& src)
 		_response = src._response;
 		_targetPath = src._targetPath;
 		_cgi = src._cgi;
+		_body = src._body;
 	}
 	return *this;
 }
@@ -47,9 +49,9 @@ void	Response::setAllowHeader(void)
 	if (*(allowed.end() - 1) == ' ')
 		allowed.erase(allowed.end() - 2, allowed.end());
 	_response += allowed + "\r\n";
-	std::string		body = generateErrorBody("Not allowed", "Method not allowed!");
-	_response += "Content-Length: " + nbToString(body.size()) + "\r\n\r\n";
-	_response += body;
+	_body = generateErrorBody("Not allowed", "Method not allowed!");
+	_response += "Content-Length: " + nbToString(_body.size()) + "\r\n\r\n";
+	_response += _body;
 }
 
 /* Parametric constructor */
@@ -60,7 +62,8 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request, 
 	_client(client),
 	_response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"),
 	_targetPath(),
-	_cgi()
+	_cgi(),
+	_body()
 {
 	if (config == NULL || loc == NULL || request == NULL)
 	{
@@ -204,17 +207,16 @@ bool	Response::tryFile(void)
 	{
 		_response = "HTTP/1.1 200 OK\r\n";
 		std::string		buff;
-		std::string		body;
 		while (getline(file, buff))
 		{
-			body += buff + "\n";
+			_body += buff + "\n";
 		}
 		std::stringstream	ss;
-		ss << body.size();
+		ss << _body.size();
 		_response += "Content-Length: " + ss.str() + "\r\n";
 		_response += "Connection: keep-alive\r\n";
 		_response += "\r\n";
-		_response += body;
+		_response += _body;
 	}
 	return true;
 }
@@ -241,10 +243,9 @@ void	Response::getFile(void)
 		return;
 	}
 	std::string		buff;
-	std::string		body;
 	while (std::getline(errFile, buff))
-		body += buff + "\n";
-	_response = generateResponse(404, "File Not Found", body);
+		_body += buff + "\n";
+	_response = generateResponse(404, "File Not Found", _body);
 }
 
 /* Set le vector d'environnement variables (RFC 3875) */
@@ -295,24 +296,37 @@ void		Response::phpCgiGet(void)
 	}
 	//TODO: alors soit disant faut ajouter les "locaux" fds a epoll, genre
 	// meme pour lire le pipe bah faut passer par epoll... et pour les error files
+	readFromCgi();
+	_response = generateResponseCgi(_body);
 }
 
-//int		Response::readFromCgi(void)
-//{
-//	char buf[BUFFSIZE];
-//	ssize_t	nbread = read(_pipefdRead, buf, BUFFSIZE - 1);
-//	// if nbread == BUFFSIZE - 1 alors reste des bytes à lire omg
-//	if (nbread == -1)
-//	{
-//		Logger::Error("Response::phpCgiGet() read() failed");
-//		return -1;
-//	}
-//	buf[nbread] = 0;
-//	
-//	std::string	body(buf);
-//	_response = generateResponseCgi(body);
-//	close(_pipefdRead);
-//}
+/* Remplit le _body depuis les datas read from le pipe du CGI. */
+int		Response::readFromCgi(void)
+{
+	int	fd = _cgi.getReadPipe();
+	char buf[BUFFSIZE];
+	ssize_t	nbread = read(fd, buf, BUFFSIZE - 1);
+	if (nbread == -1)
+	{
+		Logger::Error("Response::phpCgiGet() read() failed");
+		return -1;
+	}
+	buf[nbread] = 0;
+	_body += buf;
+	while (nbread == BUFFSIZE - 1)
+	{
+		nbread = read(fd, buf, BUFFSIZE - 1);
+		if (nbread == -1)
+		{
+			Logger::Error("Response::phpCgiGet() read() failed");
+			return -1;
+		}
+		buf[nbread] = 0;
+		_body += buf;
+	}
+	close(fd);
+	return (nbread);
+}
 
 void		Response::doGET(void)
 {

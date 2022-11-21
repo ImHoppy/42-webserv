@@ -32,6 +32,7 @@ class CGI {
 		CGI(const CGI & src);
 		/* GET */
 		const std::vector<std::string> &	getEnv(void) const;
+		int									getReadPipe(void) const;
 		/* SET */
 		void	setEnv(std::vector<std::string> & env);
 		void	initEnv(void);
