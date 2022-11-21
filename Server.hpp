@@ -9,15 +9,15 @@
 # include <stdlib.h>
 # include <sys/epoll.h>
 # include <stdio.h> // perror
-# include "Client.hpp"
 # include <ctime> //time
 # include <iomanip>
 # include <unistd.h>
 # include <vector>
 # include <set>
+# include <errno.h>
 # include "Base.hpp"
 # include "Response.hpp"
-# include <errno.h>
+# include "Client.hpp"
 # include "Logger.hpp"
 
 # define CONSTRUC
@@ -281,6 +281,8 @@ void	Server::respond(Client* client)
 	execve php-cgi filepath (ATTENTION need export variable REDIRECT_STATUS=true)
 	balise 'action': permet de preciser quel programme doit etre execve 
 	ex:		<form action="/cgi-bin/test.cgi" method="get"> 
+	Attention: commencer action par "/" permet au navigateur de remplacer le referer
+	avec
 	attention, le script doit avoir les droit d'exec pour tous
 	pour passer la query string (les "arguments/donnes du form) au program: faut set
 	une variable d'environnement called QUERY_STRING avec elle (body d'une POST request)

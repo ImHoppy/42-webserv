@@ -4,7 +4,7 @@
 # include <string>
 # include <bitset>
 # include "Path.hpp"
-# include "CGI.hpp"
+//# include "CGI.hpp"
 # include <iostream>
 # include <iomanip>
 

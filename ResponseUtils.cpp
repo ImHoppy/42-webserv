@@ -1,12 +1,5 @@
-#include <string>
 #include "Utils.hpp"
 
-// OpenDir
-#include <sys/types.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <iostream>
 
 std::string generateResponseCgi(std::string cgiRes)
 {

@@ -1,6 +1,4 @@
 #include "Response.hpp"
-#include "Logger.hpp"
-#include <string>
 
 /* Default constructor */
 Response::Response(void) : _config(), _location(), _rqst(), _response("HTTP/1.1 501 Not Implemented Yet\r\n\r\n"), _targetPath() {}
@@ -147,9 +145,31 @@ int		Response::doDELETE(const std::string &path)
 	return 204;
 }
 
-void	Response::doPOST(void)
+void	Response::upload(void)
 {
 	//TODO
+	_response = "HTTP/1.1 200 OK\r\n\r\n";
+}
+
+void	Response::doPOST(void)
+{
+	Request::headers_t	headers = _rqst->getHeaders();
+	Request::headers_t::const_iterator	type = headers.find("Content-Type");
+	if (type == headers.end())
+	{
+		_response = "HTTP/1.1 400 Bad Request\r\n\r\n";
+		return ;
+	}
+	if (type->second == "multipart/form-data") // upload
+	{
+		upload();
+		return ;
+	}
+	if (type->second == "application/x-www-form-urlencoded")
+	{
+//		cgiPost();
+		return ;
+	}
 }
 
 std::string	Response::getResponse(void) const

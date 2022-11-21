@@ -14,6 +14,9 @@
 # include <sys/wait.h> // waitpid()
 # include <cstring> // memcpy()
 # include <unistd.h> // pipe()
+# include "Response.hpp"
+# include "Logger.hpp"
+
 
 /*
 	_targetPath: path to file or directory. Function request URI path and config root
@@ -38,6 +41,7 @@ class Response
 		bool		targetIsCgi(void) const;
 		void		getFile(void);
 		void		phpCgiGet(void);
+		void		upload(void);
 
 	public:
 		/* COplien */

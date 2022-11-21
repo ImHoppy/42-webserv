@@ -1,7 +1,10 @@
-#pragma once
+#ifndef PATH_HPP
+# define PATH_HPP
 
-#include <string>
-#include <vector>
+# include <string>
+# include <vector>
+# include <sys/types.h>
+# include <dirent.h>
 
 class Path : public std::string {
 	private:
@@ -18,3 +21,6 @@ class Path : public std::string {
 	static bool				isAbsolute( std::string const & path );
 	static std::vector<std::string>	listFiles( std::string const & path );
 };
+
+#endif
+

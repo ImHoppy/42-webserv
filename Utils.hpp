@@ -1,7 +1,20 @@
-#pragma once
+#ifndef UTILS_HPP
+# define UTILS_HPP
+
 #include <string>
-#include <stdint.h>
 #include <vector>
+#include <sstream>
+#include <stdint.h>
+// OpenDir
+#include <sys/types.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <iostream>
+// Trim.cpp
+#include <string>
+#include <algorithm>
+#include "Parsing.hpp"
 
 #define SpaceChar " \t\n\r\f\v"
 
@@ -26,3 +39,6 @@ std::string &	trim_quote(std::string & s, int lineNumber = -1);
 std::string &	trim(std::string& s, const char* t = SpaceChar);
 
 std::string getExtension(std::string const & filename);
+
+#endif
+

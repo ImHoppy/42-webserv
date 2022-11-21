@@ -1,7 +1,4 @@
 #include "Path.hpp"
-#include <sys/types.h>
-#include <dirent.h>
-
 
 void			Path::setRoot(std::string const & path)
 {

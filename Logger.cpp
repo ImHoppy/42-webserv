@@ -1,9 +1,4 @@
-#include <iostream>
-#include <iomanip>
-#include <ctime>
-#include <string>
-#include <stdio.h>
-#include <stdarg.h>
+#include "Logger.hpp"
 
 #define LogFunc(stdout, fd, color, type) \
 { \

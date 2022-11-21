@@ -1,10 +1,4 @@
-#include "GeneralConfig.hpp"
-#include "LocationConfig.hpp"
-#include <string>
-#include <iostream>
-#include <sstream>
-#include "Parsing.hpp"
-#include "Utils.hpp"
+#include "FillConfig.hpp"
 
 // string ip to int32_t
 
@@ -22,7 +16,6 @@ static bool	isDigit(std::string const & s)
 	return true;
 }
 
-typedef std::vector<std::pair<std::string, std::string> > key_value_t;
 
 void	locationBlock(ServerConfig & server, key_value_t::iterator & it)
 {
@@ -155,7 +148,6 @@ void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
 	config.addServer(server);
 }
 
-#include <algorithm>
 bool	ServerNamesIsEqual(std::vector<std::string> const & a, std::vector<std::string> const & b)
 {
 	std::vector<std::string>::const_iterator it = a.begin();

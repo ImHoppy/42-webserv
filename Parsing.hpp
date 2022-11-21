@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PARSING_HPP
+# define PARSING_HPP
 
 #include <exception>
 #include <string>
@@ -6,6 +7,13 @@
 #include <vector>
 #include <cstddef>
 #include "GeneralConfig.hpp"
+#include "Utils.hpp"
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <stdint.h>
+
+class GeneralConfig;
 
 class ParsingError : public std::exception
 {
@@ -22,3 +30,6 @@ class ParsingError : public std::exception
 };
 
 void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value, GeneralConfig &);
+
+#endif
+

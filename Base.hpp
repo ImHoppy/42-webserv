@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BASE_HPP
+# define BASE_HPP
 
 #include <string>
 
@@ -11,4 +12,6 @@ class Base {
 
 	virtual std::string const & getType() const = 0;
 };
+
+#endif
 

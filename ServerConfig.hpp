@@ -11,6 +11,8 @@
 # include <sstream>
 # include "Utils.hpp" // ends_with()
 
+class LocationConfig;
+
 class ServerConfig {
 	private:
 	//TODO: map inutile, puisque key = LocationConfig.getPath() (remplacer par vector)

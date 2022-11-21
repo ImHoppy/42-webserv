@@ -1,10 +1,16 @@
-#pragma once
+#ifndef GENERALCONFIG_HPP
+# define GENERALCONFIG_HPP
 
-#include <string>
-#include <vector>
-#include "ServerConfig.hpp"
-#include <iostream>
-#include <map>
+# include <string>
+# include <vector>
+# include <map>
+# include <iostream>
+# include <fstream>
+# include <sstream>
+# include "ServerConfig.hpp"
+# include "Utils.hpp"
+
+class ServerConfig;
 
 class GeneralConfig {
 	private:
@@ -21,3 +27,6 @@ class GeneralConfig {
 	void	addServer(const ServerConfig &server);
 	std::vector<ServerConfig> const &	getServers() const;
 };
+
+#endif
+

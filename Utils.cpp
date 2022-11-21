@@ -1,8 +1,4 @@
-#include <string>
-#include <sstream>
-#include <vector>
 #include "Utils.hpp"
-#include <iostream> // debug 
 
 std::string		getFileExtension(const std::string & filename)
 {

@@ -1,8 +1,4 @@
 #include "GeneralConfig.hpp"
-#include "Utils.hpp"
-#include <iostream>
-#include <fstream>
-#include <sstream>
 
 GeneralConfig::GeneralConfig() {
 	if (GeneralConfig::_errorPages.empty())
