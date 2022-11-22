@@ -7,3 +7,7 @@ ubuntu_tester
 *.swp
 .nfs*
 www/isometric-map
+# Test file
+test.txt
+read_ifstream.cpp
+test_open.c
