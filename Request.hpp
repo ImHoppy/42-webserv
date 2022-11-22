@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:37 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/18 19:02:00 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/22 10:15:23 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,9 @@ class Request
 		const headers_t &			getHeaders(void) const;
 		const std::string &			getHost(void) const;
 		const std::string &			getBody(void) const;
+
+		void						appendToBody(const std::string & more);
+
 	private:
 		/* Setteurs */
 		void			setRqstLine(void);

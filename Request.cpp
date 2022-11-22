@@ -6,11 +6,16 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/20 15:36:48 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/22 10:15:58 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Request.hpp"
+
+void			Request::appendToBody(const std::string & more)
+{
+	_body += more;
+}
 
 /* Default constructor (private) */
 Request::Request(void) {}

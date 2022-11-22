@@ -99,8 +99,7 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request, 
 	}
 	else if (_rqst->getMethod() == "POST")
 	{
-		setAllowHeader();
-//		doPOST();
+		doPOST();
 	}
 }
 
@@ -164,6 +163,7 @@ void	Response::upload(void)
 
 void	Response::doPOST(void)
 {
+	Logger::Info("doPOST() entered");
 	Request::headers_t	headers = _rqst->getHeaders();
 	Request::headers_t::const_iterator	type = headers.find("Content-Type");
 	if (type == headers.end())
@@ -173,11 +173,13 @@ void	Response::doPOST(void)
 	}
 	if (type->second == "multipart/form-data") // upload
 	{
+		Logger::Info("is multiform()");
 		upload();
 		return ;
 	}
 	if (type->second == "application/x-www-form-urlencoded")
 	{
+		Logger::Info("is URL encoded");
 //		cgiPost();
 		return ;
 	}
@@ -278,7 +280,7 @@ void		Response::setCgiEnv(void)
 	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _location->getCGIPath() + _rqst->getUri().path);
 	_cgi.addVarToEnv("SCRIPT_NAME=" + _rqst->getUri().path);
 	_cgi.addVarToEnv("SERVER_NAME=" + _config->getServerNames()[0]);
-	_cgi.addVarToEnv("SERVER_PORT=" + _config->getPort());
+	_cgi.addVarToEnv("SERVER_PORT=" + nbToString(_config->getPort()));
 	_cgi.addVarToEnv("SERVER_PROTOCOL=HTTP/1.1");
 	_cgi.addVarToEnv("SERVER_SOFTWARE=WebServ");
 	//TODO: RFC 3875 parle meta-variables: export tous les headers de la request

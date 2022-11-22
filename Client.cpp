@@ -102,7 +102,7 @@ int		Client::recvRequest(void)
 {
 	char buf[BUFFSIZE];
 	memset(&buf, 0, sizeof(buf));
-	ssize_t bytes = recv(_csock, buf, BUFFSIZE, 0);
+	ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
 	if (bytes < 0)
 		throw std::runtime_error("recv failed");
 	else if (bytes == 0)
@@ -116,6 +116,13 @@ int		Client::recvRequest(void)
 		Logger::Info("Client: new Request received from client %d", _csock);
 		Request*		new_rqst = new Request(buf);
 		_pendingRqst.push_back(new_rqst);
+		Request::const_iterator		content_length = new_rqst>getHeaders().find("Content-Length");
+		if (len != new_rqst->getHeaders().end())
+		{
+			int		clen = StrToInt(content_length->second);
+			if (clen > new_rqst->getBody().size()) // Body pas full recu
+				return (-2) // signifie need read encore PAS pollout
+		}
 		return (bytes);
 	}
 }
