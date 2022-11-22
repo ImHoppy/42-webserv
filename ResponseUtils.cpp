@@ -1,25 +1,12 @@
 #include "Utils.hpp"
 
-
-std::string generateResponseCgi(std::string cgiRes)
-{
-	std::string response;
-
-	response = "HTTP/1.1 200 OK\r\n"
-		"Content-Length: "
-		+ nbToString(cgiRes.length() - cgiRes.find("\r\n\r\n") - 4) + "\r\n"
-		"Connection: Keep-Alive\r\n"
-		+ cgiRes; // Contient le content type et \r\n
-	return response;
-}
-
 std::string generateResponse(std::string fileContent)
 {
 	std::string response;
 
 	response = "HTTP/1.1 200 OK\r\n"
 //		"Content-Type: text/html\r\n"
-		"Content-Length: " + nbToString(fileContent.length()) + "\r\n"
+		"Content-Length: " + IntToStr(fileContent.length()) + "\r\n"
 		"Connection: Keep-Alive\r\n"
 		"\r\n"
 		+ fileContent;
@@ -30,9 +17,9 @@ std::string generateResponse(int code, std::string codeMsg, std::string fileCont
 {
 	std::string response;
 
-	response = "HTTP/1.1 " + nbToString(code) + " " + codeMsg + "\r\n"
+	response = "HTTP/1.1 " + IntToStr(code) + " " + codeMsg + "\r\n"
 //		"Content-Type: text/html\r\n"
-		"Content-Length: " + nbToString(fileContent.length()) + "\r\n"
+		"Content-Length: " + IntToStr(fileContent.length()) + "\r\n"
 		"Connection: Keep-Alive\r\n"
 		"\r\n"
 		+ fileContent;
@@ -72,6 +59,24 @@ std::string	generateErrorBody(std::string body)
 }
 
 
+std::string	generateErrorBody(std::pair<int, std::string> code)
+{
+	std::string html;
+
+	html = "<!DOCTYPE html>"
+		"<html>"
+		"<head>"
+		"<title>Error</title>"
+		"</head>"
+		"<body>"
+		+ code.second + ""
+		+ "<image src=\"https://http.cat/" + IntToStr(code.first) + "\"><\\image>"
+		"</body>"
+		"</html>";
+	return html;
+}
+
+// TODO: Si opendir fail, change code response
 std::vector<std::string>	listFiles(std::string const & path, bool withDot)
 {
 	DIR							*dr;
@@ -86,7 +91,7 @@ std::vector<std::string>	listFiles(std::string const & path, bool withDot)
 			std::string	name(en->d_name);
 			if (en->d_type == DT_DIR)
 			{
-				if (withDot == true || (name != "." && name != ".."))
+				if (withDot || (name != "." && name != ".."))
 					vec_files.push_back(name + "/");
 			}
 			else
@@ -107,6 +112,8 @@ bool	startsWith(std::string const & str, std::string const & start)
 std::string	GenerateHtmlDirectory(std::string const & path)
 {
 	std::vector<std::string>	vec_files = listFiles(path);
+	if (vec_files.empty())
+		return "";
 	std::string					htmlPage;
 	std::vector<std::string>::iterator it;
 

@@ -87,7 +87,6 @@ LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 			if (locs->first == ".php")
 				return &(locs->second);
 		}
-		return NULL;
 	}
 	std::string::size_type found;
 	std::string::size_type start_search = url.size();
@@ -134,7 +133,7 @@ std::ostream&	operator<<(std::ostream& o, const ServerConfig& me)
 		o << "\tMethods: " << it2->second.getMethods() << std::endl;
 		o << "\tRedirect: " << it2->second.getRedirUrl() << std::endl;
 		o << "\tCgi: " << std::boolalpha <<it2->second.isCGIActive() << std::endl;
-		o << "\tCgiPath: " << it2->second.getCGIPath() << std::endl;
+		o << "\tCgiPath: " << it2->second.getCGICmd() << std::endl;
 	}
 	return o;
 }

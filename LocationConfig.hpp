@@ -3,8 +3,6 @@
 
 # include <string>
 # include <bitset>
-# include "Path.hpp"
-//# include "CGI.hpp"
 # include <iostream>
 # include <iomanip>
 
@@ -20,13 +18,11 @@ class LocationConfig {
 
 	private:
 	bool			_dirList;
-	bool			_CGIActive;
 	std::string		_path;
 	std::string		_root;
 	std::string		_indexFile;
 	std::string		_redirUrl;
-	std::string		_CGIPath;
-	// CGI				_CGI;
+	std::string		_CGICmd;
 	std::bitset<3>	_methods;
 
 	
@@ -43,8 +39,7 @@ class LocationConfig {
 	void	setRootPath(const std::string &path);
 	void	setIndexFile(const std::string &indexFile);
 	void	setRedirUrl(const std::string &url);
-	void	setCGIPath(const std::string &CGIPath);
-	void	setCGICmd(const std::string &CGIPath);
+	void	setCGICmd(const std::string &CGICmd);
 	void	setMethods(const std::bitset<3> &methods);
 	// TODO(mbraets): Check if used
 	void	setMethod(http_methods method, bool value);
@@ -56,7 +51,7 @@ class LocationConfig {
 	bool			isCGIActive() const;
 	std::string		getPath() const;
 	std::string		getRootPath() const;
-	std::string		getCGIPath() const;
+	std::string		getCGICmd() const;
 	std::string		getRedirUrl() const;
 	std::string 	getIndexFile() const;
 	std::bitset<3>	getMethods() const;

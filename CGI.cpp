@@ -1,20 +1,32 @@
 #include "CGI.hpp"
+#include <cstring> // memcpy()
+#include <unistd.h> // fork()
+#include <sys/types.h> // fork()
+#include <sys/wait.h> // waitpid()
+#include <unistd.h> // pipe()
+#include <cstdlib> // malloc
 
 CGI::CGI(void) : _env(), _pipefdRead(-1), _pipefdWrite(-1), _pid(-1),
+	_tmpfile(NULL),
 	_path("/usr/bin/php-cgi")
 {
 	initEnv();
 }
 
-CGI::~CGI(void) {}
+CGI::~CGI(void) {
+	if (_tmpfile != NULL)
+		std::fclose(_tmpfile);
+}
 
 CGI::CGI(const CGI & src) :
 	_env(src._env),
 	_pipefdRead(-1),
 	_pipefdWrite(-1),
 	_pid(-1),
+	_tmpfile(NULL),
 	_path("/usr/bin/php-cgi")
-{}
+{
+}
 
 CGI &	CGI::operator=(const CGI & src)
 {

@@ -31,7 +31,7 @@ bool	ends_with(const std::string& str, const std::string& extension)
 	return false;
 }
 
-std::string	nbToString(int nb)
+std::string	IntToStr(int nb)
 {
 	std::stringstream	ss;
 	ss << nb;

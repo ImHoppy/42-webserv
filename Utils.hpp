@@ -18,7 +18,6 @@
 
 #define SpaceChar " \t\n\r\f\v"
 
-std::string generateResponseCgi(std::string cgiRes);
 bool	ends_with(const std::string& str, const std::string& extension);
 bool	ends_with(const std::string& str, const char c);
 std::string::iterator	findCRLF(std::string::iterator start, std::string::iterator end);
@@ -29,7 +28,7 @@ std::string	generateErrorBody(std::string body);
 std::string generateResponse(std::string fileContent);
 std::string generateResponse(int code, std::string codeMsg, std::string fileContent);
 std::string	GenerateHtmlDirectory(std::string const & path);
-std::string	nbToString(int nb);
+std::string	IntToStr(int nb);
 int32_t		StrToInt(std::string const & str);
 int32_t		StrToIp(std::string const & ip);
 bool		isIpv4(std::string const & s);

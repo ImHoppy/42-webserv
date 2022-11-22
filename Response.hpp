@@ -16,6 +16,8 @@
 # include "LocationConfig.hpp"
 # include "Request.hpp"
 
+#define CLRF "\r\n"
+
 /*
 	_targetPath: path to file or directory. Function request URI path and config root
 */
@@ -31,10 +33,12 @@ class Response
 		LocationConfig*						_location;
 		Request*							_rqst;
 		Client*								_client;
-		std::string							_response;
 		std::string							_targetPath;
 		CGI									_cgi;
+		std::pair<int, std::string>			_code;
+		headers_t							_headers;
 		std::string							_body;
+		std::string							_response;
 		/* Private member fcts */
 		void		setTargetPath(void);
 		void		setAllowHeader(void);
@@ -47,6 +51,7 @@ class Response
 		void		upload(void);
 		void		setCgiEnv(void);
 
+		bool		openPageError(std::string path);
 	public:
 		/* COplien */
 		Response(void);
@@ -64,7 +69,9 @@ class Response
 		void	doPOST(void);
 		bool	tryFile(void);
 		int		readFromCgi(void);
-	
+		void	handleError(int error);
+		void		generateResponse(void);
+
 }; // end class Response
 
 std::ostream&	operator<<(std::ostream& o, const Response& me);

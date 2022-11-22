@@ -2,12 +2,11 @@
 
 LocationConfig::LocationConfig() :
 _dirList(false),
-_CGIActive(false),
 _path("/"),
 _root(),
 _indexFile("index.html"),
 _redirUrl(),
-_CGIPath(),
+_CGICmd(),
 _methods() {}
 LocationConfig::LocationConfig(const LocationConfig &other)
 {
@@ -18,9 +17,8 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &other)
 	if (this != &other)
 	{
 		_dirList = other._dirList;
-		_CGIActive = other._CGIActive;
 		_path = other._path;
-		_CGIPath = other._CGIPath;
+		_CGICmd = other._CGICmd;
 		// _CGI = other._CGI;
 		_redirUrl = other._redirUrl;
 		_indexFile = other._indexFile;
@@ -33,12 +31,11 @@ LocationConfig::~LocationConfig() {}
 
 LocationConfig::LocationConfig(std::string path) :
 _dirList(false),
-_CGIActive(false),
 _path(path),
 _root(),
 _indexFile(),
 _redirUrl(),
-_CGIPath(),
+_CGICmd(),
 _methods() {}
 
 void	LocationConfig::setPath(const std::string & path)
@@ -61,16 +58,9 @@ void	LocationConfig::setRedirUrl(const std::string &url)
 {
 	_redirUrl = url;
 }
-void	LocationConfig::setCGIPath(const std::string &CGIPath)
-{
-	_CGIPath = CGIPath;
-	if (_CGIPath != "")
-	_CGIActive = not _CGIPath.empty();
-}
 void	LocationConfig::setCGICmd(const std::string &CGICmd)
 {
-	_CGIPath = CGICmd;
-	// _CGI.setCmd(CGIPath);
+	_CGICmd = CGICmd;
 }
 void	LocationConfig::setMethods(const std::bitset<3> &methods)
 {
@@ -104,15 +94,15 @@ bool			LocationConfig::isRedirection() const
 }
 bool			LocationConfig::isCGIActive() const
 {
-	return _CGIActive;
+	return (not _CGICmd.empty());
 }
 std::string		LocationConfig::getPath() const
 {
 	return _path;
 }
-std::string		LocationConfig::getCGIPath() const
+std::string		LocationConfig::getCGICmd() const
 {
-	return _CGIPath;
+	return _CGICmd;
 }
 std::string		LocationConfig::getRedirUrl() const
 {
@@ -128,7 +118,7 @@ bool			LocationConfig::methodIsAllowed(http_methods method) const
 }
 bool	LocationConfig::isEmpty() const
 {
-	return (_dirList == false && _CGIActive == false && _CGIPath.empty() && _indexFile.empty() && _root.empty() && _methods.none());
+	return (_dirList == false && isCGIActive() == false && _CGICmd.empty() && _indexFile.empty() && _root.empty() && _methods.none());
 }
 
 bool	LocationConfig::methodIsAllowed(std::string method) const
@@ -150,7 +140,7 @@ std::ostream&	operator<<(std::ostream& o, const LocationConfig& me)
 	o << "Root = " << me.getRootPath() << std::endl;
 	o << "Index file = " << me.getIndexFile() << std::endl;
 	o << "Redir URL = " << me.getRedirUrl() << std::endl;
-	o << "CGI path = " << me.getCGIPath() << std::endl;
+	o << "CGI path = " << me.getCGICmd() << std::endl;
 	o << "Methods = ";
 	if (me.methodIsAllowed(LocationConfig::GET) == true)
 		o << "GET ";

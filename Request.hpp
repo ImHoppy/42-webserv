@@ -13,6 +13,7 @@
 #ifndef  REQUEST_HPP
 # define  REQUEST_HPP
 
+
 # include <algorithm> // find 
 # include <iostream>
 # include <string>
@@ -27,6 +28,8 @@
 # ifndef HEADER_VALUE_MAX_LENGTH
 #  define HEADER_VALUE_MAX_LENGTH 400 // en octets RFC 2616 page 26
 # endif
+
+#define CLRF "\r\n"
 
 typedef struct s_uri
 {

@@ -1,29 +1,25 @@
-#ifndef CGI_HPP
-# define CGI_HPP
+#pragma once
 
-# include <string>
-# include <vector>
-# include <unistd.h> // fork()
-# include <sys/types.h> // fork()
-# include <sys/wait.h> // waitpid()
-# include <cstring> // memcpy()
-# include <unistd.h> // pipe()
-# include <cstdlib> // malloc
+#include <string>
+#include <vector>
 
-# include "Logger.hpp"
+#include <cstdio> // FILE*
 
-# ifndef BUFFSIZE
-#  define BUFFSIZE 1500
-# endif
+#include "Logger.hpp"
+
+#ifndef BUFFSIZE
+# define BUFFSIZE 1500
+#endif
 
 class CGI {
 	private:
-		std::vector<std::string>		_env;
-		int								_pipefdRead;
-		int								_pipefdWrite;
-		pid_t							_pid;
-		std::string						_path;
-//		int								_readFrom; // useless for now mais je pense qu'il faut lui mettre le body de la request dedans si c'est du post par exemple?
+		std::vector<std::string>	_env;
+		int							_pipefdRead;
+		int							_pipefdWrite;
+		pid_t						_pid;
+		std::FILE*					_tmpfile;
+		std::string					_path;
+//		int							_readFrom; // useless for now mais je pense qu'il faut lui mettre le body de la request dedans si c'est du post par exemple?
 	
 	public:
 		CGI(void);
@@ -42,6 +38,3 @@ class CGI {
 		int		launch(void);
 
 };
-
-#endif
-
