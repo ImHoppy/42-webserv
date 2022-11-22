@@ -118,11 +118,8 @@ bool	Response::openPageError(std::string path)
 	return true;
 }
 
-void	Response::generateResponse(void)
+void	Response::generateBodyError()
 {
-
-	_response = "HTTP/1.1 " + IntToStr(_code.first) + " " + _code.second + CLRF;
-
 	if (_code.first >= 400)
 	{
 		ServerConfig::errors_t::const_iterator	it = _config->getErrorPaths().find(_code.first);
@@ -133,6 +130,14 @@ void	Response::generateResponse(void)
 			_headers["Connection"] = "close";
 		}
 	}
+	if (_code.first == 200 && _body.empty())
+		_code = std::make_pair(204, "No Content");
+}
+
+void	Response::generateResponse(void)
+{
+	generateBodyError();
+	_response = "HTTP/1.1 " + IntToStr(_code.first) + " " + _code.second + CLRF;
 
 	headers_t::const_iterator	it;
 	for (it = _headers.begin(); it != _headers.end(); it++)
