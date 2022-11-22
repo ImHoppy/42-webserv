@@ -8,11 +8,17 @@ Response::Response(void) :
 	_code(std::make_pair(501, "Not Implemented")),
 	_headers(),
 	_body(),
-	_response()
+	_response(),
+	_readData()
 {}
 
 /* Destructor */
-Response::~Response(void) {}
+Response::~Response(void) {
+	if (_readData.buffer != NULL)
+		delete[] _readData.buffer;
+	if (_readData.file.is_open())
+		_readData.file.close();
+}
 
 /* Copy constructor */
 Response::Response(const Response& src) {this->operator=(src);}
@@ -47,7 +53,8 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request, 
 	_code(std::make_pair(501, "Not Implemented")),
 	_headers(),
 	_body(),
-	_response()
+	_response(),
+	_readData()
 {
 	_headers["Connection"] = "keep-alive";
 	if (config == NULL || loc == NULL || request == NULL)
@@ -126,25 +133,26 @@ void	Response::generateBodyError()
 
 		if (it == _config->getErrorPaths().end() || not openPageError(it->second))
 		{
-			_body = generateErrorBody(_code.second);
+			_body = generateErrorBody(_code);
 			_headers["Connection"] = "close";
 		}
+		_headers["Content-Length"] = IntToStr(_body.size());
 	}
-	if (_code.first == 200 && _body.empty())
-		_code = std::make_pair(204, "No Content");
 }
 
 void	Response::generateResponse(void)
 {
 	generateBodyError();
+	// if (_code.first == 200 && _body.empty() && _headers["Content-Length"][0] == '0' )
+		// _code = std::make_pair(204, "No Content");
 	_response = "HTTP/1.1 " + IntToStr(_code.first) + " " + _code.second + CLRF;
 
 	headers_t::const_iterator	it;
 	for (it = _headers.begin(); it != _headers.end(); it++)
 		_response += it->first + ": " + it->second + CLRF;
 
-	if (_body.size() > 0)
-		_response += "Content-Length: " + IntToStr(_body.size()) + CLRF;
+	// if (_body.size() > 0)
+		// _response += "Content-Length: " + IntToStr(_body.size()) + CLRF;
 	
 	_response += CLRF;
 
@@ -238,6 +246,11 @@ std::string	Response::getResponse(void) const
 	return _response;
 }
 
+Response::ReadData const & Response::getReadData(void) const
+{
+	return _readData;
+}
+
 std::ostream&	operator<<(std::ostream& o, const Response& me)
 {
 	o << me.getResponse();
@@ -250,18 +263,57 @@ std::ostream&	operator<<(std::ostream& o, const Response& me)
 */
 bool	Response::tryFile(void)
 {
-	std::ifstream	file(_targetPath.c_str());
-	if (file.is_open() == false)
-		return false;
+	if (_readData.buffer == NULL)
+	{
+		_readData.file.open(_targetPath.c_str());
+		if (_readData.file.is_open() == false)
+			return false;
+
+		// get length of _readData.file:
+		_readData.file.seekg(0, _readData.file.end);
+		if (not _readData.file.good())
+			return false; // TODO: error : _readData.file is directory
+		int length = _readData.file.tellg();
+		_headers["Content-Length"] = IntToStr(length);
+		_readData.file.seekg(0, _readData.file.beg);
+
+		_readData.buffer = new char [1024];
+		bzero(_readData.buffer, 1024);
+
+		_readData.file.read(_readData.buffer, 1024);
+		_readData.read_bytes = _readData.file.gcount();
+
+		_body.assign(_readData.buffer, _readData.read_bytes);
+		std::cout << std::bitset<4>(_readData.file.rdstate()) << std::endl;
+
+		if (_readData.file.eof())
+		{
+			Logger::Error("EOF1");
+			_readData.file.close();
+			_readData.status = EOF_FILE;
+		}
+		else
+			_readData.status = READY_READ;
+	}
 	else
 	{
-		std::string		buff;
-		while (getline(file, buff))
+		// if (not _readData.file.is_open()) return true;
+		Logger::Info("Respond - Read Data");
+		bzero(_readData.buffer, 1024);
+		_readData.file.read(_readData.buffer, 1024);
+		_readData.read_bytes = _readData.file.gcount();
+		if (_readData.file.eof())
 		{
-			_body += buff + "\n";
+			Logger::Error("EOF2");
+			_readData.file.close();
+			_readData.status = EOF_FILE;
 		}
-		std::stringstream	ss;
-		ss << _body.size();
+		else
+		{
+			if (_readData.file.fail())
+				throw std::runtime_error("read file failed");
+			_readData.status = READY_SEND;
+		}
 	}
 	return true;
 }
@@ -357,6 +409,7 @@ void		Response::doGET(void)
 		_code = std::make_pair(200, "OK");
 		if (_body.empty())
 			_code = std::make_pair(501, "Internal Server Error");
+		_headers["Content-Length"] = IntToStr(_body.size());
 		return ;
 	}
 	else if (targetIsFile())

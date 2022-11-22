@@ -1,7 +1,11 @@
 #include "Client.hpp"
 
 /* Default Constructor */
-Client::Client(void) : Base("Client"), _csock(-1), _myServer(), _pendingRqst()
+Client::Client(void) : Base("Client"),
+	_csock(-1),
+	_myServer(),
+	_Rqst(),
+	_Resp()
 {
 	#ifdef CONSTRUC
 	std::cerr << "Client Default constructor" << std::endl;
@@ -14,8 +18,11 @@ Client::~Client(void)
 	#ifdef CONSTRUC
 	std::cerr << "Client Destructor" << std::endl;
 	#endif
-	for (std::deque<Request*>::iterator it = _pendingRqst.begin(); it != _pendingRqst.end(); ++it)
-		delete *it;
+	Logger::Warning("Client destructor");
+	if (_Rqst != NULL)
+		delete _Rqst;
+	if (_Resp != NULL)
+		delete _Resp;
 	if (_csock >= 0)
 		close(_csock);
 }
@@ -25,7 +32,8 @@ Client::Client(const Client& src) :
 	Base("Client"),
 	_csock(src._csock),
 	_myServer(src._myServer),
-	_pendingRqst(src._pendingRqst)
+	_Rqst(src._Rqst),
+	_Resp()
 {
 	#ifdef CONSTRUC
 	std::cerr << "Client Copy constructor" << std::endl;
@@ -37,7 +45,8 @@ Client::Client(socket_t csock, Server* serv) :
 	Base("Client"),
 	_csock(csock),
 	_myServer(serv),
-	_pendingRqst()
+	_Rqst(),
+	_Resp()
 {
 	#ifdef CONSTRUC
 	std::cerr << "Client Parametric constructor" << std::endl;
@@ -51,44 +60,29 @@ Client&		Client::operator=(const Client& src)
 		return *this;
 	_csock = src._csock;
 	_myServer = src._myServer;
-	_pendingRqst = src._pendingRqst;
+	_Rqst = src._Rqst;
 	#ifdef CONSTRUC
 	std::cerr << "Client Assignement operator" << std::endl;
 	#endif
 	return *this;
 }
 
-/* Add a new Request to the pending queue of requests to be respond. */
-void	Client::addRequest(std::string raw_rqst)
-{
-	Request*	rqst = new Request(raw_rqst);
-	this->_pendingRqst.push_back(rqst);
-}
-
-/* Add a new Request to the pending queue of request to be respond. */
-void	Client::addRequest(Request* rqst)
-{
-	this->_pendingRqst.push_back(rqst);
-}
-
 void	Client::popOutRequest(void)
 {
-	if (_pendingRqst.empty())
-		return ;
-	delete *(_pendingRqst.begin());
-	this->_pendingRqst.pop_front();
+	delete _Rqst;
+	_Rqst = NULL;
 }
 
-Request*	Client::getFirstRequest(void)
+
+void	Client::popOutResponse(void)
 {
-	if (_pendingRqst.empty())
-		return NULL;
-	return this->_pendingRqst.front();
+	delete _Resp;
+	_Resp = NULL;
 }
 
-const std::deque<Request*>&	Client::getPendingRequests(void) const
+Request*	Client::getRequest(void)
 {
-	return this->_pendingRqst;
+	return this->_Rqst;
 }
 
 int		Client::getSocket(void) const
@@ -100,6 +94,8 @@ int		Client::getSocket(void) const
 create a Request object with the buf received, and add it int its queued requests. */
 int		Client::recvRequest(void)
 {
+	if (_Rqst != NULL)
+		return 0;
 	char buf[BUFFSIZE];
 	memset(&buf, 0, sizeof(buf));
 	ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
@@ -115,7 +111,8 @@ int		Client::recvRequest(void)
 		buf[bytes] = 0;
 		Logger::Info("Client: new Request received from client %d", _csock);
 		Request*		new_rqst = new Request(buf);
-		_pendingRqst.push_back(new_rqst);
+		_Rqst = new_rqst;
+		// TODO: Chunk request
 /* 		Request::const_iterator		content_length = new_rqst->getHeaders().find("Content-Length");
 		if (len != new_rqst->getHeaders().end())
 		{
@@ -132,5 +129,15 @@ Server*		Client::getServer(void)
 	return _myServer;
 }
 
+Response*	Client::getResponse(void) const
+{
+	return _Resp;
+}
+void	Client::setResponse(Response* resp)
+{
+	_Resp = resp;
+}
+
 std::string const & Client::getType() const { return _type; }
+
 

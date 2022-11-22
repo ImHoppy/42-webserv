@@ -81,7 +81,16 @@ void	WebServ::StartLoop(void)
 				}
 				else if (events[i].events & EPOLLOUT)
 				{
-					client->getServer()->respond(client);
+					try
+					{
+						client->getServer()->respond(client);
+					}
+					catch(const std::exception& e)
+					{
+						Logger::Error("Problem client response: %s", e.what());
+						client->getServer()->removeClient(client);
+					}
+					
 				}
 			} 
 		}

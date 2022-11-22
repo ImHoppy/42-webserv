@@ -70,7 +70,7 @@ std::string	generateErrorBody(std::pair<int, std::string> code)
 		"</head>"
 		"<body>"
 		+ code.second + ""
-		+ "<image src=\"https://http.cat/" + IntToStr(code.first) + "\"><\\image>"
+		+ "<image src=\"https://http.cat/" + IntToStr(code.first) + "\">"
 		"</body>"
 		"</html>";
 	return html;

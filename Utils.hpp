@@ -23,6 +23,7 @@ bool	ends_with(const std::string& str, const char c);
 std::string::iterator	findCRLF(std::string::iterator start, std::string::iterator end);
 std::vector<std::string>	listFiles(std::string const & path, bool withDot = true);
 std::string		getFileExtension(const std::string & filename);
+std::string	generateErrorBody(std::pair<int, std::string> code);
 std::string	generateErrorBody(std::string title, std::string body);
 std::string	generateErrorBody(std::string body);
 std::string generateResponse(std::string fileContent);

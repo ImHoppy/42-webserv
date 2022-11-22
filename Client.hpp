@@ -3,6 +3,7 @@
 
 # include "Server.hpp"
 # include "Request.hpp"
+# include "Response.hpp"
 # include "Base.hpp"
 
 # include <iostream>
@@ -20,12 +21,14 @@
 
 typedef int socket_t;
 class Server;
+class Response;
 
 class Client : public Base
 {
 	socket_t		_csock; // client socket, the one returned by accept() calls
 	Server*			_myServer;
-	std::deque<Request*>		_pendingRqst; // deque of requests from this clientwhich havn't been respond yet
+	Request*		_Rqst; // deque of requests from this clientwhich havn't been respond yet
+	Response*		_Resp;
 	public:
 		Client(void);
 		~Client(void);
@@ -36,10 +39,13 @@ class Client : public Base
 		void	addRequest(std::string raw_rqst);
 		void	addRequest(Request* rqst);
 		void	popOutRequest(void);
-		Request*	getFirstRequest(void);
-		const std::deque<Request*>&	getPendingRequests(void) const;
+		void	popOutResponse(void);
+		Request*	getRequest(void);
 		int			recvRequest(void);
 		Server*		getServer(void);
+
+		void		setResponse(Response* resp);
+		Response*	getResponse(void) const;
 
 		std::string const & getType() const;
 

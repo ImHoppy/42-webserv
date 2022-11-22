@@ -190,33 +190,67 @@ socket_t	 Server::AcceptNewClient(void)
 */
 void	Server::respond(Client* client)
 {
+	int	bytes = 0;
+
 	if (client == NULL) return;
-	Request*	rqst = client->getFirstRequest();
-	if (rqst == NULL)
-		return ;
-	std::cerr << " REQUEST IS:\n" << *rqst << "_____ END REQUEST" << std::endl;
-	std::cerr << "Request body:\n" << rqst->getBody() << std::endl;
-	std::cerr << "RAW RQST:\n" << rqst->getRawRequest() << std::endl;
-	ServerConfig*	chosen_conf = getConfigForRequest(rqst);
-//	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
-	LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
-	if (chosen_loc == NULL)
+
+	Response	*rep = client->getResponse();
+	if (rep == NULL)
 	{
-		Logger::Error("LOCATION NULL");
+		Request*	rqst = client->getRequest();
+		if (rqst == NULL)
+			return ;
+		// std::cerr << " REQUEST IS:\n" << *rqst << "_____ END REQUEST" << std::endl;
+		// std::cerr << "Request body:\n" << rqst->getBody() << std::endl;
+		// std::cerr << "RAW RQST:\n" << rqst->getRawRequest() << std::endl;
+		ServerConfig*	chosen_conf = getConfigForRequest(rqst);
+		if (chosen_conf == NULL)
+		{
+			Logger::Error("Respond - CONFIG NULL");
+			return ;
+		}
+	//	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
+		LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
+		if (chosen_loc == NULL)
+		{
+			Logger::Error("Respond - LOCATION NULL");
+			return ;
+		}
+		// std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
+		Logger::Info("Respond - Created");
+		rep = new Response(chosen_conf, chosen_loc, rqst, client);
+		rep->generateResponse();
+		std::cout << "res" << rep->getResponse() << std::endl; 
+		client->setResponse(rep);
+		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
+		Logger::Info("Respond - Send Response");
+		if (rep->getReadData().status == Response::EOF_FILE || rep->getReadData().status == Response::NONE)
+		{
+			client->popOutRequest();
+			client->popOutResponse();
+		}
 	}
-	std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
-	Response	rep(chosen_conf, chosen_loc, rqst, client);
-	rep.generateResponse();
-	std::cerr << "____ RESPONSE:\n" << rep << "______END RESPONSE" << std::endl;
-	socket_t	socket = client->getSocket();
-	ssize_t		bytes;
-	bytes = send(socket, rep.getResponse().c_str(), rep.getResponse().size(), 0);
+	else
+	{
+		Response::ReadData const & data = rep->getReadData();
+		if (data.buffer == NULL) return ;
+
+		rep->tryFile();
+
+		Logger::Info("Respond - Send Buffer");
+		bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
+		if (data.status == Response::EOF_FILE)
+		{
+			client->popOutRequest();
+			client->popOutResponse();
+		}
+	}
+
 	if (bytes == -1)
 	{
 		throw std::runtime_error("send failed");
 	}
 //	Logger::Info("Request for '%s' respond by %s", rqst->getRequestLine().c_str(), chosen_conf->getServerNames()[0].c_str());
-	client->popOutRequest();
 	//TODO: if _pendingRqst du client is empty, epollCTL MODify events to POLLIN only,
-	// et pas oublier de remettre POLLOUT a reception de la premiere request
+// et pas oublier de remettre POLLOUT a reception de la premiere request
 }
