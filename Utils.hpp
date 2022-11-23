@@ -20,6 +20,7 @@
 
 bool	ends_with(const std::string& str, const std::string& extension);
 bool	ends_with(const std::string& str, const char c);
+bool	startsWith(std::string const & str, std::string const & start);
 std::string::iterator	findCRLF(std::string::iterator start, std::string::iterator end);
 std::vector<std::string>	listFiles(std::string const & path, bool withDot = true);
 std::string		getFileExtension(const std::string & filename);

@@ -102,13 +102,6 @@ std::vector<std::string>	listFiles(std::string const & path, bool withDot)
 	return vec_files;
 }
 
-bool	startsWith(std::string const & str, std::string const & start)
-{
-	if (str.length() < start.length())
-		return false;
-	return (str.compare(0, start.length(), start) == 0);
-}
-
 std::string	GenerateHtmlDirectory(std::string const & path)
 {
 	std::vector<std::string>	vec_files = listFiles(path);

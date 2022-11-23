@@ -31,6 +31,13 @@ bool	ends_with(const std::string& str, const std::string& extension)
 	return false;
 }
 
+bool	startsWith(std::string const & str, std::string const & start)
+{
+	if (str.length() < start.length())
+		return false;
+	return (str.compare(0, start.length(), start) == 0);
+}
+
 std::string	IntToStr(int nb)
 {
 	std::stringstream	ss;
