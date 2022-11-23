@@ -213,11 +213,12 @@ int		Response::doDELETE(const std::string &path)
 void	Response::upload(void)
 {
 	//TODO
-	_response = "HTTP/1.1 200 OK\r\n\r\n";
+	_code = std::make_pair(200, "OK UPLOAD");
 }
 
 void	Response::doPOST(void)
 {
+	std::string		multi = "multipart/form-data";
 	Logger::Info("doPOST() entered");
 	Request::headers_t	headers = _rqst->getHeaders();
 	Request::headers_t::const_iterator	type = headers.find("Content-Type");
@@ -226,7 +227,8 @@ void	Response::doPOST(void)
 		_code = std::make_pair(501, "Not Implemented");
 		return ;
 	}
-	if (type->second == "multipart/form-data") // upload
+	std::cout << "{"<< type->second << "}\n";
+	if (startsWith(type->second, multi))
 	{
 		Logger::Info("is multiform()");
 		upload();
