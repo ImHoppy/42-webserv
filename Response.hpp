@@ -42,7 +42,7 @@ class Response
 			unsigned int	read_bytes;
 			std::ifstream	file;
 		};
-		typedef std::map<std::string, std::string, less_tolower>		headers_t;
+		typedef std::map<std::string, std::string>		headers_t;
 	private:
 		/* Attributs */
 		ServerConfig*				_config;

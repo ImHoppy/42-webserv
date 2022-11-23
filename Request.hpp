@@ -39,20 +39,11 @@ typedef struct s_uri
 	std::string		query; // query string (voif html form / CGI
 }				t_uri;
 
-#include <string.h>
-struct less_tolower // : public binary_function<std::string, std::string, bool>
-{
-	bool
-	operator()(const std::string& x, const std::string& y) const
-	{
-		return strcasecmp(x.c_str(), y.c_str());
-	}
-};
 
 class Request
 {
 	public:
-		typedef std::map<std::string, std::string, less_tolower>		headers_t;
+		typedef std::map<std::string, std::string>		headers_t;
 		typedef std::string::iterator					siterator_t;
 		typedef std::string::const_iterator				scstiterator_t;
 

@@ -184,6 +184,20 @@ A server MUST reject any received Request message that contains
 whitespace between a header field-name and colon with a response code
 of 400 (Bad Request). (RFC 2616 pqge 25)
 */
+
+static std::string	UpperKey(Request::siterator_t start, Request::siterator_t end)
+{
+	std::string str(start, end);
+	for (std::size_t x = 0; x < str.length(); x++)
+	{
+		if (x == 0 || str[x - 1] == '-')
+		{
+			str[x] = toupper(str[x]);
+		}
+	}
+	return str;
+}
+
 int	Request::splitHeaders(siterator_t start, siterator_t end)
 {
 	if (start == end)
@@ -208,7 +222,7 @@ int	Request::splitHeaders(siterator_t start, siterator_t end)
 		perror("Request: value field too long");
 		return (-1);
 	}
-	_headers[std::string(start, name_end)] = std::string(value_start, end);
+	_headers[UpperKey(start, name_end)] = std::string(value_start, end);
 	return (0);
 }
 

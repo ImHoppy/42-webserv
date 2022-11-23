@@ -223,6 +223,7 @@ void	Response::doPOST(void)
 	Logger::Info("doPOST() entered");
 	Request::headers_t	headers = _rqst->getHeaders();
 	Request::headers_t::const_iterator	type = headers.find("Content-Type");
+
 	if (type == headers.end())
 	{
 		_code = std::make_pair(501, "Not Implemented Content-Type");

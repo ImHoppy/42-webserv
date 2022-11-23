@@ -157,7 +157,7 @@ int		Client::recvRequest(void)
 		{
 			Logger::Info("Client: new Request received from client %d", _csock);
 			_Rqst = new Request(buf);
-			std::cout << buf;
+			// std::cout << buf;
 		}
 		else
 		{
