@@ -100,7 +100,7 @@ LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 		}
 		start_search = url.find_last_of('/', start_search - 1);
 	}
-	return NULL;
+	return &(_location.begin()->second);
 }
 ServerConfig::map_locs	const & ServerConfig::getLocations() const {
 	return _location;

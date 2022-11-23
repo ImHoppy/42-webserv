@@ -161,8 +161,9 @@ int		Client::recvRequest(void)
 		}
 		else
 		{
-			Logger::Info("Client: got new Chunk");
 			_Rqst->appendToBody(buf);
+			Request::headers_t hed = _Rqst->getHeaders();
+			Logger::Info("Client: got new Chunk %d/%s", _Rqst->getBody().size(), hed["Content-Length"].c_str());
 		}
  		Request::headers_t::const_iterator		content_length = _Rqst->getHeaders().find("Content-Length");
 		if (content_length != _Rqst->getHeaders().end())
