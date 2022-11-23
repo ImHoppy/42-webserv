@@ -72,7 +72,11 @@ void	WebServ::StartLoop(void)
 				}
 				if (events[i].events & EPOLLIN)
 				{
+					// if (client->getRequest() == NULL)
 					int readSize = client->recvRequest();
+					// if (client->getRequest()->getMethod() == "POST")
+					// client->getServer()->readyToRead(client);
+
 					if (readSize == 0)
 					{
 						client->getServer()->removeClient(client);

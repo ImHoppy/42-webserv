@@ -175,7 +175,7 @@ socket_t	 Server::AcceptNewClient(void)
 	Client * client = new Client(client_socket, this);
 	event.data.ptr = client; // addr de this Server
 	//TODO: enlever POLLOUT au debut pas de requete dc pas POLLOUT
-	event.events = EPOLLIN | EPOLLOUT;
+	event.events = EPOLLIN;
 	if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
 		throw std::runtime_error("epoll_ctl failed");
 	}
@@ -183,6 +183,17 @@ socket_t	 Server::AcceptNewClient(void)
 	Logger::Info("Server %d accepted new client on fd %d", _socket, client_socket);
 	return (client_socket);
 }
+
+void	Server::readyToRead(Client* client)
+{
+	struct epoll_event event;
+	event.data.ptr = client;
+	event.events = EPOLLOUT | EPOLLIN;
+	if (epoll_ctl(_epollInstance, EPOLL_CTL_MOD, client->getSocket(), &event) < 0) {
+		throw std::runtime_error("epoll_ctl OUT failed");
+	}
+}
+
 
 /*	1) Find la bonne config grace au host header
 	2) Find la bonne location grace a l'URL
@@ -221,7 +232,12 @@ void	Server::respond(Client* client)
 		Logger::Info("Respond - Created");
 		rep = new Response(chosen_conf, chosen_loc, rqst, client);
 		rep->generateResponse();
-		std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl; 
+		std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl;
+		std::cout << "Raw Body rqst:{" << rqst->getBody() << "}" << std::endl;
+		// write body to file
+		std::ofstream out("output.txt");
+		out << rqst->getBody();
+		out.close();
 		std::cout << "res to send:\n" << rep->getResponse() << std::endl; 
 		client->setResponse(rep);
 		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);

@@ -136,12 +136,13 @@ void	Response::generateBodyError()
 			_body = generateErrorBody(_code);
 			_headers["Connection"] = "close";
 		}
-		_headers["Content-Length"] = IntToStr(_body.size());
 	}
 }
 
 void	Response::generateResponse(void)
 {
+	if (_headers.find("Content-Length") == _headers.end())
+		_headers["Content-Length"] = IntToStr(_body.size());
 	generateBodyError();
 	// if (_code.first == 200 && _body.empty() && _headers["Content-Length"][0] == '0' )
 		// _code = std::make_pair(204, "No Content");
@@ -214,30 +215,35 @@ void	Response::upload(void)
 {
 	//TODO
 	_code = std::make_pair(200, "OK UPLOAD");
+	_body = "Upload succeeded";
 }
 
 void	Response::doPOST(void)
 {
-	std::string		multi = "multipart/form-data";
 	Logger::Info("doPOST() entered");
 	Request::headers_t	headers = _rqst->getHeaders();
 	Request::headers_t::const_iterator	type = headers.find("Content-Type");
 	if (type == headers.end())
 	{
-		_code = std::make_pair(501, "Not Implemented");
+		_code = std::make_pair(501, "Not Implemented Content-Type");
 		return ;
 	}
-	std::cout << "{"<< type->second << "}\n";
-	if (startsWith(type->second, multi))
+	if (startsWith(type->second, "multipart/form-data"))
 	{
 		Logger::Info("is multiform()");
 		upload();
 		return ;
 	}
-	if (type->second == "application/x-www-form-urlencoded")
+	else if (type->second == "application/x-www-form-urlencoded")
 	{
 		Logger::Info("is URL encoded");
 //		cgiPost();
+		return ;
+	}
+	else
+	{
+		Logger::Info("Clasic Post");
+		upload();
 		return ;
 	}
 	_code = std::make_pair(400, "Bad Request");

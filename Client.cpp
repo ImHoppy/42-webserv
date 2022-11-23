@@ -89,12 +89,15 @@ int		Client::getSocket(void) const
 {
 	return _csock;
 }
-
+enum {
+	RECV_OK = -1,
+	RECV_EOF = -2
+};
 /* If bytes rcved is 0, closes the connection. Else,
 create a Request object with the buf received, and add it int its queued requests. */
 int		Client::recvRequest(void)
 {
-	if (_Rqst != NULL)
+/* 	if (_Rqst != NULL)
 	{
 		char buf[BUFFSIZE];
 		memset(&buf, 0, sizeof(buf));
@@ -103,17 +106,40 @@ int		Client::recvRequest(void)
 			throw std::runtime_error("recv failed");
 		else if (bytes == 0)
 		{
-//			Logger::Info("Client HERE: EOF received from client %d", _csock);
+			_myServer->readyToRead(this);
+
+			Logger::Warning("Client: EOF received from client %d", _csock);
 			return (1);
 		}
 		else
 		{
 			buf[bytes] = 0;
-			Logger::Info("Client HERE: new Request received from client %d", _csock);
+
+			Logger::Info("Client: new Body received from client %d", _csock);
 			std::cout << "START CHUNK ________" << buf << "END CHUNK_______" << std::endl;
+
+			Request::headers_t headers = _Rqst->getHeaders();
+			Request::headers_t::const_iterator it = headers.find("Content-Type");
+			Logger::Warning("content_type");
+			if (it != headers.end())
+				return (1);
+			Logger::Warning("startwith");
+			if (!startsWith(it->second, "multipart/form-data"))
+				return 1;
+			std::string boundary("boundary=");
+			int index = it->second.find(boundary);
+			boundary = it->second.substr(index + boundary.length());
+			if (ends_with(buf, boundary+"--"))
+			{
+				std::string body = _Rqst->getBody();
+				body.replace(body.find(boundary), boundary.length(), "");
+				body.replace(body.find(boundary + "--"), boundary.length(), "");
+				std::cout << "NEW BODY :\n" << body << std::endl;
+				_myServer->readyToRead(this);
+			}
 			return (bytes);
 		}
-	}
+	} */
 	char buf[BUFFSIZE];
 	memset(&buf, 0, sizeof(buf));
 	ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
@@ -127,17 +153,27 @@ int		Client::recvRequest(void)
 	else
 	{
 		buf[bytes] = 0;
-		Logger::Info("Client: new Request received from client %d", _csock);
-		Request*		new_rqst = new Request(buf);
-		_Rqst = new_rqst;
-		// TODO: Chunk request
-/* 		Request::const_iterator		content_length = new_rqst->getHeaders().find("Content-Length");
-		if (len != new_rqst->getHeaders().end())
+		if (_Rqst == NULL)
 		{
-			int		clen = StrToInt(content_length->second);
-			if (clen > new_rqst->getBody().size()) // Body pas full recu
-				return (-2); // signifie need read encore PAS pollout
-		} */
+			Logger::Info("Client: new Request received from client %d", _csock);
+			_Rqst = new Request(buf);
+			std::cout << buf;
+		}
+		else
+		{
+			Logger::Info("Client: got new Chunk");
+			_Rqst->appendToBody(buf);
+		}
+ 		Request::headers_t::const_iterator		content_length = _Rqst->getHeaders().find("Content-Length");
+		if (content_length != _Rqst->getHeaders().end())
+		{
+			size_t	len = StrToInt(content_length->second);
+			if (len > _Rqst->getBody().size()) // Body pas full recu
+			{
+				return (RECV_OK);
+			}
+		}
+		_myServer->readyToRead(this);
 		return (bytes);
 	}
 }

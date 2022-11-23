@@ -53,6 +53,7 @@ class Server : public Base
 		socket_t	 AcceptNewClient(void);
 		/* Logs */
 		bool	isSameHostPort(int32_t host, int16_t port) const;
+		void	readyToRead(Client* client);
 };
 
 /* CGI:

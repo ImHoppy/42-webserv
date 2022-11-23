@@ -43,7 +43,6 @@ class Client : public Base
 		Request*	getRequest(void);
 		int			recvRequest(void);
 		Server*		getServer(void);
-
 		void		setResponse(Response* resp);
 		Response*	getResponse(void) const;
 
