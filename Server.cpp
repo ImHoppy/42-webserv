@@ -140,6 +140,7 @@ int		Server::InitServer(void)
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(_configs[0].getHost());
 	servaddr.sin_port = htons(_configs[0].getPort());
+	// TODO: C'est normal de prendre congif[0] ???
 	if (bind(_socket, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0)
 	{
 		Logger::Error("Server: bind() failed: %s", strerror(errno));
@@ -220,7 +221,8 @@ void	Server::respond(Client* client)
 		Logger::Info("Respond - Created");
 		rep = new Response(chosen_conf, chosen_loc, rqst, client);
 		rep->generateResponse();
-		std::cout << "res" << rep->getResponse() << std::endl; 
+		std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl; 
+		std::cout << "res to send:\n" << rep->getResponse() << std::endl; 
 		client->setResponse(rep);
 		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
 		Logger::Info("Respond - Send Response");

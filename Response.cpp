@@ -218,6 +218,7 @@ void	Response::upload(void)
 
 void	Response::doPOST(void)
 {
+	std::string		multipart = "multipart/form-data";
 	Logger::Info("doPOST() entered");
 	Request::headers_t	headers = _rqst->getHeaders();
 	Request::headers_t::const_iterator	type = headers.find("Content-Type");
@@ -226,7 +227,7 @@ void	Response::doPOST(void)
 		_code = std::make_pair(501, "Not Implemented");
 		return ;
 	}
-	if (type->second == "multipart/form-data") // upload
+	if (type->second.compare(0, multipart.size(), multipart) == true) // upload
 	{
 		Logger::Info("is multiform()");
 		upload();
@@ -284,7 +285,6 @@ bool	Response::tryFile(void)
 		_readData.read_bytes = _readData.file.gcount();
 
 		_body.assign(_readData.buffer, _readData.read_bytes);
-		std::cout << std::bitset<4>(_readData.file.rdstate()) << std::endl;
 
 		if (_readData.file.eof())
 		{

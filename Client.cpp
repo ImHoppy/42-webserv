@@ -95,7 +95,25 @@ create a Request object with the buf received, and add it int its queued request
 int		Client::recvRequest(void)
 {
 	if (_Rqst != NULL)
-		return 0;
+	{
+		char buf[BUFFSIZE];
+		memset(&buf, 0, sizeof(buf));
+		ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
+		if (bytes < 0)
+			throw std::runtime_error("recv failed");
+		else if (bytes == 0)
+		{
+//			Logger::Info("Client HERE: EOF received from client %d", _csock);
+			return (1);
+		}
+		else
+		{
+			buf[bytes] = 0;
+			Logger::Info("Client HERE: new Request received from client %d", _csock);
+			std::cout << "START CHUNK ________" << buf << "END CHUNK_______" << std::endl;
+			return (bytes);
+		}
+	}
 	char buf[BUFFSIZE];
 	memset(&buf, 0, sizeof(buf));
 	ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
