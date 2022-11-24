@@ -94,10 +94,10 @@ enum {
 	RECV_EOF = -2
 };
 
-void	Client::createNewRequest(const std::string & buf)
+void	Client::createNewRequest(char * buf, ssize_t & bytes)
 {
 	Logger::Info("Client: new Request received from client %d", _csock);
-	_Rqst = new Request(buf);
+	_Rqst = new Request(buf, bytes);
 
 	ServerConfig* chosen_conf = _myServer->getConfigForRequest(_Rqst);
 	if (chosen_conf == NULL)
@@ -115,6 +115,12 @@ void	Client::createNewRequest(const std::string & buf)
 	_Rqst->setConfig(chosen_conf);
 	_Rqst->setLocation(chosen_loc);
 	_Rqst->setTargetPath();
+	if (_Rqst.getMethod() == "POST")
+	{
+		_file.open("testupoad");
+		if (not _file.is_open())
+			throw std::runtime_error("file for POST cant be open");
+	}
 }
 
 /* If bytes rcved is 0, closes the connection. Else,
@@ -122,7 +128,7 @@ create a Request object with the buf received, and add it int its queued request
 int		Client::recvRequest(void)
 {
 	char buf[BUFFSIZE];
-	memset(&buf, 0, sizeof(buf));
+	memset(buf, 0, sizeof(buf));
 	ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
 	if (bytes < 0)
 		throw std::runtime_error("recv failed");
@@ -135,19 +141,31 @@ int		Client::recvRequest(void)
 	{
 		buf[bytes] = 0;
 		if (_Rqst == NULL)
-			createNewRequest(buf);
+		{
+			createNewRequest(buf, bytes);
+			Request::headers_t hed = _Rqst->getHeaders();
+			if (_file.is_open())
+				_file.write(buf, bytes);
+		}
 		else
 		{
-			_Rqst->appendToBody(buf);
 			Request::headers_t hed = _Rqst->getHeaders();
-			Logger::Info("Client: got new Chunk %d/%s", _Rqst->getBody().size(), hed["Content-Length"].c_str());
+//			_Rqst->appendToBody(buf);
+			removeBoundaryLast(buf, bytes);
+			if (buf + hed["Content-Type"])
+
+			if (_file.is_open())
+				_file.write(buf, bytes);
+			Logger::Info("Client: got new Chunk %d/%s", _file.tellg(), hed["Content-Length"].c_str());
 		}
  		Request::headers_t::const_iterator		content_length = _Rqst->getHeaders().find("Content-Length");
 		if (content_length != _Rqst->getHeaders().end())
 		{
+			
 			size_t	len = StrToInt(content_length->second);
-			if (len > _Rqst->getBody().size()) // Body pas full recu
+			if (len > _file.tellg()) // Body pas full recu
 			{
+				Logger::Info("recv total = %d, content length%d ", _file.tellg(), len);
 				return (RECV_OK);
 			}
 		}

@@ -31,9 +31,10 @@ class Client : public Base
 		Request*		_Rqst;
 		Response*		_Resp;
 		std::string		_uploadName;
+		std::ofstream	_file;
 
 		void			generateFileName(void);
-		void			createNewRequest(const std::string & buf);
+		void			createNewRequest(char * buf, ssize_t & bytes);
 
 	public:
 		Client(void);

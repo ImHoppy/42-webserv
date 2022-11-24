@@ -217,10 +217,10 @@ void	Server::respond(Client* client)
 		rep->generateResponse();
 		
 		std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl;
-		std::cout << "Raw Body rqst:{" << rqst->getBody() << "}" << std::endl;
-		std::ofstream out("output.txt");
-		out << rqst->getBody();
-		out.close();
+//		std::cout << "Raw Body rqst:{" << rqst->getBody() << "}" << std::endl;
+//		std::ofstream out("output.txt");
+//		out << rqst->getBody();
+//		out.close();
 		std::cout << "res to send:\n" << rep->getResponse() << std::endl; 
 		client->setResponse(rep);
 

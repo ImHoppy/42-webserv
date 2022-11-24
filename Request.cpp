@@ -35,6 +35,32 @@ Request&	Request::operator=(const Request& src)
 	return *this;
 }
 
+
+#include <cstring>
+/* ATTENTION: str MUST NOT be empty! */
+/* Parametric construcotr */
+Request::Request(char* buf, ssize_t & bytes)
+{
+	ssize_t i;
+	for (i = 0; i < bytes - 4 ; ++i)
+	{
+		if (strncmp(buf + i,"\r\n\r\n", 4) == 0)
+			break;
+	}
+	i += 4;
+	_rawRqst.assign(buf, buf + i);
+	buf = buf + i;
+	bytes = bytes - i;
+	setRqstLine();
+	setMethod();
+	setTarget();
+	siterator_t	bodyStart;
+	bodyStart = setHeaders();
+	// if (bodyStart != _rawRqst.end())
+		// setBody(bodyStart);
+	setURI();
+}
+
 const std::string &		Request::getRequestLine(void) const
 {
 	return _rqstLine;
@@ -58,20 +84,6 @@ bool		Request::targetIsFile(void) const
 bool		Request::targetIsCgi(void) const
 {
 	return (ends_with(_targetPath, ".php"));
-}
-
-/* ATTENTION: str MUST NOT be empty! */
-/* Parametric construcotr */
-Request::Request(const std::string& str) : _rawRqst(str)
-{
-	setRqstLine();
-	setMethod();
-	setTarget();
-	siterator_t	bodyStart;
-	bodyStart = setHeaders();
-	if (bodyStart != _rawRqst.end())
-		setBody(bodyStart);
-	setURI();
 }
 
 /* Set le private attribut _targetPath en fonction du path de l'URI de la request et en
