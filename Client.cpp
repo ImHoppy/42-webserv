@@ -93,6 +93,37 @@ enum {
 	RECV_OK = -1,
 	RECV_EOF = -2
 };
+
+ServerConfig*	Client::getConfig(void) const
+{
+	return _conf;
+}
+
+LocationConfig*	Client::getLocation(void) const
+{
+	return _loc;
+}
+
+void		Client::createNewRequest(const std::string & buf)
+{
+	Logger::Info("Client: new Request received from client %d", _csock);
+	_Rqst = new Request(buf);
+
+	ServerConfig*	_conf = _myServer->getConfigForRequest(_Rqst);
+	if (_conf == NULL)
+	{
+		Logger::Error("Respond - CONFIG NULL");
+		return ;
+	}
+
+	LocationConfig*	_loc = _conf->getLocationFromUrl(_Rqst->getUri().path);
+	if (_loc == NULL)
+	{
+		Logger::Error("Respond - LOCATION NULL");
+		return ;
+	}
+}
+
 /* If bytes rcved is 0, closes the connection. Else,
 create a Request object with the buf received, and add it int its queued requests. */
 int		Client::recvRequest(void)
@@ -111,11 +142,7 @@ int		Client::recvRequest(void)
 	{
 		buf[bytes] = 0;
 		if (_Rqst == NULL)
-		{
-			Logger::Info("Client: new Request received from client %d", _csock);
-			_Rqst = new Request(buf);
-			// std::cout << buf;
-		}
+			createNewRequest(buf);
 		else
 		{
 			_Rqst->appendToBody(buf);

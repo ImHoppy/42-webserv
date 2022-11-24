@@ -80,7 +80,7 @@ class Response
 		~Response(void);
 		Response(const Response& src);
 		Response&	operator=(const Response& src);
-		Response(ServerConfig* config, LocationConfig* loc, Request* request, Client* client);
+		Response(Client *client);
 		
 		/* Getteurs */
 		std::string			getResponse(void) const;
@@ -96,6 +96,7 @@ class Response
 		int		readFromCgi(void);
 		void	handleError(int error);
 		void	generateResponse(void);
+		void	doMethod(void);
 
 }; // end class Response
 

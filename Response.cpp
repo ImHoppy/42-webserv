@@ -43,10 +43,10 @@ Response &	Response::operator=(const Response& src)
 }
 
 /* Parametric constructor */
-Response::Response(ServerConfig* config, LocationConfig* loc, Request* request, Client* client) :
-	_config(config),
-	_location(loc),
-	_rqst(request),
+Response::Response(Client *client) :
+	_config(client->getConfig()),
+	_location(client->getLocation()),
+	_rqst(client->getRequest()),
 	_client(client),
 	_targetPath(),
 	_cgi(),
@@ -57,12 +57,12 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request, 
 	_readData()
 {
 	_headers["Connection"] = "keep-alive";
-	if (config == NULL || loc == NULL || request == NULL)
+	if (_config == NULL || _location == NULL || _rqst == NULL)
 	{
 		_code = std::make_pair(400, "Bad Request");
 		return ;
 	}
-	if (request->getUri().path.size() + request->getUri().query.size() > 1024)
+	if (_rqst->getUri().path.size() + _rqst->getUri().query.size() > 1024)
 	{
 		_code = std::make_pair(414, "Request-URI Too Long");
 		return ;
@@ -78,6 +78,11 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request, 
 		return ;
 	}
 	setTargetPath();
+}
+
+/* "Launch" le process de la response. */
+void	Response::doMethod(void)
+{
 	if (_rqst->getMethod() == "GET")
 	{
 		doGET();
@@ -94,8 +99,8 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request, 
 	{
 		doPOST();
 	}
-}
 
+}
 
 void	Response::setAllowHeader(void)
 {
