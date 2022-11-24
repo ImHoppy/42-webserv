@@ -2,8 +2,7 @@
 
 /* Default constructor */
 Response::Response(void) :
-	_config(), _location(), _rqst(), _client(), 
-	_targetPath(),
+	_rqst(),
 	_cgi(),
 	_code(std::make_pair(501, "Not Implemented")),
 	_headers(),
@@ -28,11 +27,7 @@ Response &	Response::operator=(const Response& src)
 {
 	if (this != &src)
 	{
-		_config = src._config;
-		_location = src._location;
 		_rqst = src._rqst;
-		_client = src._client;
-		_targetPath = src._targetPath;
 		_cgi = src._cgi;
 		_code = src._code;
 		_headers = src._headers;
@@ -43,12 +38,8 @@ Response &	Response::operator=(const Response& src)
 }
 
 /* Parametric constructor */
-Response::Response(Client *client) :
-	_config(client->getConfig()),
-	_location(client->getLocation()),
-	_rqst(client->getRequest()),
-	_client(client),
-	_targetPath(),
+Response::Response(Request* rqst) :
+	_rqst(rqst),
 	_cgi(),
 	_code(std::make_pair(501, "Not Implemented")),
 	_headers(),
@@ -57,7 +48,7 @@ Response::Response(Client *client) :
 	_readData()
 {
 	_headers["Connection"] = "keep-alive";
-	if (_config == NULL || _location == NULL || _rqst == NULL)
+	if (_rqst == NULL)
 	{
 		_code = std::make_pair(400, "Bad Request");
 		return ;
@@ -77,7 +68,6 @@ Response::Response(Client *client) :
 		setAllowHeader();
 		return ;
 	}
-	setTargetPath();
 }
 
 /* "Launch" le process de la response. */
@@ -90,7 +80,7 @@ void	Response::doMethod(void)
 	}
 	else if (_rqst->getMethod() == "DELETE")
 	{
-		if (doDELETE(_targetPath) == 404)
+		if (doDELETE(_rqst->getTargetPath()) == 404)
 			_code = std::make_pair(404, "Not Found");
 		else
 			_code = std::make_pair(204, "No Content");
@@ -104,12 +94,13 @@ void	Response::doMethod(void)
 
 void	Response::setAllowHeader(void)
 {
+	LocationConfig*	loc = _rqst->getLocation();
 	std::string		allowed;
-	if (_location->methodIsAllowed(LocationConfig::GET))
+	if (loc->methodIsAllowed(LocationConfig::GET))
 		allowed += "GET, ";
-	if (_location->methodIsAllowed(LocationConfig::POST))
+	if (loc->methodIsAllowed(LocationConfig::POST))
 		allowed += "POST, ";
-	if (_location->methodIsAllowed(LocationConfig::DELETE))
+	if (loc->methodIsAllowed(LocationConfig::DELETE))
 		allowed += "DELETE";
 	if (*(allowed.end() - 1) == ' ')
 		allowed.erase(allowed.end() - 2, allowed.end());
@@ -134,9 +125,9 @@ void	Response::generateBodyError()
 {
 	if (_code.first >= 400)
 	{
-		ServerConfig::errors_t::const_iterator	it = _config->getErrorPaths().find(_code.first);
+		ServerConfig::errors_t::const_iterator	it = _rqst->getConfig()->getErrorPaths().find(_code.first);
 
-		if (it == _config->getErrorPaths().end() || not openPageError(it->second))
+		if (it == _rqst->getConfig()->getErrorPaths().end() || not openPageError(it->second))
 		{
 			_body = generateErrorBody(_code);
 			_headers["Connection"] = "close";
@@ -163,20 +154,6 @@ void	Response::generateResponse(void)
 	_response += CLRF;
 
 	_response += _body;
-}
-
-/* Set le private attribut _targetPath en fonction du path de l'URI de la request et en
-fonction du root de la config. */
-void	Response::setTargetPath(void)
-{
-	std::string		url(_rqst->getUri().path);
-	_targetPath =  url.replace(0, _location->getPath().size(), _location->getRootPath());
-	if (ends_with(url, '/') == true)
-	{
-		if (_location->isDirList() == true || _rqst->getMethod() == "DELETE")
-			return ;
-		_targetPath += _location->getIndexFile();
-	}
 }
 
 
@@ -279,7 +256,7 @@ bool	Response::tryFile(void)
 {
 	if (_readData.buffer == NULL)
 	{
-		_readData.file.open(_targetPath.c_str());
+		_readData.file.open(_rqst->getTargetPath().c_str());
 		if (_readData.file.is_open() == false)
 			return false;
 
@@ -360,8 +337,8 @@ void		Response::setCgiEnv(void)
 	_cgi.addVarToEnv("REQUEST_METHOD=" + _rqst->getMethod());
 	_cgi.addVarToEnv("SCRIPT_FILENAME=cgi-bin/" + _rqst->getUri().path);
 	_cgi.addVarToEnv("SCRIPT_NAME=" + _rqst->getUri().path);
-	_cgi.addVarToEnv("SERVER_NAME=" + _config->getServerNames()[0]);
-	_cgi.addVarToEnv("SERVER_PORT=" + IntToStr(_config->getPort()));
+	_cgi.addVarToEnv("SERVER_NAME=" + _rqst->getConfig()->getServerNames()[0]);
+	_cgi.addVarToEnv("SERVER_PORT=" + IntToStr(_rqst->getConfig()->getPort()));
 	_cgi.addVarToEnv("SERVER_PROTOCOL=HTTP/1.1");
 	_cgi.addVarToEnv("SERVER_SOFTWARE=WebServ");
 	//TODO: RFC 3875 parle meta-variables: export tous les headers de la request
@@ -415,17 +392,16 @@ int		Response::readFromCgi(void)
 
 void		Response::doGET(void)
 {
-	
-	if (targetIsDir() && _location->isDirList() == true)
+	if (_rqst->targetIsDir() && _rqst->getLocation()->isDirList() == true)
 	{
-		_body = GenerateHtmlDirectory(_targetPath);
+		_body = GenerateHtmlDirectory(_rqst->getTargetPath());
 		_code = std::make_pair(200, "OK");
 		if (_body.empty())
 			_code = std::make_pair(501, "Internal Server Error");
 		_headers["Content-Length"] = IntToStr(_body.size());
 		return ;
 	}
-	else if (targetIsFile())
+	else if (_rqst->targetIsFile())
 	{
 		if (tryFile())
 			_code = std::make_pair(200, "OK");
@@ -449,21 +425,6 @@ bool	Response::checkHost(void) const
 
 bool	Response::checkMethod(void) const
 {
-	return _location->methodIsAllowed(_rqst->getMethod());
+	return _rqst->getLocation()->methodIsAllowed(_rqst->getMethod());
 }
 
-
-bool		Response::targetIsDir(void) const
-{
-	return (ends_with(_targetPath, '/'));
-}
-
-bool		Response::targetIsFile(void) const
-{
-	return !(targetIsDir() || targetIsCgi());
-}
-
-bool		Response::targetIsCgi(void) const
-{
-	return (ends_with(_targetPath, ".php"));
-}

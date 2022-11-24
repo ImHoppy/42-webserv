@@ -1,23 +1,9 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Request.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/24 11:11:58 by cdefonte         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 # include "Request.hpp"
 
 void			Request::appendToBody(const std::string & more)
 {
 	_body += more;
 }
-
-
 
 /* Default constructor (private) */
 Request::Request(void) {}
@@ -28,7 +14,7 @@ Request::~Request(void) {}
 /* Copy constructor */
 Request::Request(const Request& src) : 
 _rawRqst(src._rawRqst), _rqstLine(src._rqstLine), _method(src._method),
-_target(src._target),
+_target(src._target), _targetPath(src._targetPath),
 _uri(src._uri), _headers(src._headers), _body(src._body) {}
 
 
@@ -39,6 +25,7 @@ Request&	Request::operator=(const Request& src)
 	_rqstLine.assign(src._rqstLine);
 	_method.assign(src._method);
 	_target.assign(src._target);
+	_targetPath = src._targetPath;
 	_uri.scheme = src._uri.scheme;
 	_uri.authority = src._uri.authority;
 	_uri.path = src._uri.path;
@@ -53,6 +40,26 @@ const std::string &		Request::getRequestLine(void) const
 	return _rqstLine;
 }
 
+const std::string &		Request::getTargetPath(void) const
+{
+	return _targetPath;
+}
+
+bool		Request::targetIsDir(void) const
+{
+	return (ends_with(_targetPath, '/'));
+}
+
+bool		Request::targetIsFile(void) const
+{
+	return !(targetIsDir() || targetIsCgi());
+}
+
+bool		Request::targetIsCgi(void) const
+{
+	return (ends_with(_targetPath, ".php"));
+}
+
 /* ATTENTION: str MUST NOT be empty! */
 /* Parametric construcotr */
 Request::Request(const std::string& str) : _rawRqst(str)
@@ -65,6 +72,20 @@ Request::Request(const std::string& str) : _rawRqst(str)
 	if (bodyStart != _rawRqst.end())
 		setBody(bodyStart);
 	setURI();
+}
+
+/* Set le private attribut _targetPath en fonction du path de l'URI de la request et en
+fonction du root de la config. */
+void	Request::setTargetPath(void)
+{
+	std::string		url(_uri.path);
+	_targetPath =  url.replace(0, _loc->getPath().size(), _loc->getRootPath());
+	if (ends_with(url, '/') == true)
+	{
+		if (_loc->isDirList() == true || _method == "DELETE")
+			return ;
+		_targetPath += _loc->getIndexFile();
+	}
 }
 
 /* Enregistre le body: prend un iterator qui pointe sur le premier caractere, i.e le
@@ -303,5 +324,24 @@ std::ostream&	operator<<(std::ostream& o, const Request& me)
 	o << "URI path = \'" << me.getUri().path << "\'" << std::endl;
 	o << "URI query = \'" << me.getUri().query << "\'" << std::endl;
 	return o;
+}
+
+void	Request::setLocation(LocationConfig* loc)
+{
+	this->_loc = loc;
+}
+void	Request::setConfig(ServerConfig* conf)
+{
+	this->_conf = conf;
+}
+
+ServerConfig*	Request::getConfig(void) const
+{
+	return _conf;
+}
+
+LocationConfig*	Request::getLocation(void) const
+{
+	return _loc;
 }
 

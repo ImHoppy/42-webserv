@@ -18,6 +18,7 @@
 
 #define SpaceChar " \t\n\r\f\v"
 
+char	generateChar(void);
 bool	ends_with(const std::string& str, const std::string& extension);
 bool	ends_with(const std::string& str, const char c);
 bool	startsWith(std::string const & str, std::string const & start);

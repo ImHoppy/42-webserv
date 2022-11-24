@@ -1,5 +1,12 @@
 #include "Utils.hpp"
 
+char	generateChar(void)
+{
+	const std::string alpha("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+	return alpha[std::rand() % alpha.size()];
+}
+
+
 std::string		getFileExtension(const std::string & filename)
 {
 	std::string		extension;

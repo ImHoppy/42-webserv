@@ -17,6 +17,10 @@
 #  define HEADER_VALUE_MAX_LENGTH 400 // en octets RFC 2616 page 26
 # endif
 
+/*
+	_targetPath: path to file or directory. Function request URI path and config root
+*/
+
 #define CLRF "\r\n"
 
 typedef struct s_uri
@@ -40,10 +44,13 @@ class Request
 		std::string		_rawRqst;
 		std::string		_rqstLine; // for debug/info printings
 		std::string		_method;
-		std::string		_target;
+		std::string		_target; // target brut URL
+		std::string		_targetPath; // target rooted fct conf et loc
 		t_uri			_uri;
 		headers_t		_headers;
 		std::string		_body;
+		ServerConfig*	_conf;
+		LocationConfig*	_loc;
 		/* Private default constructor */
 		Request(void);
 
@@ -53,8 +60,12 @@ class Request
 		Request(const Request& src);
 		/* Parametric constructor */
 		Request(const std::string& str);
+		/* Public Setteurs */
+		void	setLocation(LocationConfig* loc);
+		void	setConfig(ServerConfig* conf);
 
 		/* Getteurs */
+		const std::string &			getTargetPath(void) const;
 		const std::string &			getRawRequest(void) const;
 		const std::string &			getRequestLine(void) const;
 		const std::string &			getMethod(void) const;
@@ -63,8 +74,14 @@ class Request
 		const headers_t &			getHeaders(void) const;
 		const std::string &			getHost(void) const;
 		const std::string &			getBody(void) const;
+		ServerConfig*				getConfig(void) const;
+		LocationConfig*				getLocation(void) const;
 
-		void						appendToBody(const std::string & more);
+		void			appendToBody(const std::string & more);
+		bool			targetIsCgi(void) const;
+		bool		targetIsFile(void) const;
+		bool		targetIsDir(void) const;
+		void			setTargetPath(void);
 
 	private:
 		/* Setteurs */

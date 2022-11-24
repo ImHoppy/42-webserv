@@ -213,7 +213,7 @@ void	Server::respond(Client* client)
 		if (rqst == NULL)
 			return ;
 		Logger::Info("Respond - Created");
-		rep = new Response(client);
+		rep = new Response(rqst);
 		rep->generateResponse();
 		
 		std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl;
@@ -223,6 +223,7 @@ void	Server::respond(Client* client)
 		out.close();
 		std::cout << "res to send:\n" << rep->getResponse() << std::endl; 
 		client->setResponse(rep);
+
 		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
 		Logger::Info("Respond - Send Response");
 		if (rep->getReadData().status == Response::EOF_FILE || rep->getReadData().status == Response::NONE)

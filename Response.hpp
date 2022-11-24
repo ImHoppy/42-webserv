@@ -7,20 +7,16 @@
 # include <cstdio> // std::remove (file/dir)
 # include <sys/types.h> // waitpid()
 # include <sys/wait.h> // waitpid()
+# include <strings.h> // bzero
 
 # include "Utils.hpp"
 # include "Logger.hpp"
-# include "Client.hpp"
 # include "CGI.hpp"
 # include "ServerConfig.hpp"
 # include "LocationConfig.hpp"
 # include "Request.hpp"
 
 #define CLRF "\r\n"
-
-/*
-	_targetPath: path to file or directory. Function request URI path and config root
-*/
 
 
 
@@ -45,23 +41,16 @@ class Response
 		typedef std::map<std::string, std::string>		headers_t;
 	private:
 		/* Attributs */
-		ServerConfig*				_config;
-		LocationConfig*				_location;
 		Request*					_rqst;
-		// TODO: Remove client
-		Client*						_client;
-		std::string					_targetPath;
 		// TODO: Move cgi to client
 		CGI							_cgi;
 		std::pair<int, std::string>	_code;
 		headers_t					_headers;
 		std::string					_body;
 		std::string					_response;
-
 		ReadData					_readData;
 
 		/* Private member fcts */
-		void		setTargetPath(void);
 		void		setAllowHeader(void);
 		//TODO: ameliorer avec des private static bitset<3> file dit cgi ?
 		bool		targetIsDir(void) const;
@@ -80,7 +69,7 @@ class Response
 		~Response(void);
 		Response(const Response& src);
 		Response&	operator=(const Response& src);
-		Response(Client *client);
+		Response(Request* rqst);
 		
 		/* Getteurs */
 		std::string			getResponse(void) const;

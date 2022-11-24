@@ -94,34 +94,27 @@ enum {
 	RECV_EOF = -2
 };
 
-ServerConfig*	Client::getConfig(void) const
-{
-	return _conf;
-}
-
-LocationConfig*	Client::getLocation(void) const
-{
-	return _loc;
-}
-
-void		Client::createNewRequest(const std::string & buf)
+void	Client::createNewRequest(const std::string & buf)
 {
 	Logger::Info("Client: new Request received from client %d", _csock);
 	_Rqst = new Request(buf);
 
-	ServerConfig*	_conf = _myServer->getConfigForRequest(_Rqst);
-	if (_conf == NULL)
+	ServerConfig* chosen_conf = _myServer->getConfigForRequest(_Rqst);
+	if (chosen_conf == NULL)
 	{
-		Logger::Error("Respond - CONFIG NULL");
+		Logger::Error("Request: - CONFIG NULL");
 		return ;
 	}
 
-	LocationConfig*	_loc = _conf->getLocationFromUrl(_Rqst->getUri().path);
-	if (_loc == NULL)
+	LocationConfig* chosen_loc = chosen_conf->getLocationFromUrl(_Rqst->getUri().path);
+	if (chosen_loc == NULL)
 	{
-		Logger::Error("Respond - LOCATION NULL");
+		Logger::Error("Request: - LOCATION NULL");
 		return ;
 	}
+	_Rqst->setConfig(chosen_conf);
+	_Rqst->setLocation(chosen_loc);
+	_Rqst->setTargetPath();
 }
 
 /* If bytes rcved is 0, closes the connection. Else,
@@ -178,13 +171,6 @@ void	Client::setResponse(Response* resp)
 }
 
 std::string const & Client::getType() const { return _type; }
-
-char	Client::generateChar(void)
-{
-	const std::string alpha("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-	return alpha[std::rand() % alpha.size()];
-}
-
 
 void	Client::generateFileName(void)
 {

@@ -30,8 +30,11 @@ class Client : public Base
 		Server*			_myServer;
 		Request*		_Rqst;
 		Response*		_Resp;
-		ServerConfig*	_conf;
-		LocationConfig*	_loc;
+		std::string		_uploadName;
+
+		void			generateFileName(void);
+		void			createNewRequest(const std::string & buf);
+
 	public:
 		Client(void);
 		~Client(void);
@@ -48,11 +51,8 @@ class Client : public Base
 		Server*		getServer(void);
 		void		setResponse(Response* resp);
 		Response*	getResponse(void) const;
-		ServerConfig*				getConfig(void) const;
-		LocationConfig*				getLocation(void) const;
 
 		std::string const & getType() const;
-		void		createNewRequest(const std::string & buf);
 
 }; // end class Client
 #endif
