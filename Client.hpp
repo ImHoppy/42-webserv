@@ -53,6 +53,8 @@ class Client : public Base
 		void		setResponse(Response* resp);
 		Response*	getResponse(void) const;
 
+		void		closeFile(void);
+
 		std::string const & getType() const;
 
 }; // end class Client

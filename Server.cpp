@@ -230,6 +230,7 @@ void	Server::respond(Client* client)
 		{
 			client->popOutRequest();
 			client->popOutResponse();
+			client->closeFile();
 		}
 	}
 	else

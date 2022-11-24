@@ -72,17 +72,18 @@ void	WebServ::StartLoop(void)
 				}
 				if (events[i].events & EPOLLIN)
 				{
-					// if (client->getRequest() == NULL)
-					int readSize = client->recvRequest();
-					// if (client->getRequest()->getMethod() == "POST")
-					// client->getServer()->readyToRead(client);
-					// client->setConf && loc
-
-					if (readSize == 0)
-					{
-						client->getServer()->removeClient(client);
-						events[i].events = 0; // pour pas passer ds le pollou suivant alors qu'on a delete le client
+					int	readSize;
+					try {
+						readSize = client->recvRequest();
+						if (readSize == 0)
+							client->getServer()->removeClient(client);
 					}
+					catch (std::exception& exc)
+					{
+						Logger::Error("%s", exc.what());
+						client->getServer()->removeClient(client);
+					}
+
 				}
 				else if (events[i].events & EPOLLOUT)
 				{

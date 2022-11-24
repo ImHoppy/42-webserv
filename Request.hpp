@@ -10,6 +10,8 @@
 # include <errno.h> // perror
 # include <cctype> // isspace
 # include "Utils.hpp" // pour findCRLF
+# include "Logger.hpp"
+
 # ifndef STATUS_LINE_MAX_LENGTH
 #  define STATUS_LINE_MAX_LENGTH 8000 // en octets RFC7230 page 22
 # endif

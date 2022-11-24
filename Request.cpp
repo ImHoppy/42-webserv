@@ -35,7 +35,6 @@ Request&	Request::operator=(const Request& src)
 	return *this;
 }
 
-
 #include <cstring>
 /* ATTENTION: str MUST NOT be empty! */
 /* Parametric construcotr */
@@ -50,7 +49,6 @@ Request::Request(char* buf, ssize_t & bytes)
 	i += 4;
 	_rawRqst.assign(buf, buf + i);
 	buf = buf + i;
-	bytes = bytes - i;
 	setRqstLine();
 	setMethod();
 	setTarget();
@@ -59,6 +57,8 @@ Request::Request(char* buf, ssize_t & bytes)
 	// if (bodyStart != _rawRqst.end())
 		// setBody(bodyStart);
 	setURI();
+	if (_method == "POST")
+		bytes = bytes - i;
 }
 
 const std::string &		Request::getRequestLine(void) const

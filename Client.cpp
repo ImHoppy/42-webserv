@@ -25,6 +25,8 @@ Client::~Client(void)
 		delete _Resp;
 	if (_csock >= 0)
 		close(_csock);
+	if (_file.is_open())
+		_file.close();
 }
 
 /* Copy Constructor */
@@ -115,7 +117,7 @@ void	Client::createNewRequest(char * buf, ssize_t & bytes)
 	_Rqst->setConfig(chosen_conf);
 	_Rqst->setLocation(chosen_loc);
 	_Rqst->setTargetPath();
-	if (_Rqst.getMethod() == "POST")
+	if (_Rqst->getMethod() == "POST")
 	{
 		_file.open("testupoad");
 		if (not _file.is_open())
@@ -151,27 +153,32 @@ int		Client::recvRequest(void)
 		{
 			Request::headers_t hed = _Rqst->getHeaders();
 //			_Rqst->appendToBody(buf);
-			removeBoundaryLast(buf, bytes);
-			if (buf + hed["Content-Type"])
-
 			if (_file.is_open())
 				_file.write(buf, bytes);
-			Logger::Info("Client: got new Chunk %d/%s", _file.tellg(), hed["Content-Length"].c_str());
+			Logger::Info("Client: got new Chunk %d/%s", (long)_file.tellp(), hed["Content-Length"].c_str());
 		}
  		Request::headers_t::const_iterator		content_length = _Rqst->getHeaders().find("Content-Length");
 		if (content_length != _Rqst->getHeaders().end())
 		{
-			
+
 			size_t	len = StrToInt(content_length->second);
-			if (len > _file.tellg()) // Body pas full recu
+			if (len > (unsigned long)_file.tellp()) // Body pas full recu
 			{
-				Logger::Info("recv total = %d, content length%d ", _file.tellg(), len);
 				return (RECV_OK);
 			}
 		}
 		_myServer->readyToRead(this);
+		if (_file.is_open())
+			_file.flush();
+		Logger::Error("Bytes returned = %d", bytes);
 		return (bytes);
 	}
+}
+
+void		Client::closeFile(void)
+{
+	if (_file.is_open())
+		_file.close();
 }
 
 Server*		Client::getServer(void)
