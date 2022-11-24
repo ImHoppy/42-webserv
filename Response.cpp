@@ -68,6 +68,7 @@ Response::Response(Request* rqst) :
 		setAllowHeader();
 		return ;
 	}
+	doMethod();
 }
 
 /* "Launch" le process de la response. */
