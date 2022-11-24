@@ -25,10 +25,13 @@ class Response;
 
 class Client : public Base
 {
-	socket_t		_csock; // client socket, the one returned by accept() calls
-	Server*			_myServer;
-	Request*		_Rqst; // deque of requests from this clientwhich havn't been respond yet
-	Response*		_Resp;
+	private:
+		socket_t		_csock; // client socket, the one returned by accept() calls
+		Server*			_myServer;
+		Request*		_Rqst;
+		Response*		_Resp;
+		ServerConfig*	_conf;
+		LocationConfig*	_loc;
 	public:
 		Client(void);
 		~Client(void);
@@ -45,8 +48,11 @@ class Client : public Base
 		Server*		getServer(void);
 		void		setResponse(Response* resp);
 		Response*	getResponse(void) const;
+		ServerConfig*				getConfig(void) const;
+		LocationConfig*				getLocation(void) const;
 
 		std::string const & getType() const;
+		void		createNewRequest(const std::string & buf);
 
 }; // end class Client
 #endif

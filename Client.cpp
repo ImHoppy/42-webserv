@@ -93,53 +93,41 @@ enum {
 	RECV_OK = -1,
 	RECV_EOF = -2
 };
+
+ServerConfig*	Client::getConfig(void) const
+{
+	return _conf;
+}
+
+LocationConfig*	Client::getLocation(void) const
+{
+	return _loc;
+}
+
+void		Client::createNewRequest(const std::string & buf)
+{
+	Logger::Info("Client: new Request received from client %d", _csock);
+	_Rqst = new Request(buf);
+
+	ServerConfig*	_conf = _myServer->getConfigForRequest(_Rqst);
+	if (_conf == NULL)
+	{
+		Logger::Error("Respond - CONFIG NULL");
+		return ;
+	}
+
+	LocationConfig*	_loc = _conf->getLocationFromUrl(_Rqst->getUri().path);
+	if (_loc == NULL)
+	{
+		Logger::Error("Respond - LOCATION NULL");
+		return ;
+	}
+}
+
 /* If bytes rcved is 0, closes the connection. Else,
 create a Request object with the buf received, and add it int its queued requests. */
 int		Client::recvRequest(void)
 {
-/* 	if (_Rqst != NULL)
-	{
-		char buf[BUFFSIZE];
-		memset(&buf, 0, sizeof(buf));
-		ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
-		if (bytes < 0)
-			throw std::runtime_error("recv failed");
-		else if (bytes == 0)
-		{
-			_myServer->readyToRead(this);
-
-			Logger::Warning("Client: EOF received from client %d", _csock);
-			return (1);
-		}
-		else
-		{
-			buf[bytes] = 0;
-
-			Logger::Info("Client: new Body received from client %d", _csock);
-			std::cout << "START CHUNK ________" << buf << "END CHUNK_______" << std::endl;
-
-			Request::headers_t headers = _Rqst->getHeaders();
-			Request::headers_t::const_iterator it = headers.find("Content-Type");
-			Logger::Warning("content_type");
-			if (it != headers.end())
-				return (1);
-			Logger::Warning("startwith");
-			if (!startsWith(it->second, "multipart/form-data"))
-				return 1;
-			std::string boundary("boundary=");
-			int index = it->second.find(boundary);
-			boundary = it->second.substr(index + boundary.length());
-			if (ends_with(buf, boundary+"--"))
-			{
-				std::string body = _Rqst->getBody();
-				body.replace(body.find(boundary), boundary.length(), "");
-				body.replace(body.find(boundary + "--"), boundary.length(), "");
-				std::cout << "NEW BODY :\n" << body << std::endl;
-				_myServer->readyToRead(this);
-			}
-			return (bytes);
-		}
-	} */
 	char buf[BUFFSIZE];
 	memset(&buf, 0, sizeof(buf));
 	ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
@@ -154,11 +142,7 @@ int		Client::recvRequest(void)
 	{
 		buf[bytes] = 0;
 		if (_Rqst == NULL)
-		{
-			Logger::Info("Client: new Request received from client %d", _csock);
-			_Rqst = new Request(buf);
-			// std::cout << buf;
-		}
+			createNewRequest(buf);
 		else
 		{
 			_Rqst->appendToBody(buf);

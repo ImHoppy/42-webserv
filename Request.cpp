@@ -6,7 +6,7 @@
 /*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/22 10:15:58 by cdefonte         ###   ########.fr       */
+/*   Updated: 2022/11/24 11:11:58 by cdefonte         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@ void			Request::appendToBody(const std::string & more)
 {
 	_body += more;
 }
+
+
 
 /* Default constructor (private) */
 Request::Request(void) {}
@@ -28,6 +30,7 @@ Request::Request(const Request& src) :
 _rawRqst(src._rawRqst), _rqstLine(src._rqstLine), _method(src._method),
 _target(src._target),
 _uri(src._uri), _headers(src._headers), _body(src._body) {}
+
 
 /* Assignment operator */
 Request&	Request::operator=(const Request& src)

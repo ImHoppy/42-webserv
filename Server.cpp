@@ -212,25 +212,8 @@ void	Server::respond(Client* client)
 		Request*	rqst = client->getRequest();
 		if (rqst == NULL)
 			return ;
-		// std::cerr << " REQUEST IS:\n" << *rqst << "_____ END REQUEST" << std::endl;
-		// std::cerr << "Request body:\n" << rqst->getBody() << std::endl;
-		// std::cerr << "RAW RQST:\n" << rqst->getRawRequest() << std::endl;
-		ServerConfig*	chosen_conf = getConfigForRequest(rqst);
-		if (chosen_conf == NULL)
-		{
-			Logger::Error("Respond - CONFIG NULL");
-			return ;
-		}
-	//	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
-		LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
-		if (chosen_loc == NULL)
-		{
-			Logger::Error("Respond - LOCATION NULL");
-			return ;
-		}
-		// std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
 		Logger::Info("Respond - Created");
-		rep = new Response(chosen_conf, chosen_loc, rqst, client);
+		rep = new Response(client);
 		rep->generateResponse();
 		
 		std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl;
