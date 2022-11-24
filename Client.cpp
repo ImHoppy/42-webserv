@@ -97,49 +97,6 @@ enum {
 create a Request object with the buf received, and add it int its queued requests. */
 int		Client::recvRequest(void)
 {
-/* 	if (_Rqst != NULL)
-	{
-		char buf[BUFFSIZE];
-		memset(&buf, 0, sizeof(buf));
-		ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
-		if (bytes < 0)
-			throw std::runtime_error("recv failed");
-		else if (bytes == 0)
-		{
-			_myServer->readyToRead(this);
-
-			Logger::Warning("Client: EOF received from client %d", _csock);
-			return (1);
-		}
-		else
-		{
-			buf[bytes] = 0;
-
-			Logger::Info("Client: new Body received from client %d", _csock);
-			std::cout << "START CHUNK ________" << buf << "END CHUNK_______" << std::endl;
-
-			Request::headers_t headers = _Rqst->getHeaders();
-			Request::headers_t::const_iterator it = headers.find("Content-Type");
-			Logger::Warning("content_type");
-			if (it != headers.end())
-				return (1);
-			Logger::Warning("startwith");
-			if (!startsWith(it->second, "multipart/form-data"))
-				return 1;
-			std::string boundary("boundary=");
-			int index = it->second.find(boundary);
-			boundary = it->second.substr(index + boundary.length());
-			if (ends_with(buf, boundary+"--"))
-			{
-				std::string body = _Rqst->getBody();
-				body.replace(body.find(boundary), boundary.length(), "");
-				body.replace(body.find(boundary + "--"), boundary.length(), "");
-				std::cout << "NEW BODY :\n" << body << std::endl;
-				_myServer->readyToRead(this);
-			}
-			return (bytes);
-		}
-	} */
 	char buf[BUFFSIZE];
 	memset(&buf, 0, sizeof(buf));
 	ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
@@ -195,4 +152,17 @@ void	Client::setResponse(Response* resp)
 
 std::string const & Client::getType() const { return _type; }
 
+char	Client::generateChar(void)
+{
+	const std::string alpha("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+	return alpha[std::rand() % alpha.size()];
+}
 
+
+void	Client::generateFileName(void)
+{
+	srand(time(NULL));
+	_uploadName = "upload_";
+	_uploadName.reserve(15);
+	std::generate_n(_uploadName.begin() + _uploadName.size(), _uploadName.capacity(), generateChar);
+}

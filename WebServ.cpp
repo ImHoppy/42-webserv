@@ -61,7 +61,7 @@ void	WebServ::StartLoop(void)
 			}
 			else if (base->getType() == "Client")
 			{
-				Client*	client= dynamic_cast<Client*>(base);
+				Client*	client = dynamic_cast<Client*>(base);
 				if (events[i].events & EPOLLERR)
 				{
 					std::cout << "ERROR on socket " << client->getSocket() <<std::endl;
@@ -76,6 +76,7 @@ void	WebServ::StartLoop(void)
 					int readSize = client->recvRequest();
 					// if (client->getRequest()->getMethod() == "POST")
 					// client->getServer()->readyToRead(client);
+					// client->setConf && loc
 
 					if (readSize == 0)
 					{
