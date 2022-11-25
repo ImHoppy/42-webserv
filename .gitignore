@@ -11,3 +11,4 @@ www/isometric-map
 test.txt
 read_ifstream.cpp
 test_open.c
+upload_*

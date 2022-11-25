@@ -119,7 +119,7 @@ void	Client::createNewRequest(char * buf, ssize_t & bytes)
 	_Rqst->setTargetPath();
 	if (_Rqst->getMethod() == "POST")
 	{
-		_file.open("testupoad");
+		_file.open(generateFileName(time(NULL) + _csock).c_str());
 		if (not _file.is_open())
 			throw std::runtime_error("file for POST cant be open");
 	}
@@ -196,11 +196,3 @@ void	Client::setResponse(Response* resp)
 }
 
 std::string const & Client::getType() const { return _type; }
-
-void	Client::generateFileName(void)
-{
-	srand(time(NULL));
-	_uploadName = "upload_";
-	_uploadName.reserve(15);
-	std::generate_n(_uploadName.begin() + _uploadName.size(), _uploadName.capacity(), generateChar);
-}

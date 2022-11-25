@@ -6,6 +6,16 @@ char	generateChar(void)
 	return alpha[std::rand() % alpha.size()];
 }
 
+std::string	generateFileName(int seed = time(NULL))
+{
+	std::srand(seed);
+	std::string fileName;
+	fileName = "upload_";
+	fileName.reserve(15);
+	std::generate_n(fileName.begin() + fileName.size(), fileName.capacity(), generateChar);
+	return fileName;
+}
+
 
 std::string		getFileExtension(const std::string & filename)
 {

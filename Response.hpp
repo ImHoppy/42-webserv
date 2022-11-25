@@ -86,6 +86,8 @@ class Response
 		void	handleError(int error);
 		void	generateResponse(void);
 		void	doMethod(void);
+		
+		void	uploadMutltipart(void);
 
 }; // end class Response
 

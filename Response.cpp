@@ -200,6 +200,11 @@ void	Response::upload(void)
 	_code = std::make_pair(200, "OK UPLOAD");
 	_body = "Upload succeeded";
 }
+void	Response::uploadMutltipart(void)
+{
+	
+
+}
 
 void	Response::doPOST(void)
 {
@@ -215,6 +220,7 @@ void	Response::doPOST(void)
 	if (startsWith(type->second, "multipart/form-data"))
 	{
 		Logger::Info("is multiform()");
+		uploadMutltipart();
 		upload();
 		return ;
 	}
