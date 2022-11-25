@@ -92,7 +92,10 @@ void	Request::setTargetPath(void)
 {
 	std::string		url(_uri.path);
 	_targetPath =  url.replace(0, _loc->getPath().size(), _loc->getRootPath());
-	if (ends_with(url, '/') == true)
+	// TODO: Only use url or _targetPath but not both
+	if (ends_with(url, '.'))
+		_targetPath += '/';
+	if (ends_with(_targetPath, '/'))
 	{
 		if (_loc->isDirList() == true || _method == "DELETE")
 			return ;
