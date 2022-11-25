@@ -38,7 +38,7 @@ Request&	Request::operator=(const Request& src)
 #include <cstring>
 /* ATTENTION: str MUST NOT be empty! */
 /* Parametric construcotr */
-Request::Request(char* buf, ssize_t & bytes)
+Request::Request(char * buf, size_t & start_buf, ssize_t & bytes)
 {
 	ssize_t i;
 	for (i = 0; i < bytes - 4 ; ++i)
@@ -48,14 +48,14 @@ Request::Request(char* buf, ssize_t & bytes)
 	}
 	i += 4;
 	_rawRqst.assign(buf, buf + i);
-	buf = buf + i;
+	start_buf = i;
 	setRqstLine();
 	setMethod();
 	setTarget();
 	siterator_t	bodyStart;
 	bodyStart = setHeaders();
 	// if (bodyStart != _rawRqst.end())
-		// setBody(bodyStart);
+	// 	_body.assign(buf+i, 0, (bytes - i));
 	setURI();
 	if (_method == "POST")
 		bytes = bytes - i;

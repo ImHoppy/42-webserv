@@ -32,7 +32,7 @@ class Client : public Base
 		Response*		_Resp;
 		std::ofstream	_file;
 
-		void			createNewRequest(char * buf, ssize_t & bytes);
+		void			createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes);
 
 	public:
 		Client(void);

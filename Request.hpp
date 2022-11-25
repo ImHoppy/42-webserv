@@ -61,7 +61,7 @@ class Request
 		Request&	operator=(const Request& src);
 		Request(const Request& src);
 		/* Parametric constructor */
-		Request(char * str, ssize_t & bytes);
+		Request(char * buf, size_t & start_buf, ssize_t & bytes);
 		/* Public Setteurs */
 		void	setLocation(LocationConfig* loc);
 		void	setConfig(ServerConfig* conf);

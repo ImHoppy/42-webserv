@@ -96,10 +96,10 @@ enum {
 	RECV_EOF = -2
 };
 
-void	Client::createNewRequest(char * buf, ssize_t & bytes)
+void	Client::createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes)
 {
 	Logger::Info("Client: new Request received from client %d", _csock);
-	_Rqst = new Request(buf, bytes);
+	_Rqst = new Request(buf, start_buf, bytes);
 
 	ServerConfig* chosen_conf = _myServer->getConfigForRequest(_Rqst);
 	if (chosen_conf == NULL)
@@ -144,10 +144,10 @@ int		Client::recvRequest(void)
 		buf[bytes] = 0;
 		if (_Rqst == NULL)
 		{
-			createNewRequest(buf, bytes);
-			Request::headers_t hed = _Rqst->getHeaders();
+			size_t start_buf = 0;
+			createNewRequest(buf, start_buf, bytes);
 			if (_file.is_open())
-				_file.write(buf, bytes);
+				_file.write(buf+start_buf, bytes);
 		}
 		else
 		{
