@@ -89,29 +89,31 @@ int		CGI::launch(void)
 		}
 		close(_pipefdWrite);
 
+
 		char **argv;
 		argv = (char **)malloc(sizeof(char *) * 2);
 		argv[0] = (char*)malloc(_path.size() + 1);
 		argv[0] = (char*)memcpy(argv[0], _path.c_str(), _path.size());
 		argv[0][_path.size()] = '\0';
 		argv[1] = NULL;
-		char **env;
-		env = (char **)malloc(sizeof(char *) * _env.size() + 1);
+		
+		char	**env = new char*[this->_env.size() + 1];
 		int	j = 0;
-		for (std::vector<std::string>::iterator it = _env.begin(); it != _env.end(); ++it)
-		{
-			env[j] = (char *)malloc(it->size() + 1);
-			env[j] = (char*)memcpy(env[j], it->c_str(), it->size());
-			env[j][it->size()] = '\0';
-			std::cout << *it << "\n";
-			++j;
+		for (std::vector<std::string>::const_iterator i = this->_env.begin(); i != this->_env.end(); i++) {
+			env[j] = new char[i->size() + 1];
+			env[j] = strcpy(env[j], (const char*)i->c_str());
+			j++;
 		}
 		env[j] = NULL;
+
 		if (execve(argv[0], argv, env) == -1)
 		{
 			Logger::Error("Response::phpCgiGet() execve() failed");
 			exit(-1);
 		}
+		for (size_t i = 0; env[i]; i++)
+			delete[] env[i];
+		delete[] env;
 	}
 	close(_pipefdWrite);
 	int		status = 0;
