@@ -56,12 +56,15 @@ class Response
 		bool		targetIsDir(void) const;
 		bool		targetIsFile(void) const;
 		bool		targetIsCgi(void) const;
-		void		phpCgiGet(void);
 		void		upload(void);
-		void		setCgiEnv(void);
 		
 		bool	openPageError(std::string path);
 		void	generateBodyError();
+
+		/* CGI */
+		void		setCgiEnv(void);
+		void		phpCgiGet(void);
+		void		phpCgiPost(void);
 	public:
 
 		/* Coplien */

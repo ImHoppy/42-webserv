@@ -200,10 +200,21 @@ void	Response::upload(void)
 	_code = std::make_pair(200, "OK UPLOAD");
 	_body = "Upload succeeded";
 }
-void	Response::uploadMutltipart(void)
-{
-	
 
+void	Response::phpCgiPost(void)
+{
+	setCgiEnv();
+	if (_cgi.launch() == -1)
+	{
+		_code = std::make_pair(500, "Internal Server Error");
+		return ;
+	}
+	//TODO: alors soit disant faut ajouter les "locaux" fds a epoll, genre
+	// meme pour lire le pipe bah faut passer par epoll... et pour les error files
+	if (readFromCgi() == -1)
+		_code = std::make_pair(500, "Internal Server Error");
+	else
+		_code = std::make_pair(200, "OK");
 }
 
 void	Response::doPOST(void)
@@ -220,14 +231,13 @@ void	Response::doPOST(void)
 	if (startsWith(type->second, "multipart/form-data"))
 	{
 		Logger::Info("is multiform()");
-		uploadMutltipart();
 		upload();
 		return ;
 	}
 	else if (type->second == "application/x-www-form-urlencoded")
 	{
 		Logger::Info("is URL encoded");
-//		cgiPost();
+		phpCgiPost();
 		return ;
 	}
 	else
@@ -320,37 +330,23 @@ bool	Response::tryFile(void)
 /* Set le vector d'environnement variables (RFC 3875) */
 void		Response::setCgiEnv(void)
 {
-	Request::headers_t		headers = _rqst->getHeaders();
-	Request::headers_t::const_iterator	not_found = headers.end();
-
-	Request::headers_t::const_iterator	found = headers.find("Authorization");
-	if (found != not_found)
-	{
-		_cgi.addVarToEnv("AUTH_TYPE" + found->second);
-	}
-	found = headers.find("Content-Type");
-	if (found != not_found)
-	{
-		_cgi.addVarToEnv("CONTENT_TYPE" + found->second);
-	}
-	found = headers.find("Content-Length");
-	if (found != not_found)
-	{
-		_cgi.addVarToEnv("CONTENT_LENGTH" + found->second);
-	}
+	std::cout << _rqst->getUri().path << std::endl;
 	_cgi.addVarToEnv("REDIRECT_STATUS=true");
-	_cgi.addVarToEnv("GATEWAY_INTERFACE=CGI/0.1");
+	_cgi.addVarToEnv("GATEWAY_INTERFACE=CGI/1.1");
 	_cgi.addVarToEnv("PATH_INFO=/"); // ou si myscript.php/this/is/pathinfo?query
 	_cgi.addVarToEnv("QUERY_STRING=" + _rqst->getUri().query);
 //	_cgi.addVarToEnv("REMOTE_ADDR=" + inet_ntoa(client->addr())); //IP
 	_cgi.addVarToEnv("REQUEST_METHOD=" + _rqst->getMethod());
-	_cgi.addVarToEnv("SCRIPT_FILENAME=cgi-bin/" + _rqst->getUri().path);
+	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _rqst->getUri().path);
 	_cgi.addVarToEnv("SCRIPT_NAME=" + _rqst->getUri().path);
 	_cgi.addVarToEnv("SERVER_NAME=" + _rqst->getConfig()->getServerNames()[0]);
 	_cgi.addVarToEnv("SERVER_PORT=" + IntToStr(_rqst->getConfig()->getPort()));
 	_cgi.addVarToEnv("SERVER_PROTOCOL=HTTP/1.1");
 	_cgi.addVarToEnv("SERVER_SOFTWARE=WebServ");
-	//TODO: RFC 3875 parle meta-variables: export tous les headers de la request
+	for (Request::headers_t::const_iterator cit = _rqst->getHeaders().begin(); cit != _rqst->getHeaders().end(); ++cit)
+	{
+		_cgi.addVarToEnv(cit->first + "=" + cit->second);
+	}
 }
 
 /* CGI GET quand par exemple html fomr pour submit une image qu'on veut afficher
