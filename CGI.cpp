@@ -105,7 +105,6 @@ int		CGI::launch(void)
 			j++;
 		}
 		env[j] = NULL;
-
 		if (execve(argv[0], argv, env) == -1)
 		{
 			Logger::Error("Response::phpCgiGet() execve() failed");

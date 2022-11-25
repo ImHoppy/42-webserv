@@ -337,7 +337,7 @@ void		Response::setCgiEnv(void)
 	_cgi.addVarToEnv("QUERY_STRING=" + _rqst->getUri().query);
 //	_cgi.addVarToEnv("REMOTE_ADDR=" + inet_ntoa(client->addr())); //IP
 	_cgi.addVarToEnv("REQUEST_METHOD=" + _rqst->getMethod());
-	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _rqst->getUri().path);
+	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _rqst->getLocation()->getRootPath() + _rqst->getUri().path);
 	_cgi.addVarToEnv("SCRIPT_NAME=" + _rqst->getUri().path);
 	_cgi.addVarToEnv("SERVER_NAME=" + _rqst->getConfig()->getServerNames()[0]);
 	_cgi.addVarToEnv("SERVER_PORT=" + IntToStr(_rqst->getConfig()->getPort()));
@@ -371,7 +371,7 @@ void		Response::phpCgiGet(void)
 int		Response::readFromCgi(void)
 {
 	int	fd = _cgi.getReadPipe();
-	char buf[BUFFSIZE];
+	char buf[BUFFSIZE] = {};
 	ssize_t	nbread = read(fd, buf, BUFFSIZE - 1);
 	if (nbread == -1)
 	{
@@ -379,7 +379,13 @@ int		Response::readFromCgi(void)
 		return -1;
 	}
 	buf[nbread] = 0;
-	_body += buf;
+	std::string		raw(buf, nbread);
+	std::string		content = "Content-type:";
+	if (raw.find(content) == 0)
+	{
+		_headers["Content-Type"] = raw.substr(content.size(), raw.find_first_of("\r\n\r\n") - content.size());
+	}
+	_body.assign(findCRLF(raw.begin(), raw.end()) + 4, raw.end());
 	while (nbread == BUFFSIZE - 1)
 	{
 		nbread = read(fd, buf, BUFFSIZE - 1);
