@@ -64,7 +64,7 @@ void	WebServ::StartLoop(void)
 				Client*	client = dynamic_cast<Client*>(base);
 				if (events[i].events & EPOLLERR)
 				{
-					std::cout << "ERROR on socket " << client->getSocket() <<std::endl;
+					std::cout << "ERROR on socket "  << client->getSocket() << strerror(errno) << std::endl;
 				}
 				if (events[i].events & EPOLLRDHUP)
 				{

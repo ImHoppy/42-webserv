@@ -138,9 +138,9 @@ void	Response::generateBodyError()
 
 void	Response::generateResponse(void)
 {
+	generateBodyError();
 	if (_headers.find("Content-Length") == _headers.end())
 		_headers["Content-Length"] = IntToStr(_body.size());
-	generateBodyError();
 	// if (_code.first == 200 && _body.empty() && _headers["Content-Length"][0] == '0' )
 		// _code = std::make_pair(204, "No Content");
 	_response = "HTTP/1.1 " + IntToStr(_code.first) + " " + _code.second + CLRF;
@@ -249,6 +249,7 @@ std::ostream&	operator<<(std::ostream& o, const Response& me)
 	return o;
 }
 
+#define BUFFSIZE_RES 8192
 /*
 	1) Essai d'ouvrir le fichier : return false si fail (file not found)
 	2) Remplit le _response body avec le contenu du fichier, et set le bon Content-Lenght
@@ -257,6 +258,7 @@ bool	Response::tryFile(void)
 {
 	if (_readData.buffer == NULL)
 	{
+		Logger::Info("GET - Opening %s", _rqst->getTargetPath().c_str());
 		_readData.file.open(_rqst->getTargetPath().c_str());
 		if (_readData.file.is_open() == false)
 			return false;
@@ -269,10 +271,10 @@ bool	Response::tryFile(void)
 		_headers["Content-Length"] = IntToStr(length);
 		_readData.file.seekg(0, _readData.file.beg);
 
-		_readData.buffer = new char [1024];
-		bzero(_readData.buffer, 1024);
+		_readData.buffer = new char [BUFFSIZE_RES];
+		bzero(_readData.buffer, BUFFSIZE_RES);
 
-		_readData.file.read(_readData.buffer, 1024);
+		_readData.file.read(_readData.buffer, BUFFSIZE_RES);
 		_readData.read_bytes = _readData.file.gcount();
 
 		_body.assign(_readData.buffer, _readData.read_bytes);
@@ -289,9 +291,9 @@ bool	Response::tryFile(void)
 	else
 	{
 		// if (not _readData.file.is_open()) return true;
-		Logger::Info("Respond - Read Data");
-		bzero(_readData.buffer, 1024);
-		_readData.file.read(_readData.buffer, 1024);
+		// Logger::Info("Respond - Read Data");
+		bzero(_readData.buffer, BUFFSIZE_RES);
+		_readData.file.read(_readData.buffer, BUFFSIZE_RES);
 		_readData.read_bytes = _readData.file.gcount();
 		if (_readData.file.eof())
 		{

@@ -216,12 +216,12 @@ void	Server::respond(Client* client)
 		rep = new Response(rqst);
 		rep->generateResponse();
 		
-		std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl;
+		// std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl;
 //		std::cout << "Raw Body rqst:{" << rqst->getBody() << "}" << std::endl;
 //		std::ofstream out("output.txt");
 //		out << rqst->getBody();
 //		out.close();
-		std::cout << "res to send:\n" << rep->getResponse() << std::endl; 
+		// std::cout << "res to send:\n" << rep->getResponse() << std::endl; 
 		client->setResponse(rep);
 
 		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
@@ -240,7 +240,7 @@ void	Server::respond(Client* client)
 
 		rep->tryFile();
 
-		Logger::Info("Respond - Send Buffer");
+		// Logger::Info("Respond - Send Buffer");
 		bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
 		if (data.status == Response::EOF_FILE)
 		{
