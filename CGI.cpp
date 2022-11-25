@@ -103,7 +103,7 @@ int		CGI::launch(void)
 			env[j] = (char *)malloc(it->size() + 1);
 			env[j] = (char*)memcpy(env[j], it->c_str(), it->size());
 			env[j][it->size()] = '\0';
-			std::cout << *it << "\n";
+			std::cerr << *it << "\n";
 			++j;
 		}
 		env[j] = NULL;
