@@ -15,7 +15,7 @@ Request::~Request(void) {}
 Request::Request(const Request& src) : 
 _rawRqst(src._rawRqst), _rqstLine(src._rqstLine), _method(src._method),
 _target(src._target), _targetPath(src._targetPath),
-_uri(src._uri), _headers(src._headers), _body(src._body) {}
+_uri(src._uri), _headers(src._headers), _body(src._body), _uploadFileName(src._uploadFileName) {}
 
 
 /* Assignment operator */
@@ -32,6 +32,7 @@ Request&	Request::operator=(const Request& src)
 	_uri.query = src._uri.query;
 	_headers = src._headers;
 	_body.assign(src._body);
+	_uploadFileName = src._uploadFileName;
 	return *this;
 }
 
@@ -360,3 +361,12 @@ LocationConfig*	Request::getLocation(void) const
 	return _loc;
 }
 
+void	Request::setUploadFile(const std::string& path)
+{
+	_uploadFileName = path;
+}
+
+const std::string &	Request::getUploadFile(void) const
+{
+	return _uploadFileName;
+}

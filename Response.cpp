@@ -217,6 +217,57 @@ void	Response::phpCgiPost(void)
 		_code = std::make_pair(200, "OK");
 }
 
+void Response::UploadMultipart(void)
+{
+	Request::headers_t::const_iterator it = _rqst->getHeaders().find("Content-Type");
+	if (it == _rqst->getHeaders().end() || it->second.find("boundary=") == std::string::npos)
+	{
+		_code = std::make_pair(400, "Bad Request");
+		return ;
+	}
+	std::string boundary = it->second;
+	boundary.erase(0, boundary.find("boundary=") + 9);
+	boundary.erase(boundary.size() - 1, 1);
+
+	std::ifstream file(_rqst->getUploadFile().c_str());
+	std::string line;
+	std::string filename;
+	std::string content;
+
+	while (std::getline(file, line))
+	{
+		if (line.find("Content-Disposition") != std::string::npos)
+		{
+			if (line.find("filename") != std::string::npos)
+			{
+				filename = line.substr(line.find("filename") + 10);
+				filename = filename.substr(0, filename.find("\""));
+			}
+		}
+		else if (line == boundary + "\r" || line == boundary + "--\r")
+		{
+			if (!content.empty())
+			{
+				if (!filename.empty())
+				{
+					filename.insert(0, _rqst->getLocation()->getRootPath());
+					std::cout << "File: " << filename << '\n';
+					std::ofstream ofs(filename.c_str());
+					content.erase(0, 2);
+					content.erase(content.size() - 2, 2);
+					ofs << content;
+					ofs.close();
+				}
+				filename.clear();
+				content.clear();
+			}
+			std::cout << line << std::endl;
+		}
+		else
+			content += line + '\n';
+	}
+}
+
 void	Response::doPOST(void)
 {
 	Logger::Info("doPOST() entered");
@@ -231,7 +282,7 @@ void	Response::doPOST(void)
 	if (startsWith(type->second, "multipart/form-data"))
 	{
 		Logger::Info("is multiform()");
-		upload();
+		UploadMultipart();
 		return ;
 	}
 	else if (type->second == "application/x-www-form-urlencoded")

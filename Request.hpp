@@ -53,6 +53,8 @@ class Request
 		std::string		_body;
 		ServerConfig*	_conf;
 		LocationConfig*	_loc;
+		std::string		_uploadFileName;
+
 		/* Private default constructor */
 		Request(void);
 
@@ -65,6 +67,9 @@ class Request
 		/* Public Setteurs */
 		void	setLocation(LocationConfig* loc);
 		void	setConfig(ServerConfig* conf);
+
+		void						setUploadFile(const std::string & path);
+		const std::string &			getUploadFile(void) const;
 
 		/* Getteurs */
 		const std::string &			getTargetPath(void) const;
@@ -87,7 +92,7 @@ class Request
 
 	private:
 		/* Setteurs */
-		void			setRqstLine(void);
+		void			setRqstLine(void); // TODO: Delete if unused
 		void			setMethod(void);
 		void			setTarget(void);
 		int				setURI(void);

@@ -90,7 +90,7 @@ class Response
 		void	generateResponse(void);
 		void	doMethod(void);
 		
-		void	uploadMutltipart(void);
+		void	UploadMultipart(void);
 
 }; // end class Response
 

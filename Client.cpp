@@ -119,7 +119,9 @@ void	Client::createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes)
 	_Rqst->setTargetPath();
 	if (_Rqst->getMethod() == "POST")
 	{
-		_file.open(generateFileName(time(NULL) + _csock).c_str());
+		std::string fileName = generateFileName(time(NULL) + _csock);
+		_Rqst->setUploadFile(fileName);
+		_file.open(fileName.c_str());
 		if (not _file.is_open())
 			throw std::runtime_error("file for POST cant be open");
 	}
@@ -169,16 +171,18 @@ int		Client::recvRequest(void)
 		}
 		_myServer->readyToRead(this);
 		if (_file.is_open())
-			_file.flush();
+			_file.close();
 		Logger::Error("Bytes returned = %d", bytes);
 		return (bytes);
 	}
 }
 
-void		Client::closeFile(void)
+void		Client::removeTmpFile(void)
 {
 	if (_file.is_open())
 		_file.close();
+	if (remove(_Rqst->getUploadFile().c_str()) != 0)
+		Logger::Error("Error deleting file %s", _Rqst->getUploadFile().c_str());
 }
 
 Server*		Client::getServer(void)
@@ -196,3 +200,4 @@ void	Client::setResponse(Response* resp)
 }
 
 std::string const & Client::getType() const { return _type; }
+
