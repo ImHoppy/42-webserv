@@ -241,6 +241,7 @@ void Response::UploadMultipart(void)
 
 	while (std::getline(file, line))
 	{
+		// NOTE: Cause error if file contains Content-Disposition ?
 		if (startsWith(line, "Content-Disposition"))
 		{
 			if (line.find("filename") != std::string::npos)
