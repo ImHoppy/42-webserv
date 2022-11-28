@@ -227,16 +227,21 @@ void Response::UploadMultipart(void)
 	}
 	std::string boundary = it->second;
 	boundary.erase(0, boundary.find("boundary=") + 9);
-	boundary.erase(boundary.size() - 1, 1);
+	boundary.insert(0, "--");
 
 	std::ifstream file(_rqst->getUploadFile().c_str());
+	if (not file.is_open())
+	{
+		_code = std::make_pair(500, "Internal Server Error");
+		return ;
+	}
 	std::string line;
 	std::string filename;
 	std::string content;
 
 	while (std::getline(file, line))
 	{
-		if (line.find("Content-Disposition") != std::string::npos)
+		if (startsWith(line, "Content-Disposition"))
 		{
 			if (line.find("filename") != std::string::npos)
 			{
@@ -244,6 +249,8 @@ void Response::UploadMultipart(void)
 				filename = filename.substr(0, filename.find("\""));
 			}
 		}
+		else if (startsWith(line, "Content-Type"))
+			continue;
 		else if (line == boundary + "\r" || line == boundary + "--\r")
 		{
 			if (!content.empty())
@@ -253,6 +260,14 @@ void Response::UploadMultipart(void)
 					filename.insert(0, _rqst->getLocation()->getRootPath());
 					std::cout << "File: " << filename << '\n';
 					std::ofstream ofs(filename.c_str());
+					if (not ofs.is_open())
+					{
+						Logger::Error("Response::UploadMultipart(): failed to open file '%s'", filename.c_str());
+						_code = std::make_pair(500, "Internal Server Error");
+						return ;
+					}
+					else
+						Logger::Info("Response::UploadMultipart(): file '%s' created", filename.c_str());
 					content.erase(0, 2);
 					content.erase(content.size() - 2, 2);
 					ofs << content;
@@ -266,6 +281,8 @@ void Response::UploadMultipart(void)
 		else
 			content += line + '\n';
 	}
+	_code = std::make_pair(200, "OK");
+	_body = "Upload succeeded";
 }
 
 void	Response::doPOST(void)
