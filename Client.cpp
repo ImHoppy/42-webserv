@@ -177,12 +177,11 @@ int		Client::recvRequest(void)
 	}
 }
 
+// TODO: Unused
 void		Client::removeTmpFile(void)
 {
 	if (_file.is_open())
 		_file.close();
-	if (remove(_Rqst->getUploadFile().c_str()) != 0)
-		Logger::Error("Error deleting file %s", _Rqst->getUploadFile().c_str());
 }
 
 Server*		Client::getServer(void)

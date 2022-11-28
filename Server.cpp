@@ -228,9 +228,9 @@ void	Server::respond(Client* client)
 		Logger::Info("Respond - Send Response");
 		if (rep->getReadData().status == Response::EOF_FILE || rep->getReadData().status == Response::NONE)
 		{
+			// client->removeTmpFile();
 			client->popOutRequest();
 			client->popOutResponse();
-			client->removeTmpFile();
 		}
 	}
 	else

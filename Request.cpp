@@ -9,7 +9,12 @@ void			Request::appendToBody(const std::string & more)
 Request::Request(void) {}
 
 /* Destructor */
-Request::~Request(void) {}
+Request::~Request(void) {
+	if (_uploadFileName.empty())
+		return;
+	if (remove(_uploadFileName.c_str()) != 0)
+		Logger::Error("Error deleting file %s", _uploadFileName.c_str());
+}
 
 /* Copy constructor */
 Request::Request(const Request& src) : 
