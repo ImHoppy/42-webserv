@@ -194,9 +194,39 @@ int		Response::doDELETE(const std::string &path)
 	return 204;
 }
 
+/* Lis depuis le tmp file de la request (dans laquelle les datas sont brutes et tous les
+boundaries et leurs headers sont), split les files selon ces boundary et create les
+files*/
+void	Response::parseMultipart(void)
+{
+
+	std::ifstream		file(_rqst->getFilename().c_str(), std::ifstream::binary);
+	if (not file.is_open())
+		throw std::runtime_error("file for POST cant be open");
+	std::cout << "RQST=\n" << _rqst->getRawRequest() << "\n___END RAW RAST"<< std::endl;
+	const std::string*	contentType = _rqst->getContentType();
+	std::string		boundary(contentType->begin() + contentType->find('=') + 1, contentType->end());
+	boundary.insert(0, "--");
+	std::cout << "LALALAlALA:\'" << boundary << "\'" << std::endl;
+//	while (file.good())
+//	{
+		char buf[BUFFSIZE];
+		int n = file.readsome(buf, BUFFSIZE);
+		std::string		sbuf(buf, n);
+		if (sbuf.find(boundary) == 0)
+		{
+			std::cout << "WEWEWEWEWEWE" << std::endl;
+		}
+
+
+//	}
+	if (file.eof() == true)
+		std::cout << "END OF FILE" << std::endl;
+}
+
 void	Response::upload(void)
 {
-	//TODO
+	parseMultipart();
 	_code = std::make_pair(200, "OK UPLOAD");
 	_body = "Upload succeeded";
 }

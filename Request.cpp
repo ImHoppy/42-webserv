@@ -1,5 +1,20 @@
 # include "Request.hpp"
 
+const std::string*			Request::getContentType(void) const
+{
+	headers_t::const_iterator	it = _headers.find("Content-Type");
+	if (it == _headers.end())
+		return NULL;
+	return &(it->second);
+}
+
+void			Request::setFilename(const std::string & name)
+{
+	_filename = name;
+}
+
+const std::string &		Request::getFilename(void) const { return _filename; }
+
 void			Request::appendToBody(const std::string & more)
 {
 	_body += more;

@@ -119,10 +119,17 @@ void	Client::createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes)
 	_Rqst->setTargetPath();
 	if (_Rqst->getMethod() == "POST")
 	{
-		_file.open(generateFileName(time(NULL) + _csock).c_str());
+		std::string		filename = generateFileName(time(NULL) + _csock).c_str();
+		_file.open(filename.c_str());
 		if (not _file.is_open())
 			throw std::runtime_error("file for POST cant be open");
+		_Rqst->setFilename(filename);
 	}
+}
+
+const std::ofstream &	Client::getFile(void) const
+{
+	return _file;
 }
 
 /* If bytes rcved is 0, closes the connection. Else,
@@ -155,7 +162,7 @@ int		Client::recvRequest(void)
 //			_Rqst->appendToBody(buf);
 			if (_file.is_open())
 				_file.write(buf, bytes);
-			Logger::Info("Client: got new Chunk %d/%s", (long)_file.tellp(), hed["Content-Length"].c_str());
+//			Logger::Info("Client: got new Chunk %d/%s", (long)_file.tellp(), hed["Content-Length"].c_str());
 		}
  		Request::headers_t::const_iterator		content_length = _Rqst->getHeaders().find("Content-Length");
 		if (content_length != _Rqst->getHeaders().end())
@@ -170,7 +177,6 @@ int		Client::recvRequest(void)
 		_myServer->readyToRead(this);
 		if (_file.is_open())
 			_file.flush();
-		Logger::Error("Bytes returned = %d", bytes);
 		return (bytes);
 	}
 }

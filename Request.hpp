@@ -53,6 +53,7 @@ class Request
 		std::string		_body;
 		ServerConfig*	_conf;
 		LocationConfig*	_loc;
+		std::string		_filename;
 		/* Private default constructor */
 		Request(void);
 
@@ -78,12 +79,15 @@ class Request
 		const std::string &			getBody(void) const;
 		ServerConfig*				getConfig(void) const;
 		LocationConfig*				getLocation(void) const;
+		const std::string &			getFilename(void) const;
+		const std::string*			getContentType(void) const;
 
 		void			appendToBody(const std::string & more);
 		bool			targetIsCgi(void) const;
-		bool		targetIsFile(void) const;
-		bool		targetIsDir(void) const;
+		bool			targetIsFile(void) const;
+		bool			targetIsDir(void) const;
 		void			setTargetPath(void);
+		void			setFilename(const std::string & name);
 
 	private:
 		/* Setteurs */

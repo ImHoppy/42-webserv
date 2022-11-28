@@ -8,6 +8,9 @@
 # include <sys/types.h> // waitpid()
 # include <sys/wait.h> // waitpid()
 # include <strings.h> // bzero
+# include <fstream> // tmp file
+# include <sstream> // string stream upload
+# include <string.h> // strerror
 
 # include "Utils.hpp"
 # include "Logger.hpp"
@@ -52,6 +55,7 @@ class Response
 
 		/* Private member fcts */
 		void		setAllowHeader(void);
+		void		parseMultipart(void);
 		//TODO: ameliorer avec des private static bitset<3> file dit cgi ?
 		bool		targetIsDir(void) const;
 		bool		targetIsFile(void) const;

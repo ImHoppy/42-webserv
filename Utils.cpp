@@ -11,8 +11,8 @@ std::string	generateFileName(int seed = time(NULL))
 	std::srand(seed);
 	std::string fileName;
 	fileName = "upload_";
-	fileName.reserve(15);
-	std::generate_n(fileName.begin() + fileName.size(), fileName.capacity(), generateChar);
+	fileName.reserve(25);
+	std::generate_n(fileName.begin() + fileName.size(), fileName.capacity() - fileName.size(), generateChar);
 	return fileName;
 }
 

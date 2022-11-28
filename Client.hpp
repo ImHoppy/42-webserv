@@ -50,6 +50,7 @@ class Client : public Base
 		Server*		getServer(void);
 		void		setResponse(Response* resp);
 		Response*	getResponse(void) const;
+		const std::ofstream &	getFile(void) const;
 
 		void		closeFile(void);
 
