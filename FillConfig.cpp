@@ -1,22 +1,5 @@
 #include "FillConfig.hpp"
 
-// string ip to int32_t
-
-// TODO(mbraets): Create utils files or class
-// is string is only digit
-static bool	isDigit(std::string const & s)
-{
-	std::string::const_iterator it;
-
-	for (it = s.begin(); it < s.end(); it++)
-	{
-		if (*it < '0' || *it > '9')
-			return false;
-	}
-	return true;
-}
-
-
 void	locationBlock(ServerConfig & server, key_value_t::iterator & it)
 {
 	while (it->first != "}")

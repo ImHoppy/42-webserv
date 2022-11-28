@@ -108,6 +108,18 @@ bool	isIpv4(std::string const & s)
 	return true;
 }
 
+bool	isDigit(std::string const & s)
+{
+	std::string::const_iterator it;
+
+	for (it = s.begin(); it < s.end(); it++)
+	{
+		if (*it < '0' || *it > '9')
+			return false;
+	}
+	return true;
+}
+
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
 	std::stringstream ss(s);
 	std::string item;
