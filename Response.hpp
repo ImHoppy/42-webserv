@@ -8,6 +8,7 @@
 # include <sys/types.h> // waitpid()
 # include <sys/wait.h> // waitpid()
 # include <strings.h> // bzero
+# include <unistd.h> // lseek
 
 # include "Utils.hpp"
 # include "Logger.hpp"

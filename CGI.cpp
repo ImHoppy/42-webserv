@@ -7,15 +7,16 @@
 #include <cstdlib> // malloc
 
 CGI::CGI(void) : _env(), _pipefdRead(-1), _pipefdWrite(-1), _pid(-1),
-	_tmpfile(NULL),
 	_path("/usr/bin/php-cgi")
 {
 	initEnv();
 }
 
 CGI::~CGI(void) {
-	if (_tmpfile != NULL)
-		std::fclose(_tmpfile);
+	if (_pipefdRead != -1)
+		close(_pipefdRead);
+	if (_pipefdWrite != -1)
+		close(_pipefdRead);
 }
 
 CGI::CGI(const CGI & src) :
@@ -23,7 +24,6 @@ CGI::CGI(const CGI & src) :
 	_pipefdRead(-1),
 	_pipefdWrite(-1),
 	_pid(-1),
-	_tmpfile(NULL),
 	_path("/usr/bin/php-cgi")
 {
 }
@@ -44,17 +44,22 @@ void	CGI::setEnv(std::vector<std::string> & env)
 	_env = env;
 }
 
-int		CGI::initPipe(void)
+int		CGI::initFiles(const std::string & inputFilename)
 {
-	int		pipefd[2]; //0 == read end 1 == write end
-
-	if (pipe(pipefd) == -1)
+	_pipefdRead = open(inputFilename.c_str(), O_RDONLY);
+//	(void)inputFilename;
+//	_pipefdRead = open("LALALA.txt", O_RDONLY);
+	if (_pipefdRead == -1)
 	{
-		Logger::Error("Response::phpCgiGet() pipe() failed");
+		Logger::Error("CGI init files read failed errno = %d, %s", errno, strerror(errno));
 		return (-1);
 	}
-	_pipefdRead = pipefd[0];
-	_pipefdWrite = pipefd[1];
+	_pipefdWrite = open("/tmp/", O_RDWR | O_TMPFILE );
+	if (_pipefdWrite == -1)
+	{
+		Logger::Error("CGI init files write failed errno = %d, %s", errno, strerror(errno));
+		return (-1);
+	}
 	return (0);
 }
 
@@ -67,29 +72,38 @@ int		CGI::initPipe(void)
 */
 int		CGI::launch(void)
 {
-	if (initPipe() == -1)
-		return -1;
+	if (_pipefdRead == -1 || _pipefdWrite == -1)
+		throw std::runtime_error("tmp CGI files init needed");
 	_pid = fork();
 	if (_pid == -1)
 	{
 		Logger::Error("Response::phpCgiGet() fork() failed");
 		close(_pipefdRead);
+		_pipefdRead = -1;
 		close(_pipefdWrite);
+		_pipefdWrite = -1;
 		return -1;
 	}
 	if (_pid == 0) // child
 	{
+		if (dup2(_pipefdRead, 0) == -1)
+		{
+			Logger::Error("Response::phpCgiGet() dup2() failed");
+			close(_pipefdRead);
+			close(_pipefdWrite);
+			return -1;
+			
+		}
 		close(_pipefdRead);
 		if (dup2(_pipefdWrite, 1) == -1)
 		{
 			Logger::Error("Response::phpCgiGet() dup2() failed");
 			close(_pipefdRead);
+			close(_pipefdWrite);
 			return -1;
 			
 		}
 		close(_pipefdWrite);
-
-
 		char **argv;
 		argv = (char **)malloc(sizeof(char *) * 2);
 		argv[0] = (char*)malloc(_path.size() + 1);
@@ -114,7 +128,10 @@ int		CGI::launch(void)
 			delete[] env[i];
 		delete[] env;
 	}
-	close(_pipefdWrite);
+	close(_pipefdRead);
+	_pipefdRead = -1;
+//	close(_pipefdWrite);
+//	_pipefdWrite = -1;
 	int		status = 0;
 	int w = waitpid(_pid, &status, 0);
 	if (w == -1)
@@ -142,7 +159,7 @@ void	CGI::initEnv(void)
 	}
 }
 
-int		CGI::getReadPipe(void) const
+int		CGI::getOutputFile(void) const
 {
-	return _pipefdRead;
+	return _pipefdWrite;
 }

@@ -204,6 +204,7 @@ void	Response::upload(void)
 void	Response::phpCgiPost(void)
 {
 	setCgiEnv();
+	_cgi.initFiles("LALALA.txt");
 	if (_cgi.launch() == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
@@ -354,6 +355,8 @@ dans le navigateur */
 void		Response::phpCgiGet(void)
 {
 	setCgiEnv();
+	_cgi.initFiles("LALALA.txt");
+//	_cgi.initFiles(_rqst->getUploadFile());
 	if (_cgi.launch() == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
@@ -370,9 +373,12 @@ void		Response::phpCgiGet(void)
 /* Remplit le _body depuis les datas read from le pipe du CGI. */
 int		Response::readFromCgi(void)
 {
-	int	fd = _cgi.getReadPipe();
+	int	fd = _cgi.getOutputFile();
+	if (lseek(fd, 0, SEEK_SET) == -1)
+		Logger::Error("Response::readFromCgi() lseek() failed");
 	char buf[BUFFSIZE] = {};
-	ssize_t	nbread = read(fd, buf, BUFFSIZE - 1);
+	ssize_t	nbread = 0;
+	nbread = read(fd, buf, BUFFSIZE - 1);
 	if (nbread == -1)
 	{
 		Logger::Error("Response::phpCgiGet() read() failed");
@@ -397,7 +403,8 @@ int		Response::readFromCgi(void)
 		buf[nbread] = 0;
 		_body += buf;
 	}
-	close(fd);
+//	close(fd);
+//	fd = -1; //useless
 	return (nbread);
 }
 
