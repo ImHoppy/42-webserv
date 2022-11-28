@@ -28,10 +28,6 @@ std::string::iterator	findCRLF(std::string::iterator start, std::string::iterato
 std::vector<std::string>	listFiles(std::string const & path, bool withDot = true);
 std::string		getFileExtension(const std::string & filename);
 std::string	generateErrorBody(std::pair<int, std::string> code);
-std::string	generateErrorBody(std::string title, std::string body);
-std::string	generateErrorBody(std::string body);
-std::string generateResponse(std::string fileContent);
-std::string generateResponse(int code, std::string codeMsg, std::string fileContent);
 std::string	GenerateHtmlDirectory(std::string const & path);
 std::string	IntToStr(int nb);
 int32_t		StrToInt(std::string const & str);
