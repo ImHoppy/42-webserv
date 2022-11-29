@@ -8,6 +8,7 @@
 # include <sys/types.h> // waitpid()
 # include <sys/wait.h> // waitpid()
 # include <strings.h> // bzero
+# include <unistd.h> // lseek
 
 # include "Utils.hpp"
 # include "Logger.hpp"
@@ -77,6 +78,7 @@ class Response
 		/* Getteurs */
 		std::string			getResponse(void) const;
 		ReadData const &	getReadData(void) const;
+		const std::string &	getBody(void) const;
 
 		/* Public Member functions */
 		bool	checkHost(void) const;

@@ -147,7 +147,9 @@ void	Response::generateResponse(void)
 
 	headers_t::const_iterator	it;
 	for (it = _headers.begin(); it != _headers.end(); it++)
+	{
 		_response += it->first + ": " + it->second + CLRF;
+	}
 
 	// if (_body.size() > 0)
 		// _response += "Content-Length: " + IntToStr(_body.size()) + CLRF;
@@ -204,13 +206,12 @@ void	Response::upload(void)
 void	Response::phpCgiPost(void)
 {
 	setCgiEnv();
+	_cgi.initFiles("LALALA.txt");
 	if (_cgi.launch() == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
 		return ;
 	}
-	//TODO: alors soit disant faut ajouter les "locaux" fds a epoll, genre
-	// meme pour lire le pipe bah faut passer par epoll... et pour les error files
 	if (readFromCgi() == -1)
 		_code = std::make_pair(500, "Internal Server Error");
 	else
@@ -334,6 +335,11 @@ std::ostream&	operator<<(std::ostream& o, const Response& me)
 	return o;
 }
 
+const std::string &		Response::getBody(void) const
+{
+	return _body;
+}
+
 #define BUFFSIZE_RES 8192
 /*
 	1) Essai d'ouvrir le fichier : return false si fail (file not found)
@@ -399,11 +405,12 @@ bool	Response::tryFile(void)
 /* Set le vector d'environnement variables (RFC 3875) */
 void		Response::setCgiEnv(void)
 {
-	std::cout << _rqst->getUri().path << std::endl;
 	_cgi.addVarToEnv("REDIRECT_STATUS=true");
 	_cgi.addVarToEnv("GATEWAY_INTERFACE=CGI/1.1");
 	_cgi.addVarToEnv("PATH_INFO=/"); // ou si myscript.php/this/is/pathinfo?query
 	_cgi.addVarToEnv("QUERY_STRING=" + _rqst->getUri().query);
+	_cgi.addVarToEnv("CONTENT_LENGTH=" + _rqst->getContentLength());
+	_cgi.addVarToEnv("CONTENT_TYPE=" + _rqst->getValForHdr("Content-Type"));
 //	_cgi.addVarToEnv("REMOTE_ADDR=" + inet_ntoa(client->addr())); //IP
 	_cgi.addVarToEnv("REQUEST_METHOD=" + _rqst->getMethod());
 	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _rqst->getLocation()->getRootPath() + _rqst->getUri().path);
@@ -423,13 +430,14 @@ dans le navigateur */
 void		Response::phpCgiGet(void)
 {
 	setCgiEnv();
+	_cgi.initFiles("LALALA.txt");
+	//TODO: a remplacer par la fct ci dessous (apres merge avec branch doccgi)
+//	_cgi.initFiles(_rqst->getUploadFile());
 	if (_cgi.launch() == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
 		return ;
 	}
-	//TODO: alors soit disant faut ajouter les "locaux" fds a epoll, genre
-	// meme pour lire le pipe bah faut passer par epoll... et pour les error files
 	if (readFromCgi() == -1)
 		_code = std::make_pair(500, "Internal Server Error");
 	else
@@ -439,15 +447,19 @@ void		Response::phpCgiGet(void)
 /* Remplit le _body depuis les datas read from le pipe du CGI. */
 int		Response::readFromCgi(void)
 {
-	int	fd = _cgi.getReadPipe();
+	int	fd = _cgi.getOutputFile();
+	if (lseek(fd, 0, SEEK_SET) == -1)
+		Logger::Error("Response::readFromCgi() lseek() failed");
 	char buf[BUFFSIZE] = {};
-	ssize_t	nbread = read(fd, buf, BUFFSIZE - 1);
+	ssize_t	nbread = 0;
+	nbread = read(fd, buf, BUFFSIZE - 1);
 	if (nbread == -1)
 	{
 		Logger::Error("Response::phpCgiGet() read() failed");
 		return -1;
 	}
 	buf[nbread] = 0;
+//	_body += buf;
 	std::string		raw(buf, nbread);
 	std::string		content = "Content-type:";
 	if (raw.find(content) == 0)
@@ -467,6 +479,7 @@ int		Response::readFromCgi(void)
 		_body += buf;
 	}
 	close(fd);
+	fd = -1; //useless
 	return (nbread);
 }
 

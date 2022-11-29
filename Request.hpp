@@ -83,6 +83,8 @@ class Request
 		const std::string &			getBody(void) const;
 		ServerConfig*				getConfig(void) const;
 		LocationConfig*				getLocation(void) const;
+		std::string					getContentLength(void) const;
+		std::string					getValForHdr(const std::string & hdrToFind) const;
 
 		void			appendToBody(const std::string & more);
 		bool			targetIsCgi(void) const;
