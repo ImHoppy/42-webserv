@@ -213,8 +213,15 @@ void	Server::respond(Client* client)
 		if (rqst == NULL)
 			return ;
 		Logger::Info("Respond - Created");
-		rep = new Response(rqst);
-		rep->generateResponse();
+		try {
+			rep = new Response(rqst);
+			rep->generateResponse();
+		}
+		catch (std::exception& ex)
+		{
+			Logger::Error("KASJASJA");
+
+		}
 		
 		// std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl;
 //		std::cout << "Raw Body rqst:{" << rqst->getBody() << "}" << std::endl;

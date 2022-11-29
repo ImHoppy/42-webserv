@@ -108,18 +108,18 @@ void	WebServ::addServer(Server *serv)
 	_servers.push_back(serv);
 }
 
-
 /* Destructor */
 WebServ::~WebServ(void)
 {
-	for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
+	for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it)
+	{
 		const socket_t socket = (*it)->getSocket();
 
 		if (_epollInstance > 0)
 		{ 
-			if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, socket, NULL) < 0) {
-				throw std::runtime_error("epoll_ctl del failed");
-			}
+			//if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, socket, NULL) < 0) {
+			//	throw std::runtime_error("epoll_ctl del failed");
+			//}
 		}
 		if (socket >= 0)
 			close(socket);

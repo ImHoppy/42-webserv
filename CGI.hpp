@@ -26,6 +26,15 @@ class CGI {
 		std::string					_path;
 
 	public:
+		class CGIError
+		{
+			public:
+			CGIError(){};
+			CGIError(const CGIError&){};
+			CGIError& operator=(const CGIError&){return *this;};
+			virtual ~CGIError(){};
+			virtual const char* what() const { return "CGI Error";} ;
+		}; // end execveError
 		CGI(void);
 		~CGI(void);
 		CGI &	operator=(const CGI & src);

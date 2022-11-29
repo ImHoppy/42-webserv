@@ -485,8 +485,7 @@ int		Response::readFromCgi(void)
 		buf[nbread] = 0;
 		_body += buf;
 	}
-	close(fd);
-	fd = -1; //useless
+//	_cgi.CloseFiles();
 	return (nbread);
 }
 
@@ -495,8 +494,9 @@ void		Response::doDirectoryListening(void)
 	_body = GenerateHtmlDirectory(_rqst->getTargetPath());
 	_code = std::make_pair(200, "OK");
 	if (_body.empty())
-		_code = std::make_pair(501, "Internal Server Error");
-	_headers["Content-Length"] = IntToStr(_body.size());
+		_code = std::make_pair(404, "Not Found");
+	else
+		_headers["Content-Length"] = IntToStr(_body.size());
 }
 
 void		Response::doGET(void)

@@ -98,6 +98,7 @@ enum {
 
 void	Client::createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes)
 {
+	std::cout << "socket = " << _csock << std::endl;
 	Logger::Info("Client: new Request received from client %d", _csock);
 	_Rqst = new Request(buf, start_buf, bytes);
 

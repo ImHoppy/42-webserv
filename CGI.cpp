@@ -14,6 +14,7 @@ CGI::CGI(void) : _env(), _fileIn(-1), _fileOut(-1), _pid(-1),
 
 /* Destructor */
 CGI::~CGI(void) {
+	Logger::Error("DESTRUCOTR CGI");
 	CloseFiles();
 }
 
@@ -66,7 +67,7 @@ void	CGI::CloseFiles(void)
 		close(_fileIn);
 	_fileIn = -1;
 	if (_fileOut != -1)
-		close(_fileIn);
+		close(_fileOut);
 	_fileOut = -1;
 }
 
@@ -105,31 +106,36 @@ int		CGI::launch(void)
 		}
 		env[j] = NULL;
 		char * const * nil = NULL;	
-		execve("/usr/bin/phddsdp-cgi", nil, env);
+		execve("/usr/bin/php-cgi", nil, env);
 		Logger::Error("Response::phpCgiGet() execve() failed");
 		for (size_t i = 0; env[i]; i++)
 			delete[] env[i];
 		delete[] env;
-		exit(-1);
 	}
-//	close(_fileIn);
-//	_fileIn = -1;
-//	close(_fileOut);
-//	_fileOut = -1;
-	int		status = 0;
-	int w = waitpid(_pid, &status, 0);
-	if (w == -1)
+	else
 	{
-		Logger::Error("Response::phpCgiGet() waitpid() failed");
-		return -1;
+		int		status = 0;
+		int w = waitpid(_pid, &status, 0);
+		if (w == -1)
+		{
+			Logger::Error("Response::phpCgiGet() waitpid() failed");
+			return -1;
+		}
+		if (WIFEXITED(status))
+		{
+			Logger::Info("php child exited with %d", WEXITSTATUS(status));
+			return -1;
+		}
+		if (WIFSIGNALED(status))
+		{
+			Logger::Info("php child signaled with %d", WTERMSIG(status));
+			return -1;
+		}
+
 	}
-	if (WIFEXITED(status))
-		Logger::Info("php child exited with %d", WEXITSTATUS(status));
-	if (WIFSIGNALED(status))
-	{
-		Logger::Info("php child signaled with %d", WTERMSIG(status));
-		return -1;
-	}
+	CloseFiles();
+	if (_pid == 0)
+		throw CGI::CGIError();
 	return _pid;
 }
 
