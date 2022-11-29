@@ -63,6 +63,13 @@ Response::Response(Request* rqst) :
 		_code = std::make_pair(400, "Bad Request");
 		return ;
 	}
+	if (not _rqst->getLocation()->getRedirUrl().empty())
+	{
+		_code = std::make_pair(302, "Found");
+		Logger::Info("Redirection to " + _rqst->getLocation()->getRedirUrl());
+		_headers["Location"] = _rqst->getLocation()->getRedirUrl();
+		return ;
+	}
 	if (checkMethod() == false)
 	{
 		setAllowHeader();
@@ -481,15 +488,20 @@ int		Response::readFromCgi(void)
 	return (nbread);
 }
 
+void		Response::doDirectoryListening(void)
+{
+	_body = GenerateHtmlDirectory(_rqst->getTargetPath());
+	_code = std::make_pair(200, "OK");
+	if (_body.empty())
+		_code = std::make_pair(501, "Internal Server Error");
+	_headers["Content-Length"] = IntToStr(_body.size());
+}
+
 void		Response::doGET(void)
 {
 	if (_rqst->targetIsDir() && _rqst->getLocation()->isDirList() == true)
 	{
-		_body = GenerateHtmlDirectory(_rqst->getTargetPath());
-		_code = std::make_pair(200, "OK");
-		if (_body.empty())
-			_code = std::make_pair(501, "Internal Server Error");
-		_headers["Content-Length"] = IntToStr(_body.size());
+		doDirectoryListening();
 		return ;
 	}
 	else if (_rqst->targetIsFile())
