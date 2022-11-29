@@ -206,7 +206,7 @@ void	Response::upload(void)
 void	Response::phpCgiPost(void)
 {
 	setCgiEnv();
-	_cgi.initFiles("LALALA.txt");
+	_cgi.initFiles(_rqst->getUploadFile());
 	if (_cgi.launch() == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
@@ -430,9 +430,7 @@ dans le navigateur */
 void		Response::phpCgiGet(void)
 {
 	setCgiEnv();
-	_cgi.initFiles("LALALA.txt");
-	//TODO: a remplacer par la fct ci dessous (apres merge avec branch doccgi)
-//	_cgi.initFiles(_rqst->getUploadFile());
+	_cgi.initFiles(_rqst->getUploadFile());
 	if (_cgi.launch() == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
