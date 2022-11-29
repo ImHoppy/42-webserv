@@ -206,7 +206,8 @@ void	Response::upload(void)
 void	Response::phpCgiPost(void)
 {
 	setCgiEnv();
-	_cgi.initFiles(_rqst->getUploadFile());
+	_cgi.initFileIn(_rqst->getUploadFile());
+	_cgi.initFileOut();
 	if (_cgi.launch() == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
@@ -429,8 +430,9 @@ void		Response::setCgiEnv(void)
 dans le navigateur */
 void		Response::phpCgiGet(void)
 {
+//	Logger::Error("Response GET here targetPath= %s", _rqst->getTargetPath().c_str());
 	setCgiEnv();
-	_cgi.initFiles(_rqst->getUploadFile());
+	_cgi.initFileOut();
 	if (_cgi.launch() == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
