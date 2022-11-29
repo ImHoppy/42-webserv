@@ -94,7 +94,7 @@ class Request
 
 	private:
 		/* Setteurs */
-		void			setRqstLine(void); // TODO: Delete if unused
+		void			setRqstLine(void);
 		void			setMethod(void);
 		void			setTarget(void);
 		int				setURI(void);

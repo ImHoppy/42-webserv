@@ -83,6 +83,7 @@ class Response
 		/* Public Member functions */
 		bool	checkHost(void) const;
 		bool	checkMethod(void) const;
+		void	doDirectoryListening(void);
 		void	doGET(void);
 		int		doDELETE(const std::string &path);
 		void	doPOST(void);
