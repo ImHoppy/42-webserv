@@ -115,12 +115,6 @@ WebServ::~WebServ(void)
 	{
 		const socket_t socket = (*it)->getSocket();
 
-		if (_epollInstance > 0)
-		{ 
-			//if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, socket, NULL) < 0) {
-			//	throw std::runtime_error("epoll_ctl del failed");
-			//}
-		}
 		if (socket >= 0)
 			close(socket);
 		delete *it;
