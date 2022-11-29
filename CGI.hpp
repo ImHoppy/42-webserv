@@ -20,12 +20,11 @@
 class CGI {
 	private:
 		std::vector<std::string>	_env;
-		int							_pipefdRead;
-		int							_pipefdWrite;
+		int							_fileIn;
+		int							_fileOut;
 		pid_t						_pid;
 		std::string					_path;
-//		int							_readFrom; // useless for now mais je pense qu'il faut lui mettre le body de la request dedans si c'est du post par exemple?
-	
+
 	public:
 		CGI(void);
 		~CGI(void);

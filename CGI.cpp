@@ -6,23 +6,24 @@
 #include <unistd.h> // pipe()
 #include <cstdlib> // malloc
 
-CGI::CGI(void) : _env(), _pipefdRead(-1), _pipefdWrite(-1), _pid(-1),
+CGI::CGI(void) : _env(), _fileIn(-1), _fileOut(-1), _pid(-1),
 	_path("/usr/bin/php-cgi")
 {
 	initEnv();
 }
 
+/* Destructor */
 CGI::~CGI(void) {
-	if (_pipefdRead != -1)
-		close(_pipefdRead);
-	if (_pipefdWrite != -1)
-		close(_pipefdRead);
+	if (_fileIn != -1)
+		close(_fileIn);
+	if (_fileOut != -1)
+		close(_fileIn);
 }
 
 CGI::CGI(const CGI & src) :
 	_env(src._env),
-	_pipefdRead(-1),
-	_pipefdWrite(-1),
+	_fileIn(-1),
+	_fileOut(-1),
 	_pid(-1),
 	_path("/usr/bin/php-cgi")
 {
@@ -46,16 +47,14 @@ void	CGI::setEnv(std::vector<std::string> & env)
 
 int		CGI::initFiles(const std::string & inputFilename)
 {
-	_pipefdRead = open(inputFilename.c_str(), O_RDONLY);
-//	(void)inputFilename;
-//	_pipefdRead = open("LALALA.txt", O_RDONLY);
-	if (_pipefdRead == -1)
+	_fileIn = open(inputFilename.c_str(), O_RDONLY);
+	if (_fileIn == -1)
 	{
 		Logger::Error("CGI init files read failed errno = %d, %s", errno, strerror(errno));
 		return (-1);
 	}
-	_pipefdWrite = open("/tmp/", O_RDWR | O_TMPFILE );
-	if (_pipefdWrite == -1)
+	_fileOut = open("/tmp/", O_RDWR | O_TMPFILE );
+	if (_fileOut == -1)
 	{
 		Logger::Error("CGI init files write failed errno = %d, %s", errno, strerror(errno));
 		return (-1);
@@ -64,46 +63,46 @@ int		CGI::initFiles(const std::string & inputFilename)
 }
 
 //TODO: check les malloc returns;
-/*	1) Init le pipe: _pipefdWrite, pipe side dans lequel le cgi va ecrire sa
-	sortie; et _pipefdRead, depuis lequel le main pourra recuperer les donnees
+/*	1) Init le pipe: _fileOut, pipe side dans lequel le cgi va ecrire sa
+	sortie; et _fileIn, depuis lequel le main pourra recuperer les donnees
 	ecrites.
-	2) Fork() et dup2 out dans _pipefdWrite;
+	2) Fork() et dup2 out dans _fileOut;
 	3) A la sortie du fork on oublis pas de wait (en non bloquant) pr zombie;
 */
 int		CGI::launch(void)
 {
-	if (_pipefdRead == -1 || _pipefdWrite == -1)
+	if (_fileIn == -1 || _fileOut == -1)
 		throw std::runtime_error("tmp CGI files init needed");
 	_pid = fork();
 	if (_pid == -1)
 	{
 		Logger::Error("Response::phpCgiGet() fork() failed");
-		close(_pipefdRead);
-		_pipefdRead = -1;
-		close(_pipefdWrite);
-		_pipefdWrite = -1;
+		close(_fileIn);
+		_fileIn = -1;
+		close(_fileOut);
+		_fileOut = -1;
 		return -1;
 	}
 	if (_pid == 0) // child
 	{
-		if (dup2(_pipefdRead, 0) == -1)
+		if (dup2(_fileIn, 0) == -1)
 		{
-			Logger::Error("Response::phpCgiGet() dup2() failed");
-			close(_pipefdRead);
-			close(_pipefdWrite);
+			Logger::Error("CGI::dup2 pipeREAD failed");
+			close(_fileIn);
+			close(_fileOut);
 			return -1;
 			
 		}
-		close(_pipefdRead);
-		if (dup2(_pipefdWrite, 1) == -1)
+//		close(_fileIn);
+		if (dup2(_fileOut, 1) == -1)
 		{
-			Logger::Error("Response::phpCgiGet() dup2() failed");
-			close(_pipefdRead);
-			close(_pipefdWrite);
+			Logger::Error("CGI::dup2 pipeWRITE failed");
+			close(_fileIn);
+			close(_fileOut);
 			return -1;
 			
 		}
-		close(_pipefdWrite);
+//		close(_fileOut);
 		char **argv;
 		argv = (char **)malloc(sizeof(char *) * 2);
 		argv[0] = (char*)malloc(_path.size() + 1);
@@ -116,6 +115,7 @@ int		CGI::launch(void)
 		for (std::vector<std::string>::const_iterator i = this->_env.begin(); i != this->_env.end(); i++) {
 			env[j] = new char[i->size() + 1];
 			env[j] = strcpy(env[j], (const char*)i->c_str());
+//			std::cerr << "Env: " << env[j] << std::endl;
 			j++;
 		}
 		env[j] = NULL;
@@ -128,10 +128,10 @@ int		CGI::launch(void)
 			delete[] env[i];
 		delete[] env;
 	}
-	close(_pipefdRead);
-	_pipefdRead = -1;
-//	close(_pipefdWrite);
-//	_pipefdWrite = -1;
+//	close(_fileIn);
+//	_fileIn = -1;
+//	close(_fileOut);
+//	_fileOut = -1;
 	int		status = 0;
 	int w = waitpid(_pid, &status, 0);
 	if (w == -1)
@@ -161,5 +161,5 @@ void	CGI::initEnv(void)
 
 int		CGI::getOutputFile(void) const
 {
-	return _pipefdWrite;
+	return _fileOut;
 }

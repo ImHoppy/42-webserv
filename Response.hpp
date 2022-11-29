@@ -78,6 +78,7 @@ class Response
 		/* Getteurs */
 		std::string			getResponse(void) const;
 		ReadData const &	getReadData(void) const;
+		const std::string &	getBody(void) const;
 
 		/* Public Member functions */
 		bool	checkHost(void) const;

@@ -5,6 +5,24 @@ void			Request::appendToBody(const std::string & more)
 	_body += more;
 }
 
+/* Search for a specific header and return either NULL either the string containing the value
+associated to this header. */
+std::string 		Request::getValForHdr(const std::string & hdrToFind) const
+{
+	headers_t::const_iterator	it = _headers.find(hdrToFind);
+	if (it == _headers.end())
+		return "";
+	return (it->second);
+}
+
+std::string 		Request::getContentLength(void) const
+{
+	headers_t::const_iterator	it = _headers.find("Content-Length");
+	if (it == _headers.end())
+		return ("0");
+	return it->second;
+}
+
 /* Default constructor (private) */
 Request::Request(void) {}
 
