@@ -88,19 +88,40 @@ LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 				return &(locs->second);
 		}
 	}
+//	std::cout << "URL to found = \'" << url << "\'" << std::endl;
 	std::string::size_type found;
 	std::string::size_type start_search = url.size();
+	std::string		url_trunc = url;
 	while (start_search != std::string::npos)
 	{
+//		std::cout << "\tURL with start_search = \'" << url_trunc << "\'" << std::endl;
 		for (map_locs::iterator locs = _location.begin(); locs != _location.end(); ++locs)
 		{
-			found = url.rfind(locs->second.getPath(), start_search);
+			if (ends_with(locs->first, '/'))
+			{
+				found = locs->first.rfind(url_trunc, locs->first.size() - 1);
+//				std::cout << "Compared with loc = \'" << std::string(locs->first.begin(), locs->first.end() - 1) << "\'" << std::endl;
+			}
+			else
+			{
+				found = locs->first.rfind(url_trunc);
+//				std::cout << "Compared with loc = \'" << locs->first << "\'" << std::endl;
+			}
 			if (found == 0)
+			{
+//				std::cout << "Selected loc = \'" << locs->first << "\'" << std::endl;
 				return &(locs->second);
+			}
+//			else if (found != std::string::npos)
+//			{
+//				std::cout << "Found at pos " << found << std::endl;
+//			}
 		}
-		start_search = url.find_last_of('/', start_search - 1);
+		start_search = url_trunc.find_last_of('/', start_search - 1);
+		url_trunc.assign(url, 0, start_search);
 	}
-	return &(_location.begin()->second);
+//	std::cout << "FOUND NONE" << std::endl;
+	return &(_location["/"]);
 }
 ServerConfig::map_locs	const & ServerConfig::getLocations() const {
 	return _location;
