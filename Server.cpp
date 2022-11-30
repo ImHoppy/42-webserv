@@ -81,7 +81,9 @@ Return:
 */
 ServerConfig*	Server::getConfigForRequest(Request* rqst)
 {
-	std::string		host_header = rqst->getHost();
+	std::string		host_header = rqst->getValForHdr("Host");
+	if (host_header.empty())
+		return &_configs[0];
 	size_t			dotPort = host_header.find(':');
 
 	if (dotPort != std::string::npos)
