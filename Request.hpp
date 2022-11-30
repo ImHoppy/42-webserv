@@ -79,7 +79,6 @@ class Request
 		const std::string &			getTarget(void) const;
 		const t_uri &				getUri(void) const;
 		const headers_t &			getHeaders(void) const;
-		const std::string &			getHost(void) const;
 		const std::string &			getBody(void) const;
 		ServerConfig*				getConfig(void) const;
 		LocationConfig*				getLocation(void) const;

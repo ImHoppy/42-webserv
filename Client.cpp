@@ -32,16 +32,9 @@ Client::~Client(void)
 
 /* Copy Constructor */
 Client::Client(const Client& src) :
-	Base("Client"),
-	_csock(src._csock),
-	_myServer(src._myServer),
-	_Rqst(src._Rqst),
-	_Resp(),
-	_error(false)
+	Base("Client")
 {
-	#ifdef CONSTRUC
-	std::cerr << "Client Copy constructor" << std::endl;
-	#endif
+	*this = src;
 }
 
 /* Parametric Constructor (with empty pending requests) */
@@ -51,8 +44,12 @@ Client::Client(socket_t csock, Server* serv) :
 	_myServer(serv),
 	_Rqst(),
 	_Resp(),
+	_file(),
 	_error(false)
 {
+	_timeouts.recv = 30000;
+	_timeouts.send = 30000;
+	_timeouts.keepAlive = 60000;
 	#ifdef CONSTRUC
 	std::cerr << "Client Parametric constructor" << std::endl;
 	#endif
@@ -66,6 +63,9 @@ Client&		Client::operator=(const Client& src)
 	_csock = src._csock;
 	_myServer = src._myServer;
 	_Rqst = src._Rqst;
+	_Resp = src._Resp;
+	_error = src._error;
+	_timeouts = src._timeouts;
 	#ifdef CONSTRUC
 	std::cerr << "Client Assignement operator" << std::endl;
 	#endif

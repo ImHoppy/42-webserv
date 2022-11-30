@@ -14,6 +14,15 @@
 #  define BUFFSIZE 3000
 # endif
 
+#include "Time.hpp"
+
+struct Timeouts
+{
+	Timeout		recv;
+	Timeout		send;
+	Timeout		keepAlive;
+};
+
 /*	
 	Le "createur" d'un Client est responsable de fermer ses socket, et de 
 	realease totue memoire allouee (entre autre si le ptr de Server est alloue)
@@ -32,6 +41,7 @@ class Client : public Base
 		Response*		_Resp;
 		std::ofstream	_file;
 		bool			_error;
+		Timeouts		_timeouts;
 
 		void			createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes);
 
