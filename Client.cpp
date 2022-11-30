@@ -189,7 +189,7 @@ int		Client::recvRequest(void)
 		if (_file.is_open())
 			_file.close();
 		Logger::Error("Bytes returned = %d", bytes);
-		return (bytes);
+		return (1);
 	}
 }
 
