@@ -84,7 +84,6 @@ void	Response::doMethod(void)
 	if (_rqst->getMethod() == "GET")
 	{
 		doGET();
-		return ;
 	}
 	else if (_rqst->getMethod() == "DELETE")
 	{
@@ -502,11 +501,13 @@ void		Response::doGET(void)
 			_code = std::make_pair(404, "Not Found");
 		return ;
 	}
-	else // targetIsCgi()
+	else if (_rqst->getLocation()->isCGIActive()) // targetIsCgi()
 	{
 		// NOTE: Add _code = std::make_pair(200, "OK");
 		phpCgiGet();
 	}
+	else
+		_code = std::make_pair(404, "Not Found");
 }
 
 bool	Response::checkHost(void) const
