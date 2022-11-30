@@ -337,10 +337,9 @@ const std::string &		Request::getMethod(void) const
 }
 
 //TODO: provide a case insensitive comparator to the headers map
-const std::string &			Request::getHost(void) const
+const std::string &			Request::getHost(void)
 {
-	headers_t::const_iterator	it = _headers.find("Host");
-	return it->second;
+	return (_headers["Host"]);
 }
 
 const std::string &		Request::getBody(void) const

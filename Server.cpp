@@ -82,9 +82,8 @@ Return:
 ServerConfig*	Server::getConfigForRequest(Request* rqst)
 {
 	std::string		host_header = rqst->getHost();
-	if (host_header == "UNDEFINED")
-		return &_configs[0];
-	size_t		dotPort = host_header.find(':');
+	size_t			dotPort = host_header.find(':');
+
 	if (dotPort != std::string::npos)
 		host_header.erase(dotPort);
 	for (std::vector<ServerConfig>::iterator conf_it = _configs.begin(); conf_it != _configs.end(); ++conf_it)
