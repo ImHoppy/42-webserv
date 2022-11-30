@@ -203,12 +203,6 @@ int		Response::doDELETE(const std::string &path)
 	return 204;
 }
 
-void	Response::upload(void)
-{
-	//TODO
-	_code = std::make_pair(200, "OK UPLOAD");
-	_body = "Upload succeeded";
-}
 
 void	Response::phpCgiPost(void)
 {
@@ -312,16 +306,10 @@ void	Response::doPOST(void)
 		UploadMultipart();
 		return ;
 	}
-	else if (type->second == "application/x-www-form-urlencoded")
+	else if (_rqst->getLocation()->isCGIActive() && type->second == "application/x-www-form-urlencoded")
 	{
 		Logger::Info("is URL encoded");
 		phpCgiPost();
-		return ;
-	}
-	else
-	{
-		Logger::Info("Clasic Post");
-		upload();
 		return ;
 	}
 	_code = std::make_pair(400, "Bad Request");
