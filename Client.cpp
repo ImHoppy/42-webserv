@@ -8,7 +8,7 @@ Client::Client(void) : Base("Client"),
 	_Resp(),
 	_error(false)
 {
-	_keepAlive = 1000;
+	_keepAlive = TIMEOUT;
 
 	#ifdef CONSTRUC
 	std::cerr << "Client Default constructor" << std::endl;
@@ -49,7 +49,7 @@ Client::Client(socket_t csock, Server* serv) :
 	_file(),
 	_error(false)
 {
-	_keepAlive = 1000;
+	_keepAlive = TIMEOUT;
 	#ifdef CONSTRUC
 	std::cerr << "Client Parametric constructor" << std::endl;
 	#endif

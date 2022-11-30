@@ -14,6 +14,8 @@
 #  define BUFFSIZE 3000
 # endif
 
+#define TIMEOUT 60000
+
 #include "Time.hpp"
 
 /*	

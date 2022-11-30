@@ -37,7 +37,7 @@ void	WebServ::StartLoop(void)
 	std::signal(SIGINT, sig_handler);
 	while (WebServ::_isRunning)
 	{
-		nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, -1);
+		nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, 5000);
 		if (nfds < 0)
 		{
 //			throw std::runtime_error("epoll_wait failed");
