@@ -115,7 +115,10 @@ fonction du root de la config. */
 void	Request::setTargetPath(void)
 {
 	std::string		url(_uri.path);
-	_targetPath =  url.replace(0, _loc->getPath().size(), _loc->getRootPath());
+	std::string		root = _loc->getRootPath();
+	if (ends_with(root, '/') == false)
+		root += '/';
+	_targetPath =  url.replace(0, _loc->getPath().size(), root);
 	// TODO: Only use url or _targetPath but not both
 	if (ends_with(url, '.'))
 		_targetPath += '/';
