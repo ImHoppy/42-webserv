@@ -70,8 +70,9 @@ void	WebServ::StartLoop(void)
 				{
 					std::cout << "POLLRDHUP on socket " << client->getSocket()  <<std::endl;
 				}
-				if (client->hasError())
+				if (client->hasTimeout() || client->hasError())
 				{
+					Logger::Error("crash");
 					try
 					{
 						client->getServer()->respond(client);

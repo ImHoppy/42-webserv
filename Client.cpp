@@ -8,6 +8,8 @@ Client::Client(void) : Base("Client"),
 	_Resp(),
 	_error(false)
 {
+	_keepAlive = 1000;
+
 	#ifdef CONSTRUC
 	std::cerr << "Client Default constructor" << std::endl;
 	#endif
@@ -47,9 +49,7 @@ Client::Client(socket_t csock, Server* serv) :
 	_file(),
 	_error(false)
 {
-	_timeouts.recv = 30000;
-	_timeouts.send = 30000;
-	_timeouts.keepAlive = 60000;
+	_keepAlive = 1000;
 	#ifdef CONSTRUC
 	std::cerr << "Client Parametric constructor" << std::endl;
 	#endif
@@ -65,7 +65,7 @@ Client&		Client::operator=(const Client& src)
 	_Rqst = src._Rqst;
 	_Resp = src._Resp;
 	_error = src._error;
-	_timeouts = src._timeouts;
+	_keepAlive = src._keepAlive;
 	#ifdef CONSTRUC
 	std::cerr << "Client Assignement operator" << std::endl;
 	#endif
@@ -126,9 +126,10 @@ void	Client::createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes)
 		Request::headers_t::const_iterator		content_length = _Rqst->getHeaders().find("Content-Length");
 		if (content_length != _Rqst->getHeaders().end())
 		{
-			if (StrToInt(content_length->second) > _Rqst->getConfig()->getMaxBodySize())
+			int32_t size = StrToInt(content_length->second);
+			std::cout << size << std::endl;
+			if (size < 0 || size > _Rqst->getConfig()->getMaxBodySize())
 			{
-				Logger::Error("Request: - POST body too big");
 				_error = true;
 				_myServer->readyToRead(this);
 				return ;
@@ -149,7 +150,9 @@ int		Client::recvRequest(void)
 {
 	char buf[BUFFSIZE];
 	memset(buf, 0, sizeof(buf));
+	Logger::Info("Client: waiting for request from client %d", _csock);
 	ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
+	Logger::Info("Client: recvRequest() - bytes received = %d", bytes);
 	if (bytes < 0)
 		throw std::runtime_error("recv failed");
 	else if (bytes == 0)
@@ -159,6 +162,7 @@ int		Client::recvRequest(void)
 	}
 	else
 	{
+		_keepAlive.updateStart();
 		buf[bytes] = 0;
 		if (_Rqst == NULL)
 		{
@@ -219,5 +223,10 @@ bool	Client::hasError(void) const
 	return _error;
 }
 
-std::string const & Client::getType() const { return _type; }
+bool	Client::hasTimeout(void) const
+{
+	return _keepAlive.isTimeOut();
+}
 
+
+std::string const & Client::getType() const { return _type; }

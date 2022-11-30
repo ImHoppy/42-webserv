@@ -215,12 +215,12 @@ void	Server::respond(Client* client)
 			return ;
 		Logger::Info("Respond - Created");
 		try {
-			rep = new Response(rqst);
+			rep = new Response(rqst, client);
 			rep->generateResponse();
 		}
 		catch (std::exception& ex)
 		{
-			Logger::Error("KASJASJA");
+			Logger::Error("Response - %s", ex.what());
 
 		}
 		

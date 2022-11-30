@@ -5,8 +5,6 @@
 # include <string>
 # include <map>
 # include <cstdio> // std::remove (file/dir)
-# include <sys/types.h> // waitpid()
-# include <sys/wait.h> // waitpid()
 # include <strings.h> // bzero
 # include <unistd.h> // lseek
 
@@ -19,7 +17,7 @@
 
 #define CLRF "\r\n"
 
-
+# include "Client.hpp"
 
 
 class Client;
@@ -44,6 +42,7 @@ class Response
 		/* Attributs */
 		Request*					_rqst;
 		// TODO: Move cgi to client
+		Client						*_client;
 		CGI							_cgi;
 		std::pair<int, std::string>	_code;
 		headers_t					_headers;
@@ -73,7 +72,7 @@ class Response
 		~Response(void);
 		Response(const Response& src);
 		Response&	operator=(const Response& src);
-		Response(Request* rqst);
+		Response(Request* rqst, Client* client);
 		
 		/* Getteurs */
 		std::string			getResponse(void) const;

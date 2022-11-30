@@ -1,7 +1,6 @@
 #include "Time.hpp"
+#include "Logger.hpp"
 #include <sys/time.h>
-
-#define NULL (void*)0
 
 long int	Date::Now(void)
 {
@@ -37,6 +36,13 @@ Timeout & Timeout::operator=(const Timeout& rhs)
 	return (*this);
 }
 
+Timeout & Timeout::operator=(const int ms)
+{
+	_start = Date::Now();
+	_timeout = ms;
+	return (*this);
+}
+
 
 Timeout::Timeout(int ms)
 {
@@ -49,12 +55,7 @@ void	Timeout::updateStart(void)
 	_start = Date::Now();
 }
 
-void	Timeout::setTimeOut(int ms)
-{
-	_timeout = ms;
-}
-
-bool	Timeout::isTimeOut(void)
+bool	Timeout::isTimeOut(void) const
 {
 	long int now = Date::Now();
 	return (now - _start > _timeout);

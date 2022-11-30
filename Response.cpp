@@ -38,8 +38,9 @@ Response &	Response::operator=(const Response& src)
 }
 
 /* Parametric constructor */
-Response::Response(Request* rqst) :
+Response::Response(Request* rqst, Client *client) :
 	_rqst(rqst),
+	_client(client),
 	_cgi(),
 	_code(std::make_pair(501, "Not Implemented")),
 	_headers(),
@@ -63,6 +64,8 @@ Response::Response(Request* rqst) :
 		Logger::Info("Redirection to " + _rqst->getLocation()->getRedirUrl());
 		_headers["Location"] = _rqst->getLocation()->getRedirUrl();
 	}
+	else if (_client->hasTimeout())
+		_code = std::make_pair(408, "Request Timeout");
 	else if (checkMethod() == false)
 	{
 		setAllowHeader();
@@ -405,7 +408,7 @@ static int transformChar(int c)
 {
 	if (c == '-')
 		return '_';
-	return tolower(c);
+	return toupper(c);
 }
 
 /* Set le vector d'environnement variables (RFC 3875) */
