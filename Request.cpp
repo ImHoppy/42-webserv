@@ -118,6 +118,8 @@ void	Request::setTargetPath(void)
 	std::string		root = _loc->getRootPath();
 	if (ends_with(root, '/') == false)
 		root += '/';
+	std::cout <<  "URL AVANT = \'" << url  << "\'" << std::endl;
+	std::cout << "size loc = " << _loc->getPath().size() << " et = \'" << _loc->getPath() << "\'" << std::endl;
 	_targetPath =  url.replace(0, _loc->getPath().size(), root);
 	// TODO: Only use url or _targetPath but not both
 	if (ends_with(url, '.'))

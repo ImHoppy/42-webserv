@@ -94,33 +94,24 @@ LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 	std::string		url_trunc = url;
 	while (start_search != std::string::npos)
 	{
-//		std::cout << "\tURL with start_search = \'" << url_trunc << "\'" << std::endl;
+		std::cout << "\tURL with start_search = \'" << url_trunc << "\'" << std::endl;
 		for (map_locs::iterator locs = _location.begin(); locs != _location.end(); ++locs)
 		{
-			if (ends_with(locs->first, '/'))
+			std::string		loc;
+			if (ends_with(locs->first, '/') == true)
+				loc.assign
+			std::cout << "Compared with loc = \'" << loc << "\'" << std::endl;
+			if (url_trunc.compare(loc) == 0)
 			{
-				found = locs->first.rfind(url_trunc, locs->first.size() - 1);
-//				std::cout << "Compared with loc = \'" << std::string(locs->first.begin(), locs->first.end() - 1) << "\'" << std::endl;
-			}
-			else
-			{
-				found = locs->first.rfind(url_trunc);
-//				std::cout << "Compared with loc = \'" << locs->first << "\'" << std::endl;
-			}
-			if (found == 0)
-			{
-//				std::cout << "Selected loc = \'" << locs->first << "\'" << std::endl;
+				std::cout << "Selected loc = \'" << loc << "\'" << std::endl;
 				return &(locs->second);
 			}
-//			else if (found != std::string::npos)
-//			{
-//				std::cout << "Found at pos " << found << std::endl;
-//			}
 		}
 		start_search = url_trunc.find_last_of('/', start_search - 1);
 		url_trunc.assign(url, 0, start_search);
 	}
-//	std::cout << "FOUND NONE" << std::endl;
+	std::cout << "FOUND NONE" << std::endl;
+	//TODO: FillConf check if is loc "/" (else error)
 	return &(_location["/"]);
 }
 ServerConfig::map_locs	const & ServerConfig::getLocations() const {
