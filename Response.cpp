@@ -407,6 +407,13 @@ bool	Response::tryFile(void)
 	return true;
 }
 
+static int transformChar(int c)
+{
+	if (c == '-')
+		return '_';
+	return tolower(c);
+}
+
 /* Set le vector d'environnement variables (RFC 3875) */
 void		Response::setCgiEnv(void)
 {
@@ -426,7 +433,11 @@ void		Response::setCgiEnv(void)
 	_cgi.addVarToEnv("SERVER_SOFTWARE=WebServ");
 	for (Request::headers_t::const_iterator cit = _rqst->getHeaders().begin(); cit != _rqst->getHeaders().end(); ++cit)
 	{
-		_cgi.addVarToEnv(cit->first + "=" + cit->second);
+		if (cit->first == "Content-Type" || cit->first == "Content-Length" || cit->first == "Authorization")
+			continue;
+		std::string key = cit->first;
+		std::transform(key.begin(), key.end(), key.begin(), transformChar);
+		_cgi.addVarToEnv("HTTP_" + key + "=" + cit->second);
 	}
 }
 
