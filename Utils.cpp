@@ -10,9 +10,8 @@ std::string	generateFileName(int seed)
 {
 	std::srand(seed);
 	std::string fileName = "upload_";
-	fileName.reserve(15);
-	for (int i = 8; i < 15; ++i)
-		fileName += generateChar();
+	fileName.reserve(25);
+	std::generate_n(fileName.begin() + fileName.size(), fileName.capacity() - fileName.size(), generateChar);
 	return fileName;
 }
 
