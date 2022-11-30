@@ -72,7 +72,6 @@ class Request
 		const std::string &			getUploadFile(void) const;
 
 		/* Getteurs */
-		ssize_t						getBodySize(void) const;
 		const std::string &			getTargetPath(void) const;
 		const std::string &			getRawRequest(void) const;
 		const std::string &			getRequestLine(void) const;

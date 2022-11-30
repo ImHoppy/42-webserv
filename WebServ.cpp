@@ -70,7 +70,19 @@ void	WebServ::StartLoop(void)
 				{
 					std::cout << "POLLRDHUP on socket " << client->getSocket()  <<std::endl;
 				}
-				if (events[i].events & EPOLLIN)
+				if (client->hasError())
+				{
+					try
+					{
+						client->getServer()->respond(client);
+					}
+					catch(const std::exception& e)
+					{
+						Logger::Error("Problem client response: %s", e.what());
+					}
+					client->getServer()->removeClient(client);
+				}
+				else if (events[i].events & EPOLLIN)
 				{
 					int	readSize;
 					try {

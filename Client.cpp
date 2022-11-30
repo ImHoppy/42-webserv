@@ -5,7 +5,8 @@ Client::Client(void) : Base("Client"),
 	_csock(-1),
 	_myServer(),
 	_Rqst(),
-	_Resp()
+	_Resp(),
+	_error(false)
 {
 	#ifdef CONSTRUC
 	std::cerr << "Client Default constructor" << std::endl;
@@ -35,7 +36,8 @@ Client::Client(const Client& src) :
 	_csock(src._csock),
 	_myServer(src._myServer),
 	_Rqst(src._Rqst),
-	_Resp()
+	_Resp(),
+	_error(false)
 {
 	#ifdef CONSTRUC
 	std::cerr << "Client Copy constructor" << std::endl;
@@ -48,7 +50,8 @@ Client::Client(socket_t csock, Server* serv) :
 	_csock(csock),
 	_myServer(serv),
 	_Rqst(),
-	_Resp()
+	_Resp(),
+	_error(false)
 {
 	#ifdef CONSTRUC
 	std::cerr << "Client Parametric constructor" << std::endl;
@@ -120,6 +123,18 @@ void	Client::createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes)
 	_Rqst->setTargetPath();
 	if (_Rqst->getMethod() == "POST")
 	{
+		Request::headers_t::const_iterator		content_length = _Rqst->getHeaders().find("Content-Length");
+		if (content_length != _Rqst->getHeaders().end())
+		{
+			if (StrToInt(content_length->second) > _Rqst->getConfig()->getMaxBodySize())
+			{
+				Logger::Error("Request: - POST body too big");
+				_error = true;
+				_myServer->readyToRead(this);
+				return ;
+			}
+		}
+
 		std::string fileName = generateFileName(time(NULL) + _csock);
 		_Rqst->setUploadFile(fileName);
 		_file.open(fileName.c_str());
@@ -197,6 +212,11 @@ Response*	Client::getResponse(void) const
 void	Client::setResponse(Response* resp)
 {
 	_Resp = resp;
+}
+
+bool	Client::hasError(void) const
+{
+	return _error;
 }
 
 std::string const & Client::getType() const { return _type; }

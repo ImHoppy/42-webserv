@@ -5,13 +5,6 @@ void			Request::appendToBody(const std::string & more)
 	_body += more;
 }
 
-ssize_t		Request::getBodySize(void) const
-{
-	std::ifstream::pos_type filesize(const char* filename);
-	std::ifstream in(_uploadFileName.c_str(), std::ifstream::ate | std::ifstream::binary);
-	return in.tellg();
-}
-
 /* Search for a specific header and return either NULL either the string containing the value
 associated to this header. */
 std::string 		Request::getValForHdr(const std::string & hdrToFind) const

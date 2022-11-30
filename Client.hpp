@@ -31,6 +31,7 @@ class Client : public Base
 		Request*		_Rqst;
 		Response*		_Resp;
 		std::ofstream	_file;
+		bool			_error;
 
 		void			createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes);
 
@@ -50,6 +51,7 @@ class Client : public Base
 		Server*		getServer(void);
 		void		setResponse(Response* resp);
 		Response*	getResponse(void) const;
+		bool		hasError(void) const;
 
 		void		removeTmpFile(void);
 

@@ -80,9 +80,7 @@ Response::Response(Request* rqst) :
 
 bool	Response::checkBodySize(void)
 {
-	if (_rqst->getConfig()->getMaxBodySize() <= _rqst->getBodySize())
-		return false;
-	return true;
+	return (StrToInt(_rqst->getContentLength()) > _rqst->getConfig()->getMaxBodySize());
 }
 
 /* "Launch" le process de la response. */
