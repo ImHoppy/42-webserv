@@ -94,6 +94,7 @@ class Response
 		void	doMethod(void);
 		
 		void	UploadMultipart(void);
+		bool	checkBodySize(void);
 
 }; // end class Response
 

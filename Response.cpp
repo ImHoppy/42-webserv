@@ -78,6 +78,13 @@ Response::Response(Request* rqst) :
 	doMethod();
 }
 
+bool	Response::checkBodySize(void)
+{
+	if (_rqst->getConfig()->getMaxBodySize() <= _rqst->getBodySize())
+		return false;
+	return true;
+}
+
 /* "Launch" le process de la response. */
 void	Response::doMethod(void)
 {
@@ -94,6 +101,11 @@ void	Response::doMethod(void)
 	}
 	else if (_rqst->getMethod() == "POST")
 	{
+		if (checkBodySize() == false)
+		{
+			_code = std::make_pair(413, "Request Entity Too Large");
+			return ;
+		}
 		doPOST();
 	}
 

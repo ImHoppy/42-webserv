@@ -111,6 +111,8 @@ int		CGI::launch(void)
 		for (size_t i = 0; env[i]; i++)
 			delete[] env[i];
 		delete[] env;
+		CloseFiles();
+		throw CGI::CGIError();
 	}
 	else
 	{
@@ -121,21 +123,7 @@ int		CGI::launch(void)
 			Logger::Error("Response::phpCgiGet() waitpid() failed");
 			return -1;
 		}
-		if (WIFEXITED(status))
-		{
-			Logger::Info("php child exited with %d", WEXITSTATUS(status));
-			return -1;
-		}
-		if (WIFSIGNALED(status))
-		{
-			Logger::Info("php child signaled with %d", WTERMSIG(status));
-			return -1;
-		}
-
 	}
-	CloseFiles();
-	if (_pid == 0)
-		throw CGI::CGIError();
 	return _pid;
 }
 
