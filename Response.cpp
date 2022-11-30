@@ -182,7 +182,7 @@ Returns a status code wether access one file failed (breaks the whole operation,
 int		Response::doDELETE(const std::string &path)
 {
 	typedef std::vector<std::string>	strVec;
-	if (path == "./" || path == "../")
+	if (path == "./" || path == "../" || path.find("../") != std::string::npos)
 		return 204;
 	if (ends_with(path, '/') == false) // si is file, remove it and stop.
 	{
