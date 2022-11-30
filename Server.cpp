@@ -195,6 +195,26 @@ void	Server::readyToRead(Client* client)
 	}
 }
 
+void	Server::checkTimeout(void)
+{
+	for (set_client::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		Client* client = *it;
+		if (client->hasTimeout())
+		{
+			try
+			{
+				this->respond(client);
+			}
+			catch(const std::exception& e)
+			{
+				Logger::Error("Problem client response: %s", e.what());
+			}
+			this->removeClient(client);
+			Logger::Info("Client %d timed out", client->getSocket());
+		}
+	}
+}
 
 /*	1) Find la bonne config grace au host header
 	2) Find la bonne location grace a l'URL
