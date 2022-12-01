@@ -352,7 +352,6 @@ const std::string &		Response::getBody(void) const
 */
 bool	Response::tryFile(void)
 {
-	std::cout << "Target PATH = \'" << _rqst->getTargetPath() << "\'" << std::endl;
 	if (_readData.buffer == NULL)
 	{
 		Logger::Info("GET - Opening %s", _rqst->getTargetPath().c_str());
