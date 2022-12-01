@@ -77,7 +77,6 @@ void	WebServ::StartLoop(void)
 				}
 				if (client->hasTimeout() || client->hasError())
 				{
-					Logger::Error("crash");
 					try
 					{
 						client->getServer()->respond(client);

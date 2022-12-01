@@ -14,7 +14,6 @@ CGI::CGI(void) : _env(), _fileIn(-1), _fileOut(-1), _pid(-1),
 
 /* Destructor */
 CGI::~CGI(void) {
-	Logger::Error("DESTRUCOTR CGI");
 	CloseFiles();
 }
 
