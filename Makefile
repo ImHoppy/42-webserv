@@ -10,7 +10,7 @@ endif
 SRCS		=	main.cpp GeneralConfig.cpp ServerConfig.cpp \
 				LocationConfig.cpp Parsing.cpp FillConfig.cpp Server.cpp \
 				Utils.cpp Trim.cpp Client.cpp Request.cpp Response.cpp \
-				Logger.cpp ResponseUtils.cpp CGI.cpp WebServ.cpp
+				Logger.cpp ResponseUtils.cpp CGI.cpp WebServ.cpp Time.cpp
 
 OBJS_DIR	=	obj/
 OBJS		=	$(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))

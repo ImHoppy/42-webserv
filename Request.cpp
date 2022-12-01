@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Request.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: cdefonte <cdefonte@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/10/28 12:46:48 by cdefonte          #+#    #+#             */
-/*   Updated: 2022/11/22 10:15:58 by cdefonte         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 # include "Request.hpp"
 
 void			Request::appendToBody(const std::string & more)
@@ -17,17 +5,41 @@ void			Request::appendToBody(const std::string & more)
 	_body += more;
 }
 
+/* Search for a specific header and return either NULL either the string containing the value
+associated to this header. */
+std::string 		Request::getValForHdr(const std::string & hdrToFind) const
+{
+	headers_t::const_iterator	it = _headers.find(hdrToFind);
+	if (it == _headers.end())
+		return "";
+	return (it->second);
+}
+
+std::string 		Request::getContentLength(void) const
+{
+	headers_t::const_iterator	it = _headers.find("Content-Length");
+	if (it == _headers.end())
+		return ("0");
+	return it->second;
+}
+
 /* Default constructor (private) */
 Request::Request(void) {}
 
 /* Destructor */
-Request::~Request(void) {}
+Request::~Request(void) {
+	if (_uploadFileName.empty())
+		return;
+	if (remove(_uploadFileName.c_str()) != 0)
+		Logger::Error("Error deleting file %s", _uploadFileName.c_str());
+}
 
 /* Copy constructor */
 Request::Request(const Request& src) : 
 _rawRqst(src._rawRqst), _rqstLine(src._rqstLine), _method(src._method),
-_target(src._target),
-_uri(src._uri), _headers(src._headers), _body(src._body) {}
+_target(src._target), _targetPath(src._targetPath),
+_uri(src._uri), _headers(src._headers), _body(src._body), _uploadFileName(src._uploadFileName) {}
+
 
 /* Assignment operator */
 Request&	Request::operator=(const Request& src)
@@ -36,13 +48,41 @@ Request&	Request::operator=(const Request& src)
 	_rqstLine.assign(src._rqstLine);
 	_method.assign(src._method);
 	_target.assign(src._target);
+	_targetPath = src._targetPath;
 	_uri.scheme = src._uri.scheme;
 	_uri.authority = src._uri.authority;
 	_uri.path = src._uri.path;
 	_uri.query = src._uri.query;
 	_headers = src._headers;
 	_body.assign(src._body);
+	_uploadFileName = src._uploadFileName;
 	return *this;
+}
+
+#include <cstring>
+/* ATTENTION: str MUST NOT be empty! */
+/* Parametric construcotr */
+Request::Request(char * buf, size_t & start_buf, ssize_t & bytes)
+{
+	ssize_t i;
+	for (i = 0; i < bytes - 4 ; ++i)
+	{
+		if (strncmp(buf + i,"\r\n\r\n", 4) == 0)
+			break;
+	}
+	i += 4;
+	_rawRqst.assign(buf, buf + i);
+	start_buf = i;
+	setRqstLine();
+	setMethod();
+	setTarget();
+	siterator_t	bodyStart;
+	bodyStart = setHeaders();
+	// if (bodyStart != _rawRqst.end())
+	// 	_body.assign(buf+i, 0, (bytes - i));
+	setURI();
+	if (_method == "POST")
+		bytes = bytes - i;
 }
 
 const std::string &		Request::getRequestLine(void) const
@@ -50,18 +90,44 @@ const std::string &		Request::getRequestLine(void) const
 	return _rqstLine;
 }
 
-/* ATTENTION: str MUST NOT be empty! */
-/* Parametric construcotr */
-Request::Request(const std::string& str) : _rawRqst(str)
+const std::string &		Request::getTargetPath(void) const
 {
-	setRqstLine();
-	setMethod();
-	setTarget();
-	siterator_t	bodyStart;
-	bodyStart = setHeaders();
-	if (bodyStart != _rawRqst.end())
-		setBody(bodyStart);
-	setURI();
+	return _targetPath;
+}
+
+bool		Request::targetIsDir(void) const
+{
+	return (ends_with(_targetPath, '/'));
+}
+
+bool		Request::targetIsFile(void) const
+{
+	return !(targetIsDir() || targetIsCgi());
+}
+
+bool		Request::targetIsCgi(void) const
+{
+	return (ends_with(_targetPath, ".php"));
+}
+
+/* Set le private attribut _targetPath en fonction du path de l'URI de la request et en
+fonction du root de la config. */
+void	Request::setTargetPath(void)
+{
+	std::string		url(_uri.path);
+	std::string		root = _loc->getRootPath();
+	if (ends_with(root, '/') == false)
+		root += '/';
+	_targetPath =  url.replace(0, _loc->getPath().size(), root);
+	// TODO: Only use url or _targetPath but not both
+	if (ends_with(url, '.'))
+		_targetPath += '/';
+	if (ends_with(_targetPath, '/'))
+	{
+		if (_loc->isDirList() == true || _method == "DELETE")
+			return ;
+		_targetPath += _loc->getIndexFile();
+	}
 }
 
 /* Enregistre le body: prend un iterator qui pointe sur le premier caractere, i.e le
@@ -184,6 +250,20 @@ A server MUST reject any received Request message that contains
 whitespace between a header field-name and colon with a response code
 of 400 (Bad Request). (RFC 2616 pqge 25)
 */
+
+static std::string	UpperKey(Request::siterator_t start, Request::siterator_t end)
+{
+	std::string str(start, end);
+	for (std::size_t x = 0; x < str.length(); x++)
+	{
+		if (x == 0 || str[x - 1] == '-')
+		{
+			str[x] = toupper(str[x]);
+		}
+	}
+	return str;
+}
+
 int	Request::splitHeaders(siterator_t start, siterator_t end)
 {
 	if (start == end)
@@ -208,7 +288,7 @@ int	Request::splitHeaders(siterator_t start, siterator_t end)
 		perror("Request: value field too long");
 		return (-1);
 	}
-	_headers[std::string(start, name_end)] = std::string(value_start, end);
+	_headers[UpperKey(start, name_end)] = std::string(value_start, end);
 	return (0);
 }
 
@@ -259,13 +339,6 @@ const std::string &		Request::getMethod(void) const
 	return _method;
 }
 
-//TODO: provide a case insensitive comparator to the headers map
-const std::string &			Request::getHost(void) const
-{
-	headers_t::const_iterator	it = _headers.find("Host");
-	return it->second;
-}
-
 const std::string &		Request::getBody(void) const
 {
 	return _body;
@@ -288,3 +361,31 @@ std::ostream&	operator<<(std::ostream& o, const Request& me)
 	return o;
 }
 
+void	Request::setLocation(LocationConfig* loc)
+{
+	this->_loc = loc;
+}
+void	Request::setConfig(ServerConfig* conf)
+{
+	this->_conf = conf;
+}
+
+ServerConfig*	Request::getConfig(void) const
+{
+	return _conf;
+}
+
+LocationConfig*	Request::getLocation(void) const
+{
+	return _loc;
+}
+
+void	Request::setUploadFile(const std::string& path)
+{
+	_uploadFileName = path;
+}
+
+const std::string &	Request::getUploadFile(void) const
+{
+	return _uploadFileName;
+}

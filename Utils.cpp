@@ -1,5 +1,21 @@
 #include "Utils.hpp"
 
+char	generateChar(void)
+{
+	const std::string alpha("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+	return alpha[std::rand() % alpha.size()];
+}
+
+std::string	generateFileName(int seed)
+{
+	std::srand(seed);
+	std::string fileName = "upload_";
+	fileName.reserve(25);
+	for (int i = 8; i < 15; i++)
+		fileName += generateChar();
+	return fileName;
+}
+
 std::string		getFileExtension(const std::string & filename)
 {
 	std::string		extension;
@@ -89,6 +105,18 @@ bool	isIpv4(std::string const & s)
 	}
 	if (count != 3)
 		return false;
+	return true;
+}
+
+bool	isDigit(std::string const & s)
+{
+	std::string::const_iterator it;
+
+	for (it = s.begin(); it < s.end(); it++)
+	{
+		if (*it < '0' || *it > '9')
+			return false;
+	}
 	return true;
 }
 

@@ -1,64 +1,5 @@
 #include "Utils.hpp"
 
-std::string generateResponse(std::string fileContent)
-{
-	std::string response;
-
-	response = "HTTP/1.1 200 OK\r\n"
-//		"Content-Type: text/html\r\n"
-		"Content-Length: " + IntToStr(fileContent.length()) + "\r\n"
-		"Connection: Keep-Alive\r\n"
-		"\r\n"
-		+ fileContent;
-	return response;
-}
-
-std::string generateResponse(int code, std::string codeMsg, std::string fileContent)
-{
-	std::string response;
-
-	response = "HTTP/1.1 " + IntToStr(code) + " " + codeMsg + "\r\n"
-//		"Content-Type: text/html\r\n"
-		"Content-Length: " + IntToStr(fileContent.length()) + "\r\n"
-		"Connection: Keep-Alive\r\n"
-		"\r\n"
-		+ fileContent;
-	return response;
-}
-
-std::string	generateErrorBody(std::string title, std::string body)
-{
-	std::string html;
-
-	html = "<!DOCTYPE html>"
-		"<html>"
-		"<head>"
-		"<title>" + title + "</title>"
-		"</head>"
-		"<body>"
-		+ body + ""
-		"</body>"
-		"</html>";
-	return html;
-}
-
-std::string	generateErrorBody(std::string body)
-{
-	std::string html;
-
-	html = "<!DOCTYPE html>"
-		"<html>"
-		"<head>"
-		"<title>Error</title>"
-		"</head>"
-		"<body>"
-		+ body + ""
-		"</body>"
-		"</html>";
-	return html;
-}
-
-
 std::string	generateErrorBody(std::pair<int, std::string> code)
 {
 	std::string html;
@@ -66,11 +7,22 @@ std::string	generateErrorBody(std::pair<int, std::string> code)
 	html = "<!DOCTYPE html>"
 		"<html>"
 		"<head>"
+		"<style>"
+		"img {"
+		"	text-align: center;"
+		"	position: absolute;"
+		"	inset: 0;"
+		"	margin: auto;"
+		"}"
+		":root {"
+		"	color-scheme: light dark;"
+		"	background-color: #1c1b22;"
+		"}"
+		"</style>"
 		"<title>Error</title>"
 		"</head>"
 		"<body>"
-		+ code.second + ""
-		+ "<image src=\"https://http.cat/" + IntToStr(code.first) + "\">"
+		"<image src=\"https://http.cat/" + IntToStr(code.first) + "\">"
 		"</body>"
 		"</html>";
 	return html;

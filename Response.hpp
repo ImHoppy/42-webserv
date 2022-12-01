@@ -5,12 +5,11 @@
 # include <string>
 # include <map>
 # include <cstdio> // std::remove (file/dir)
-# include <sys/types.h> // waitpid()
-# include <sys/wait.h> // waitpid()
+# include <strings.h> // bzero
+# include <unistd.h> // lseek
 
 # include "Utils.hpp"
 # include "Logger.hpp"
-# include "Client.hpp"
 # include "CGI.hpp"
 # include "ServerConfig.hpp"
 # include "LocationConfig.hpp"
@@ -18,11 +17,7 @@
 
 #define CLRF "\r\n"
 
-/*
-	_targetPath: path to file or directory. Function request URI path and config root
-*/
-
-
+# include "Client.hpp"
 
 
 class Client;
@@ -42,37 +37,34 @@ class Response
 			unsigned int	read_bytes;
 			std::ifstream	file;
 		};
-		typedef std::map<std::string, std::string>	headers_t;
+		typedef std::map<std::string, std::string>		headers_t;
 	private:
 		/* Attributs */
-		ServerConfig*				_config;
-		LocationConfig*				_location;
 		Request*					_rqst;
-		// TODO: Remove client
-		Client*						_client;
-		std::string					_targetPath;
 		// TODO: Move cgi to client
+		Client						*_client;
 		CGI							_cgi;
 		std::pair<int, std::string>	_code;
 		headers_t					_headers;
 		std::string					_body;
 		std::string					_response;
-
 		ReadData					_readData;
 
 		/* Private member fcts */
-		void		setTargetPath(void);
 		void		setAllowHeader(void);
 		//TODO: ameliorer avec des private static bitset<3> file dit cgi ?
 		bool		targetIsDir(void) const;
 		bool		targetIsFile(void) const;
 		bool		targetIsCgi(void) const;
-		void		phpCgiGet(void);
 		void		upload(void);
-		void		setCgiEnv(void);
 		
 		bool	openPageError(std::string path);
 		void	generateBodyError();
+
+		/* CGI */
+		void		setCgiEnv(void);
+		void		phpCgiGet(void);
+		void		phpCgiPost(void);
 	public:
 
 		/* Coplien */
@@ -80,15 +72,17 @@ class Response
 		~Response(void);
 		Response(const Response& src);
 		Response&	operator=(const Response& src);
-		Response(ServerConfig* config, LocationConfig* loc, Request* request, Client* client);
+		Response(Request* rqst, Client* client);
 		
 		/* Getteurs */
 		std::string			getResponse(void) const;
 		ReadData const &	getReadData(void) const;
+		const std::string &	getBody(void) const;
 
 		/* Public Member functions */
 		bool	checkHost(void) const;
 		bool	checkMethod(void) const;
+		void	doDirectoryListening(void);
 		void	doGET(void);
 		int		doDELETE(const std::string &path);
 		void	doPOST(void);
@@ -96,6 +90,10 @@ class Response
 		int		readFromCgi(void);
 		void	handleError(int error);
 		void	generateResponse(void);
+		void	doMethod(void);
+		
+		void	UploadMultipart(void);
+		bool	checkBodySize(void);
 
 }; // end class Response
 

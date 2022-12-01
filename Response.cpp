@@ -2,8 +2,7 @@
 
 /* Default constructor */
 Response::Response(void) :
-	_config(), _location(), _rqst(), _client(), 
-	_targetPath(),
+	_rqst(),
 	_cgi(),
 	_code(std::make_pair(501, "Not Implemented")),
 	_headers(),
@@ -28,11 +27,7 @@ Response &	Response::operator=(const Response& src)
 {
 	if (this != &src)
 	{
-		_config = src._config;
-		_location = src._location;
 		_rqst = src._rqst;
-		_client = src._client;
-		_targetPath = src._targetPath;
 		_cgi = src._cgi;
 		_code = src._code;
 		_headers = src._headers;
@@ -43,12 +38,9 @@ Response &	Response::operator=(const Response& src)
 }
 
 /* Parametric constructor */
-Response::Response(ServerConfig* config, LocationConfig* loc, Request* request, Client* client) :
-	_config(config),
-	_location(loc),
-	_rqst(request),
+Response::Response(Request* rqst, Client *client) :
+	_rqst(rqst),
 	_client(client),
-	_targetPath(),
 	_cgi(),
 	_code(std::make_pair(501, "Not Implemented")),
 	_headers(),
@@ -57,54 +49,72 @@ Response::Response(ServerConfig* config, LocationConfig* loc, Request* request, 
 	_readData()
 {
 	_headers["Connection"] = "keep-alive";
-	if (config == NULL || loc == NULL || request == NULL)
+	_headers["Server"] = "WebServ/1.0";
+	if (_rqst == NULL || _rqst->getValForHdr("Host").empty())
 	{
 		_code = std::make_pair(400, "Bad Request");
-		return ;
 	}
-	if (request->getUri().path.size() + request->getUri().query.size() > 1024)
+	else if (_rqst->getUri().path.size() + _rqst->getUri().query.size() > 1024)
 	{
 		_code = std::make_pair(414, "Request-URI Too Long");
-		return ;
 	}
-	if (checkHost() == false)
+	else if (not _rqst->getLocation()->getRedirUrl().empty())
 	{
-		_code = std::make_pair(400, "Bad Request");
-		return ;
+		_code = std::make_pair(302, "Found");
+		Logger::Info("Redirection to " + _rqst->getLocation()->getRedirUrl());
+		_headers["Location"] = _rqst->getLocation()->getRedirUrl();
 	}
-	if (checkMethod() == false)
+	else if (_client->hasTimeout())
+		_code = std::make_pair(408, "Request Timeout");
+	else if (checkMethod() == false)
 	{
 		setAllowHeader();
-		return ;
 	}
-	setTargetPath();
+	else
+		doMethod();
+}
+
+bool	Response::checkBodySize(void)
+{
+	return (StrToInt(_rqst->getContentLength()) > _rqst->getConfig()->getMaxBodySize());
+}
+
+/* "Launch" le process de la response. */
+void	Response::doMethod(void)
+{
 	if (_rqst->getMethod() == "GET")
 	{
 		doGET();
-		return ;
 	}
 	else if (_rqst->getMethod() == "DELETE")
 	{
-		if (doDELETE(_targetPath) == 404)
+		if (doDELETE(_rqst->getTargetPath()) == 404)
 			_code = std::make_pair(404, "Not Found");
 		else
 			_code = std::make_pair(204, "No Content");
 	}
 	else if (_rqst->getMethod() == "POST")
 	{
-		doPOST();
+		int32_t		length = StrToInt(_rqst->getContentLength());
+
+		if (length <= 0)
+			_code = std::make_pair(411, "Length Required");
+		else if (length > _rqst->getConfig()->getMaxBodySize())
+			_code = std::make_pair(413, "Request Entity Too Large");
+		else
+			doPOST();
 	}
 }
 
-
 void	Response::setAllowHeader(void)
 {
+	LocationConfig*	loc = _rqst->getLocation();
 	std::string		allowed;
-	if (_location->methodIsAllowed(LocationConfig::GET))
+	if (loc->methodIsAllowed(LocationConfig::GET))
 		allowed += "GET, ";
-	if (_location->methodIsAllowed(LocationConfig::POST))
+	if (loc->methodIsAllowed(LocationConfig::POST))
 		allowed += "POST, ";
-	if (_location->methodIsAllowed(LocationConfig::DELETE))
+	if (loc->methodIsAllowed(LocationConfig::DELETE))
 		allowed += "DELETE";
 	if (*(allowed.end() - 1) == ' ')
 		allowed.erase(allowed.end() - 2, allowed.end());
@@ -129,27 +139,30 @@ void	Response::generateBodyError()
 {
 	if (_code.first >= 400)
 	{
-		ServerConfig::errors_t::const_iterator	it = _config->getErrorPaths().find(_code.first);
+		ServerConfig::errors_t::const_iterator	it = _rqst->getConfig()->getErrorPaths().find(_code.first);
 
-		if (it == _config->getErrorPaths().end() || not openPageError(it->second))
+		if (it == _rqst->getConfig()->getErrorPaths().end() || not openPageError(it->second))
 		{
 			_body = generateErrorBody(_code);
 			_headers["Connection"] = "close";
 		}
-		_headers["Content-Length"] = IntToStr(_body.size());
 	}
 }
 
 void	Response::generateResponse(void)
 {
 	generateBodyError();
+	if (_headers.find("Content-Length") == _headers.end())
+		_headers["Content-Length"] = IntToStr(_body.size());
 	// if (_code.first == 200 && _body.empty() && _headers["Content-Length"][0] == '0' )
 		// _code = std::make_pair(204, "No Content");
 	_response = "HTTP/1.1 " + IntToStr(_code.first) + " " + _code.second + CLRF;
 
 	headers_t::const_iterator	it;
 	for (it = _headers.begin(); it != _headers.end(); it++)
+	{
 		_response += it->first + ": " + it->second + CLRF;
+	}
 
 	// if (_body.size() > 0)
 		// _response += "Content-Length: " + IntToStr(_body.size()) + CLRF;
@@ -159,20 +172,6 @@ void	Response::generateResponse(void)
 	_response += _body;
 }
 
-/* Set le private attribut _targetPath en fonction du path de l'URI de la request et en
-fonction du root de la config. */
-void	Response::setTargetPath(void)
-{
-	std::string		url(_rqst->getUri().path);
-	_targetPath =  url.replace(0, _location->getPath().size(), _location->getRootPath());
-	if (ends_with(url, '/') == true)
-	{
-		if (_location->isDirList() == true || _rqst->getMethod() == "DELETE")
-			return ;
-		_targetPath += _location->getIndexFile();
-	}
-}
-
 
 /* Delete a file, or if its a directy: delete all elements in it before rmdir. 
 Returns a status code wether access one file failed (breaks the whole operation, 
@@ -180,7 +179,7 @@ Returns a status code wether access one file failed (breaks the whole operation,
 int		Response::doDELETE(const std::string &path)
 {
 	typedef std::vector<std::string>	strVec;
-	if (path == "./" || path == "../")
+	if (path == "./" || path == "../" || path.find("../") != std::string::npos)
 		return 204;
 	if (ends_with(path, '/') == false) // si is file, remove it and stop.
 	{
@@ -210,34 +209,113 @@ int		Response::doDELETE(const std::string &path)
 	return 204;
 }
 
-void	Response::upload(void)
+
+void	Response::phpCgiPost(void)
 {
-	//TODO
-	_code = std::make_pair(200, "OK UPLOAD");
+	setCgiEnv();
+	_cgi.initFileIn(_rqst->getUploadFile());
+	_cgi.initFileOut();
+	if (_cgi.launch() == -1)
+	{
+		_code = std::make_pair(500, "Internal Server Error");
+		return ;
+	}
+	if (readFromCgi() == -1)
+		_code = std::make_pair(500, "Internal Server Error");
+	else
+		_code = std::make_pair(200, "OK");
+}
+
+void Response::UploadMultipart(void)
+{
+	Request::headers_t::const_iterator it = _rqst->getHeaders().find("Content-Type");
+	if (it == _rqst->getHeaders().end() || it->second.find("boundary=") == std::string::npos)
+	{
+		_code = std::make_pair(400, "Bad Request");
+		return ;
+	}
+	std::string boundary = it->second;
+	boundary.erase(0, boundary.find("boundary=") + 9);
+	boundary.insert(0, "--");
+
+	std::ifstream file(_rqst->getUploadFile().c_str());
+	if (not file.is_open())
+	{
+		_code = std::make_pair(500, "Internal Server Error");
+		return ;
+	}
+	std::string line;
+	std::string filename;
+	std::string content;
+
+	while (std::getline(file, line))
+	{
+		// NOTE: Cause error if file contains Content-Disposition ?
+		if (startsWith(line, "Content-Disposition"))
+		{
+			if (line.find("filename") != std::string::npos)
+			{
+				filename = line.substr(line.find("filename") + 10);
+				filename = filename.substr(0, filename.find("\""));
+			}
+		}
+		else if (startsWith(line, "Content-Type"))
+			continue;
+		else if (line == boundary + "\r" || line == boundary + "--\r")
+		{
+			if (!content.empty())
+			{
+				if (!filename.empty())
+				{
+					filename.insert(0, _rqst->getLocation()->getRootPath());
+					std::cout << "File: " << filename << '\n';
+					std::ofstream ofs(filename.c_str());
+					if (not ofs.is_open())
+					{
+						Logger::Error("Response::UploadMultipart(): failed to open file '%s'", filename.c_str());
+						_code = std::make_pair(500, "Internal Server Error");
+						return ;
+					}
+					else
+						Logger::Info("Response::UploadMultipart(): file '%s' created", filename.c_str());
+					content.erase(0, 2);
+					content.erase(content.size() - 2, 2);
+					ofs << content;
+					ofs.close();
+				}
+				filename.clear();
+				content.clear();
+			}
+			std::cout << line << std::endl;
+		}
+		else
+			content += line + '\n';
+	}
+	_code = std::make_pair(201, "OK");
+	_body = generateErrorBody(_code);
 }
 
 void	Response::doPOST(void)
 {
-	std::string		multi = "multipart/form-data";
 	Logger::Info("doPOST() entered");
 	Request::headers_t	headers = _rqst->getHeaders();
 	Request::headers_t::const_iterator	type = headers.find("Content-Type");
+	
 	if (type == headers.end())
 	{
-		_code = std::make_pair(501, "Not Implemented");
+		_code = std::make_pair(501, "Not Implemented Content-Type");
 		return ;
 	}
-	std::cout << "{"<< type->second << "}\n";
-	if (startsWith(type->second, multi))
+	else if (startsWith(type->second, "multipart/form-data"))
 	{
 		Logger::Info("is multiform()");
-		upload();
+		UploadMultipart();
 		return ;
 	}
-	if (type->second == "application/x-www-form-urlencoded")
+	else if (_rqst->getLocation()->isCGIActive() && type->second == "application/x-www-form-urlencoded")
 	{
 		Logger::Info("is URL encoded");
-//		cgiPost();
+		phpCgiPost();
 		return ;
 	}
 	_code = std::make_pair(400, "Bad Request");
@@ -259,6 +337,12 @@ std::ostream&	operator<<(std::ostream& o, const Response& me)
 	return o;
 }
 
+const std::string &		Response::getBody(void) const
+{
+	return _body;
+}
+
+#define BUFFSIZE_RES 8192
 /*
 	1) Essai d'ouvrir le fichier : return false si fail (file not found)
 	2) Remplit le _response body avec le contenu du fichier, et set le bon Content-Lenght
@@ -267,7 +351,8 @@ bool	Response::tryFile(void)
 {
 	if (_readData.buffer == NULL)
 	{
-		_readData.file.open(_targetPath.c_str());
+		Logger::Info("GET - Opening %s", _rqst->getTargetPath().c_str());
+		_readData.file.open(_rqst->getTargetPath().c_str());
 		if (_readData.file.is_open() == false)
 			return false;
 
@@ -279,14 +364,13 @@ bool	Response::tryFile(void)
 		_headers["Content-Length"] = IntToStr(length);
 		_readData.file.seekg(0, _readData.file.beg);
 
-		_readData.buffer = new char [1024];
-		bzero(_readData.buffer, 1024);
+		_readData.buffer = new char [BUFFSIZE_RES];
+		bzero(_readData.buffer, BUFFSIZE_RES);
 
-		_readData.file.read(_readData.buffer, 1024);
+		_readData.file.read(_readData.buffer, BUFFSIZE_RES);
 		_readData.read_bytes = _readData.file.gcount();
 
 		_body.assign(_readData.buffer, _readData.read_bytes);
-		std::cout << std::bitset<4>(_readData.file.rdstate()) << std::endl;
 
 		if (_readData.file.eof())
 		{
@@ -300,9 +384,9 @@ bool	Response::tryFile(void)
 	else
 	{
 		// if (not _readData.file.is_open()) return true;
-		Logger::Info("Respond - Read Data");
-		bzero(_readData.buffer, 1024);
-		_readData.file.read(_readData.buffer, 1024);
+		// Logger::Info("Respond - Read Data");
+		bzero(_readData.buffer, BUFFSIZE_RES);
+		_readData.file.read(_readData.buffer, BUFFSIZE_RES);
 		_readData.read_bytes = _readData.file.gcount();
 		if (_readData.file.eof())
 		{
@@ -320,54 +404,52 @@ bool	Response::tryFile(void)
 	return true;
 }
 
+static int transformChar(int c)
+{
+	if (c == '-')
+		return '_';
+	return toupper(c);
+}
+
 /* Set le vector d'environnement variables (RFC 3875) */
 void		Response::setCgiEnv(void)
 {
-	Request::headers_t		headers = _rqst->getHeaders();
-	Request::headers_t::const_iterator	not_found = headers.end();
-
-	Request::headers_t::const_iterator	found = headers.find("Authorization");
-	if (found != not_found)
-	{
-		_cgi.addVarToEnv("AUTH_TYPE" + found->second);
-	}
-	found = headers.find("Content-Type");
-	if (found != not_found)
-	{
-		_cgi.addVarToEnv("CONTENT_TYPE" + found->second);
-	}
-	found = headers.find("Content-Length");
-	if (found != not_found)
-	{
-		_cgi.addVarToEnv("CONTENT_LENGTH" + found->second);
-	}
 	_cgi.addVarToEnv("REDIRECT_STATUS=true");
-	_cgi.addVarToEnv("GATEWAY_INTERFACE=CGI/0.1");
+	_cgi.addVarToEnv("GATEWAY_INTERFACE=CGI/1.1");
 	_cgi.addVarToEnv("PATH_INFO=/"); // ou si myscript.php/this/is/pathinfo?query
 	_cgi.addVarToEnv("QUERY_STRING=" + _rqst->getUri().query);
+	_cgi.addVarToEnv("CONTENT_LENGTH=" + _rqst->getContentLength());
+	_cgi.addVarToEnv("CONTENT_TYPE=" + _rqst->getValForHdr("Content-Type"));
 //	_cgi.addVarToEnv("REMOTE_ADDR=" + inet_ntoa(client->addr())); //IP
 	_cgi.addVarToEnv("REQUEST_METHOD=" + _rqst->getMethod());
-	_cgi.addVarToEnv("SCRIPT_FILENAME=cgi-bin/" + _rqst->getUri().path);
+	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _rqst->getLocation()->getRootPath() + _rqst->getUri().path);
 	_cgi.addVarToEnv("SCRIPT_NAME=" + _rqst->getUri().path);
-	_cgi.addVarToEnv("SERVER_NAME=" + _config->getServerNames()[0]);
-	_cgi.addVarToEnv("SERVER_PORT=" + IntToStr(_config->getPort()));
+	_cgi.addVarToEnv("SERVER_NAME=" + _rqst->getConfig()->getServerNames()[0]);
+	_cgi.addVarToEnv("SERVER_PORT=" + IntToStr(_rqst->getConfig()->getPort()));
 	_cgi.addVarToEnv("SERVER_PROTOCOL=HTTP/1.1");
 	_cgi.addVarToEnv("SERVER_SOFTWARE=WebServ");
-	//TODO: RFC 3875 parle meta-variables: export tous les headers de la request
+	for (Request::headers_t::const_iterator cit = _rqst->getHeaders().begin(); cit != _rqst->getHeaders().end(); ++cit)
+	{
+		if (cit->first == "Content-Type" || cit->first == "Content-Length" || cit->first == "Authorization")
+			continue;
+		std::string key = cit->first;
+		std::transform(key.begin(), key.end(), key.begin(), transformChar);
+		_cgi.addVarToEnv("HTTP_" + key + "=" + cit->second);
+	}
 }
 
 /* CGI GET quand par exemple html fomr pour submit une image qu'on veut afficher
 dans le navigateur */
 void		Response::phpCgiGet(void)
 {
+//	Logger::Error("Response GET here targetPath= %s", _rqst->getTargetPath().c_str());
 	setCgiEnv();
+	_cgi.initFileOut();
 	if (_cgi.launch() == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
 		return ;
 	}
-	//TODO: alors soit disant faut ajouter les "locaux" fds a epoll, genre
-	// meme pour lire le pipe bah faut passer par epoll... et pour les error files
 	if (readFromCgi() == -1)
 		_code = std::make_pair(500, "Internal Server Error");
 	else
@@ -377,16 +459,26 @@ void		Response::phpCgiGet(void)
 /* Remplit le _body depuis les datas read from le pipe du CGI. */
 int		Response::readFromCgi(void)
 {
-	int	fd = _cgi.getReadPipe();
-	char buf[BUFFSIZE];
-	ssize_t	nbread = read(fd, buf, BUFFSIZE - 1);
+	int	fd = _cgi.getOutputFile();
+	if (lseek(fd, 0, SEEK_SET) == -1)
+		Logger::Error("Response::readFromCgi() lseek() failed");
+	char buf[BUFFSIZE] = {};
+	ssize_t	nbread = 0;
+	nbread = read(fd, buf, BUFFSIZE - 1);
 	if (nbread == -1)
 	{
 		Logger::Error("Response::phpCgiGet() read() failed");
 		return -1;
 	}
 	buf[nbread] = 0;
-	_body += buf;
+//	_body += buf;
+	std::string		raw(buf, nbread);
+	std::string		content = "Content-type:";
+	if (raw.find(content) == 0)
+	{
+		_headers["Content-Type"] = raw.substr(content.size(), raw.find_first_of("\r\n\r\n") - content.size());
+	}
+	_body.assign(findCRLF(raw.begin(), raw.end()) + 4, raw.end());
 	while (nbread == BUFFSIZE - 1)
 	{
 		nbread = read(fd, buf, BUFFSIZE - 1);
@@ -398,23 +490,28 @@ int		Response::readFromCgi(void)
 		buf[nbread] = 0;
 		_body += buf;
 	}
-	close(fd);
+//	_cgi.CloseFiles();
 	return (nbread);
+}
+
+void		Response::doDirectoryListening(void)
+{
+	_body = GenerateHtmlDirectory(_rqst->getTargetPath());
+	_code = std::make_pair(200, "OK");
+	if (_body.empty())
+		_code = std::make_pair(404, "Not Found");
+	else
+		_headers["Content-Length"] = IntToStr(_body.size());
 }
 
 void		Response::doGET(void)
 {
-	
-	if (targetIsDir() && _location->isDirList() == true)
+	if (_rqst->targetIsDir() && _rqst->getLocation()->isDirList() == true)
 	{
-		_body = GenerateHtmlDirectory(_targetPath);
-		_code = std::make_pair(200, "OK");
-		if (_body.empty())
-			_code = std::make_pair(501, "Internal Server Error");
-		_headers["Content-Length"] = IntToStr(_body.size());
+		doDirectoryListening();
 		return ;
 	}
-	else if (targetIsFile())
+	else if (_rqst->targetIsFile())
 	{
 		if (tryFile())
 			_code = std::make_pair(200, "OK");
@@ -422,37 +519,17 @@ void		Response::doGET(void)
 			_code = std::make_pair(404, "Not Found");
 		return ;
 	}
-	else // targetIsCgi()
+	else if (_rqst->getLocation()->isCGIActive()) // targetIsCgi()
 	{
 		// NOTE: Add _code = std::make_pair(200, "OK");
 		phpCgiGet();
 	}
-}
-
-bool	Response::checkHost(void) const
-{
-	if (_rqst->getHost() == "UNDEFINED")
-		return false;
-	return true;
+	else
+		_code = std::make_pair(404, "Not Found");
 }
 
 bool	Response::checkMethod(void) const
 {
-	return _location->methodIsAllowed(_rqst->getMethod());
+	return _rqst->getLocation()->methodIsAllowed(_rqst->getMethod());
 }
 
-
-bool		Response::targetIsDir(void) const
-{
-	return (ends_with(_targetPath, '/'));
-}
-
-bool		Response::targetIsFile(void) const
-{
-	return !(targetIsDir() || targetIsCgi());
-}
-
-bool		Response::targetIsCgi(void) const
-{
-	return (ends_with(_targetPath, ".php"));
-}

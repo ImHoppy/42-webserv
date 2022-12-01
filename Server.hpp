@@ -32,7 +32,6 @@ class Server : public Base
 		std::vector<ServerConfig>	_configs;
 		std::set<Client*>			_clients;
 		int							_epollInstance;
-		ServerConfig*			getConfigForRequest(Request* rqst);
 	public:
 		/* Coplien */
 		Server(void);
@@ -43,6 +42,7 @@ class Server : public Base
 		std::string const &						getType(void) const;
 		socket_t								getSocket() const;
 		std::vector<ServerConfig> const &		getConf(void) const;
+		ServerConfig*			getConfigForRequest(Request* rqst);
 		/* Init fcts */
 		void	addConfig(ServerConfig const & config);
 		void	setEpollInstance(int inst);
@@ -53,6 +53,8 @@ class Server : public Base
 		socket_t	 AcceptNewClient(void);
 		/* Logs */
 		bool	isSameHostPort(int32_t host, int16_t port) const;
+		void	readyToRead(Client* client);
+		void	checkTimeout(void);
 };
 
 /* CGI:

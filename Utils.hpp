@@ -18,6 +18,9 @@
 
 #define SpaceChar " \t\n\r\f\v"
 
+char	generateChar(void);
+std::string	generateFileName(int seed);
+
 bool	ends_with(const std::string& str, const std::string& extension);
 bool	ends_with(const std::string& str, const char c);
 bool	startsWith(std::string const & str, std::string const & start);
@@ -25,15 +28,12 @@ std::string::iterator	findCRLF(std::string::iterator start, std::string::iterato
 std::vector<std::string>	listFiles(std::string const & path, bool withDot = true);
 std::string		getFileExtension(const std::string & filename);
 std::string	generateErrorBody(std::pair<int, std::string> code);
-std::string	generateErrorBody(std::string title, std::string body);
-std::string	generateErrorBody(std::string body);
-std::string generateResponse(std::string fileContent);
-std::string generateResponse(int code, std::string codeMsg, std::string fileContent);
 std::string	GenerateHtmlDirectory(std::string const & path);
 std::string	IntToStr(int nb);
 int32_t		StrToInt(std::string const & str);
 int32_t		StrToIp(std::string const & ip);
 bool		isIpv4(std::string const & s);
+bool		isDigit(std::string const & s);
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
 
 std::string &	trim_quote(std::string & s, int lineNumber = -1);

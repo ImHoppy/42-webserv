@@ -14,6 +14,10 @@
 #  define BUFFSIZE 3000
 # endif
 
+#define TIMEOUT 60000
+
+#include "Time.hpp"
+
 /*	
 	Le "createur" d'un Client est responsable de fermer ses socket, et de 
 	realease totue memoire allouee (entre autre si le ptr de Server est alloue)
@@ -25,10 +29,17 @@ class Response;
 
 class Client : public Base
 {
-	socket_t		_csock; // client socket, the one returned by accept() calls
-	Server*			_myServer;
-	Request*		_Rqst; // deque of requests from this clientwhich havn't been respond yet
-	Response*		_Resp;
+	private:
+		socket_t		_csock; // client socket, the one returned by accept() calls
+		Server*			_myServer;
+		Request*		_Rqst;
+		Response*		_Resp;
+		std::ofstream	_file;
+		bool			_error;
+		Timeout			_keepAlive;
+
+		void			createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes);
+
 	public:
 		Client(void);
 		~Client(void);
@@ -43,9 +54,13 @@ class Client : public Base
 		Request*	getRequest(void);
 		int			recvRequest(void);
 		Server*		getServer(void);
-
 		void		setResponse(Response* resp);
 		Response*	getResponse(void) const;
+		bool		hasError(void) const;
+
+		void		removeTmpFile(void);
+
+		bool		hasTimeout(void) const;
 
 		std::string const & getType() const;
 

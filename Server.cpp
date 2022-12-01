@@ -81,10 +81,11 @@ Return:
 */
 ServerConfig*	Server::getConfigForRequest(Request* rqst)
 {
-	std::string		host_header = rqst->getHost();
-	if (host_header == "UNDEFINED")
+	std::string		host_header = rqst->getValForHdr("Host");
+	if (host_header.empty())
 		return &_configs[0];
-	size_t		dotPort = host_header.find(':');
+	size_t			dotPort = host_header.find(':');
+
 	if (dotPort != std::string::npos)
 		host_header.erase(dotPort);
 	for (std::vector<ServerConfig>::iterator conf_it = _configs.begin(); conf_it != _configs.end(); ++conf_it)
@@ -140,6 +141,7 @@ int		Server::InitServer(void)
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(_configs[0].getHost());
 	servaddr.sin_port = htons(_configs[0].getPort());
+	// TODO: C'est normal de prendre congif[0] ???
 	if (bind(_socket, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0)
 	{
 		Logger::Error("Server: bind() failed: %s", strerror(errno));
@@ -163,7 +165,6 @@ socket_t	 Server::AcceptNewClient(void)
 	socket_t client_socket = accept(_socket, (struct sockaddr *)&client_addr, &client_addr_len);
 	if (client_socket < 0 && (errno != EAGAIN && errno != EWOULDBLOCK))
 	{
-		//TODO: pb quand HOST different de 0.0.0.0 AH mais en fait c'est la VM qui est sur 127.0.1.1 je crois à tester
 		throw std::runtime_error("accept() failed");
 	}
 	else if (client_socket < 0)
@@ -172,15 +173,45 @@ socket_t	 Server::AcceptNewClient(void)
 		return (-1);
 	}
 	Client * client = new Client(client_socket, this);
-	event.data.ptr = client; // addr de this Server
-	//TODO: enlever POLLOUT au debut pas de requete dc pas POLLOUT
-	event.events = EPOLLIN | EPOLLOUT;
+	event.data.ptr = client;
+	event.events = EPOLLIN;
 	if (epoll_ctl(_epollInstance, EPOLL_CTL_ADD, client_socket, &event) < 0) {
 		throw std::runtime_error("epoll_ctl failed");
 	}
 	_clients.insert(client);
 	Logger::Info("Server %d accepted new client on fd %d", _socket, client_socket);
 	return (client_socket);
+}
+
+void	Server::readyToRead(Client* client)
+{
+	struct epoll_event event;
+	event.data.ptr = client;
+	event.events = EPOLLOUT | EPOLLIN;
+	if (epoll_ctl(_epollInstance, EPOLL_CTL_MOD, client->getSocket(), &event) < 0) {
+		throw std::runtime_error("epoll_ctl OUT failed");
+	}
+}
+
+void	Server::checkTimeout(void)
+{
+	for (set_client::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		Client* client = *it;
+		if (client->hasTimeout())
+		{
+			try
+			{
+				this->respond(client);
+			}
+			catch(const std::exception& e)
+			{
+				Logger::Error("Problem client response: %s", e.what());
+			}
+			this->removeClient(client);
+			Logger::Info("Client %d timed out", client->getSocket());
+		}
+	}
 }
 
 /*	1) Find la bonne config grace au host header
@@ -200,28 +231,25 @@ void	Server::respond(Client* client)
 		Request*	rqst = client->getRequest();
 		if (rqst == NULL)
 			return ;
-		// std::cerr << " REQUEST IS:\n" << *rqst << "_____ END REQUEST" << std::endl;
-		// std::cerr << "Request body:\n" << rqst->getBody() << std::endl;
-		// std::cerr << "RAW RQST:\n" << rqst->getRawRequest() << std::endl;
-		ServerConfig*	chosen_conf = getConfigForRequest(rqst);
-		if (chosen_conf == NULL)
-		{
-			Logger::Error("Respond - CONFIG NULL");
-			return ;
-		}
-	//	std::cerr << "____ CHOSEN CONFIG:\n" << *chosen_conf << "______END CHOSEN CONFIG" << std::endl;
-		LocationConfig*	chosen_loc = chosen_conf->getLocationFromUrl(rqst->getUri().path);
-		if (chosen_loc == NULL)
-		{
-			Logger::Error("Respond - LOCATION NULL");
-			return ;
-		}
-		// std::cerr << "____ CHOSEN LOCATION:\n" << *chosen_loc << "______END CHOSEN LOC" << std::endl;
 		Logger::Info("Respond - Created");
-		rep = new Response(chosen_conf, chosen_loc, rqst, client);
-		rep->generateResponse();
-		std::cout << "res" << rep->getResponse() << std::endl; 
+		try {
+			rep = new Response(rqst, client);
+			rep->generateResponse();
+		}
+		catch (std::exception& ex)
+		{
+			Logger::Error("Response - %s", ex.what());
+
+		}
+		
+		// std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl;
+//		std::cout << "Raw Body rqst:{" << rqst->getBody() << "}" << std::endl;
+//		std::ofstream out("output.txt");
+//		out << rqst->getBody();
+//		out.close();
+		// std::cout << "res to send:\n" << rep->getResponse() << std::endl; 
 		client->setResponse(rep);
+
 		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
 		Logger::Info("Respond - Send Response");
 		if (rep->getReadData().status == Response::EOF_FILE || rep->getReadData().status == Response::NONE)
@@ -237,7 +265,7 @@ void	Server::respond(Client* client)
 
 		rep->tryFile();
 
-		Logger::Info("Respond - Send Buffer");
+		// Logger::Info("Respond - Send Buffer");
 		bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
 		if (data.status == Response::EOF_FILE)
 		{
@@ -250,7 +278,4 @@ void	Server::respond(Client* client)
 	{
 		throw std::runtime_error("send failed");
 	}
-//	Logger::Info("Request for '%s' respond by %s", rqst->getRequestLine().c_str(), chosen_conf->getServerNames()[0].c_str());
-	//TODO: if _pendingRqst du client is empty, epollCTL MODify events to POLLIN only,
-// et pas oublier de remettre POLLOUT a reception de la premiere request
 }

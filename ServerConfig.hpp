@@ -46,7 +46,7 @@ class ServerConfig {
 	int16_t									getPort() const;
 	int32_t									getMaxBodySize() const;
 	std::string	const &						getRootPath() const;
-	LocationConfig*							getLocation(const std::string &path) const;
+	const LocationConfig*							getLocation(const std::string &path) const;
 	map_locs	const &						getLocations() const;
 	std::map<int, std::string>	const &		getErrorPaths() const;
 	std::vector<std::string> const &		getServerNames() const;

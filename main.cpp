@@ -77,8 +77,15 @@ int main(int ac, char **av)
 			return (-1);
 	}
 	Logger::Info("Server started");
-	webserv.StartLoop();
+	try {
+		webserv.StartLoop();
+	}
+	catch (CGI::CGIError& ex)
+	{
+		Logger::Error("CGI execve failed");
+		return (-1);
+	}
 	Logger::Info("Server end");
-
+	return (0);
 }
 

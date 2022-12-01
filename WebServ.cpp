@@ -37,13 +37,18 @@ void	WebServ::StartLoop(void)
 	std::signal(SIGINT, sig_handler);
 	while (WebServ::_isRunning)
 	{
-		nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, -1);
+		nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, 5000);
 		if (nfds < 0)
 		{
 //			throw std::runtime_error("epoll_wait failed");
 			perror("WebServ: epoll_wait failed");
 			WebServ::_isRunning = false;
 			continue ;
+		}
+		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it)
+		{
+			Server*	server = *it;
+			server->checkTimeout();
 		}
 		for (int i = 0; i < nfds; ++i)
 		{
@@ -61,23 +66,41 @@ void	WebServ::StartLoop(void)
 			}
 			else if (base->getType() == "Client")
 			{
-				Client*	client= dynamic_cast<Client*>(base);
+				Client*	client = dynamic_cast<Client*>(base);
 				if (events[i].events & EPOLLERR)
 				{
-					std::cout << "ERROR on socket " << client->getSocket() <<std::endl;
+					std::cout << "ERROR on socket "  << client->getSocket() << strerror(errno) << std::endl;
 				}
 				if (events[i].events & EPOLLRDHUP)
 				{
 					std::cout << "POLLRDHUP on socket " << client->getSocket()  <<std::endl;
 				}
-				if (events[i].events & EPOLLIN)
+				if (client->hasTimeout() || client->hasError())
 				{
-					int readSize = client->recvRequest();
-					if (readSize == 0)
+					try
 					{
-						client->getServer()->removeClient(client);
-						events[i].events = 0; // pour pas passer ds le pollou suivant alors qu'on a delete le client
+						client->getServer()->respond(client);
 					}
+					catch(const std::exception& e)
+					{
+						Logger::Error("Problem client response: %s", e.what());
+					}
+					client->getServer()->removeClient(client);
+				}
+				else if (events[i].events & EPOLLIN)
+				{
+					int	readSize;
+					try {
+						readSize = client->recvRequest();
+						if (readSize == 0)
+							client->getServer()->removeClient(client);
+					}
+					catch (std::exception& exc)
+					{
+						Logger::Error("%s", exc.what());
+						client->getServer()->removeClient(client);
+					}
+
 				}
 				else if (events[i].events & EPOLLOUT)
 				{
@@ -102,19 +125,13 @@ void	WebServ::addServer(Server *serv)
 	_servers.push_back(serv);
 }
 
-
 /* Destructor */
 WebServ::~WebServ(void)
 {
-	for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it) {
+	for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it)
+	{
 		const socket_t socket = (*it)->getSocket();
 
-		if (_epollInstance > 0)
-		{ 
-			if (epoll_ctl(_epollInstance, EPOLL_CTL_DEL, socket, NULL) < 0) {
-				throw std::runtime_error("epoll_ctl del failed");
-			}
-		}
 		if (socket >= 0)
 			close(socket);
 		delete *it;
