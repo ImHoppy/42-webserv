@@ -45,12 +45,6 @@ void	WebServ::StartLoop(void)
 			WebServ::_isRunning = false;
 			continue ;
 		}
-		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it)
-		{
-			Server*	server = *it;
-			server->checkTimeout();
-		}
-		continue;
 		for (int i = 0; i < nfds; ++i)
 		{
 			Base *base = static_cast<Base*>(events[i].data.ptr);
@@ -117,6 +111,11 @@ void	WebServ::StartLoop(void)
 					
 				}
 			} 
+		}
+		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it)
+		{
+			Server*	server = *it;
+			server->checkTimeout();
 		}
 	}
 }
