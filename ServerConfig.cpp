@@ -89,12 +89,12 @@ std::string	const &	ServerConfig::getRootPath() const {
 	3) Si Rien ne match, return NULL.*/
 LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 {
-	if (ends_with(url, ".php") == true)
+	for (map_locs::iterator locs = _location.begin(); locs != _location.end(); ++locs)
 	{
-		for (map_locs::iterator locs = _location.begin(); locs != _location.end(); ++locs)
+		if (locs->first[0] == '.' && ends_with(url, locs->first))
 		{
-			if (locs->first == ".php")
-				return &(locs->second);
+			std::cout << "CGI" << std::endl;
+			return &(locs->second);
 		}
 	}
 	std::string::size_type start_search = url.size();

@@ -195,10 +195,12 @@ void	Server::readyToRead(Client* client)
 
 void	Server::checkTimeout(void)
 {
+	std::vector<Client *> timeoutClients;
+
 	for (set_client::iterator it = _clients.begin(); it != _clients.end(); ++it)
 	{
 		Client* client = *it;
-		if (client->hasTimeout())
+		if (client && client->hasTimeout())
 		{
 			try
 			{
@@ -208,9 +210,14 @@ void	Server::checkTimeout(void)
 			{
 				Logger::Error("Problem client response: %s", e.what());
 			}
-			this->removeClient(client);
-			Logger::Info("Client %d timed out", client->getSocket());
+			timeoutClients.push_back(client);
 		}
+	}
+	for (std::vector<Client *>::iterator itClient = timeoutClients.begin(); itClient != timeoutClients.end(); itClient++)
+	{
+		Client* client = *itClient;
+		Logger::Info("Client %d timed out", client->getSocket());
+		this->removeClient(client);
 	}
 }
 

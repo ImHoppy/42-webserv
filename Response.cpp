@@ -215,7 +215,7 @@ void	Response::phpCgiPost(void)
 	setCgiEnv();
 	_cgi.initFileIn(_rqst->getUploadFile());
 	_cgi.initFileOut();
-	if (_cgi.launch() == -1)
+	if (_cgi.launch(_rqst->getLocation()->getCGICmd()) == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
 		return ;
@@ -445,7 +445,7 @@ void		Response::phpCgiGet(void)
 //	Logger::Error("Response GET here targetPath= %s", _rqst->getTargetPath().c_str());
 	setCgiEnv();
 	_cgi.initFileOut();
-	if (_cgi.launch() == -1)
+	if (_cgi.launch(_rqst->getLocation()->getCGICmd()) == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
 		return ;

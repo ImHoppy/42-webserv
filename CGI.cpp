@@ -6,8 +6,7 @@
 #include <unistd.h> // pipe()
 #include <cstdlib> // malloc
 
-CGI::CGI(void) : _env(), _fileIn(-1), _fileOut(-1), _pid(-1),
-	_path("/usr/bin/php-cgi")
+CGI::CGI(void) : _env(), _fileIn(-1), _fileOut(-1), _pid(-1)
 {
 	initEnv();
 }
@@ -17,18 +16,19 @@ CGI::~CGI(void) {
 	CloseFiles();
 }
 
-CGI::CGI(const CGI & src) :
-	_env(src._env),
-	_fileIn(-1),
-	_fileOut(-1),
-	_pid(-1),
-	_path("/usr/bin/php-cgi")
+CGI::CGI(const CGI & src)
 {
+	*this = src;
 }
 
 CGI &	CGI::operator=(const CGI & src)
 {
+	if (&src == this)
+		return *this;
 	_env = src._env;
+	_fileIn = src._fileIn;	
+	_fileOut = src._fileOut;	
+	_pid = src._pid;	
 	return *this;
 }
 
@@ -76,7 +76,7 @@ void	CGI::CloseFiles(void)
 	2) Fork() et dup2 out dans _fileOut;
 	3) A la sortie du fork on oublis pas de wait (en non bloquant) pr zombie;
 */
-int		CGI::launch(void)
+int		CGI::launch(const std::string & cgi_cmd)
 {
 	_pid = fork();
 	if (_pid == -1)
@@ -105,7 +105,7 @@ int		CGI::launch(void)
 		}
 		env[j] = NULL;
 		char * const * nil = NULL;	
-		execve("/usr/bin/php-cgi", nil, env);
+		execve(cgi_cmd.c_str(), nil, env);
 		Logger::Error("Response::phpCgiGet() execve() failed");
 		for (size_t i = 0; env[i]; i++)
 			delete[] env[i];

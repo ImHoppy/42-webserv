@@ -50,6 +50,7 @@ void	WebServ::StartLoop(void)
 			Server*	server = *it;
 			server->checkTimeout();
 		}
+		continue;
 		for (int i = 0; i < nfds; ++i)
 		{
 			Base *base = static_cast<Base*>(events[i].data.ptr);

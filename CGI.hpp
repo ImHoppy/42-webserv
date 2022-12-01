@@ -23,7 +23,6 @@ class CGI {
 		int							_fileIn;
 		int							_fileOut;
 		pid_t						_pid;
-		std::string					_path;
 
 	public:
 		class CGIError
@@ -50,7 +49,7 @@ class CGI {
 		void		initFileIn(const std::string & inputFilename);
 		void	addVarToEnv(const std::string & varval);
 
-		int		launch(void);
+		int		launch(const std::string & gci_cmd);
 		void	CloseFiles(void);
 
 };
