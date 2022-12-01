@@ -120,6 +120,13 @@ void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
 		}
 		++it;
 	}
+	if (server.getLocation("/") == NULL)
+	{
+		LocationConfig dflt_loc;
+		dflt_loc.setRootPath(server.getRootPath());
+		dflt_loc.addMethod(LocationConfig::GET);
+		server.addLocation("/", dflt_loc);
+	}
 	if (server.getPort() == 0)
 		throw ParsingError("Server must have a port");
 	if (server.getRootPath().empty())

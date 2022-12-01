@@ -12,6 +12,15 @@ ServerConfig::ServerConfig() :
 ServerConfig::ServerConfig(const ServerConfig &other) {
 	*this = other;
 }
+
+const LocationConfig*		ServerConfig::getLocation(const std::string &path) const
+{
+	map_locs::const_iterator it = _location.find(path);
+	if (it != _location.end())
+		return &(it->second);
+	return NULL;
+}
+
 ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
 	if (this != &other) {
 		_host = other._host;
@@ -99,7 +108,6 @@ LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 		}
 		start_search = url.find_last_of('/', start_search - 1);
 	}
-	//TODO: FillConf check if is loc "/" (else error)
 	return &(_location["/"]);
 }
 ServerConfig::map_locs	const & ServerConfig::getLocations() const {
