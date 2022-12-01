@@ -416,7 +416,7 @@ void		Response::setCgiEnv(void)
 {
 	_cgi.addVarToEnv("REDIRECT_STATUS=true");
 	_cgi.addVarToEnv("GATEWAY_INTERFACE=CGI/1.1");
-	_cgi.addVarToEnv("PATH_INFO=/"); // ou si myscript.php/this/is/pathinfo?query
+	_cgi.addVarToEnv("PATH_INFO=" + _rqst->getUri().path); // ou si myscript.php/this/is/pathinfo?query
 	_cgi.addVarToEnv("QUERY_STRING=" + _rqst->getUri().query);
 	_cgi.addVarToEnv("CONTENT_LENGTH=" + _rqst->getContentLength());
 	_cgi.addVarToEnv("CONTENT_TYPE=" + _rqst->getValForHdr("Content-Type"));
