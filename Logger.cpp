@@ -1,12 +1,16 @@
 #include "Logger.hpp"
+#include <sstream>
+#include <iostream>
+#include <ctime>
+#include <stdio.h>
+#include <stdarg.h>
+#include <iomanip>
 
 #define LogFunc(stdout, fd, color, type) \
 { \
 	va_list args; \
 	va_start(args, message); \
-	displayTimestamp(stdout); \
-	stdout << color << "[" << type << "] "; \
-	std::cout.flush();\
+	dprintf(fd, "%s %s[%s] ", stringTimestamp().c_str(), color, type); \
 	vdprintf(fd, message.c_str(), args); \
 	stdout << "\033[39m" << std::endl; \
 	va_end(args); \
@@ -14,11 +18,13 @@
 
 namespace Logger
 {
-	static std::ostream & displayTimestamp(std::ostream &os = std::cout)
+	static std::string stringTimestamp()
 	{
 		std::time_t time = std::time(0);
 		std::tm *tm = std::localtime(&time);
-		os << std::setfill('0') << "\033[90m["
+		std::stringstream ss;
+
+		ss << std::setfill('0') << "\033[90m["
 
 		<< std::setw(2) << tm->tm_hour << ":"
 		<< std::setw(2) <<tm->tm_min << ":"
@@ -27,15 +33,15 @@ namespace Logger
 		<< std::setw(2) << tm->tm_mday << "/"
 		<< std::setw(2) << (tm->tm_mon + 1) << "/"
 		<< std::setw(4) << (tm->tm_year + 1900)
-		<< "]\033[39m ";
-		return os;
+		<< "]\033[39m";
+		return ss.str();
 	}
 	
 	void	Log(std::string const message, ...)
 	{
 		va_list args;
 		va_start(args, message);
-		displayTimestamp();
+		stringTimestamp();
 		vprintf(message.c_str(), args);
 		va_end(args);
 	}

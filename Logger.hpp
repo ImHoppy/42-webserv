@@ -1,11 +1,6 @@
 #pragma once
 
 #include <string>
-#include <iostream>
-#include <iomanip>
-#include <ctime>
-#include <stdio.h>
-#include <stdarg.h>
 
 namespace Logger
 {

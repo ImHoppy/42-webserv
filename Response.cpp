@@ -50,6 +50,9 @@ Response::Response(Request* rqst, Client *client) :
 {
 	_headers["Connection"] = "keep-alive";
 	_headers["Server"] = "WebServ/1.0";
+	if (_rqst->getHeaders().find("Cookie") != _rqst->getHeaders().end())
+		_headers["Set-Cookie"] = _rqst->getHeaders().find("Cookie")->second;
+
 	if (_rqst == NULL || _rqst->getValForHdr("Host").empty())
 	{
 		_code = std::make_pair(400, "Bad Request");
@@ -286,7 +289,6 @@ void Response::UploadMultipart(void)
 				filename.clear();
 				content.clear();
 			}
-			std::cout << line << std::endl;
 		}
 		else
 			content += line + '\n';
@@ -416,7 +418,7 @@ void		Response::setCgiEnv(void)
 {
 	_cgi.addVarToEnv("REDIRECT_STATUS=true");
 	_cgi.addVarToEnv("GATEWAY_INTERFACE=CGI/1.1");
-	_cgi.addVarToEnv("PATH_INFO=" + _rqst->getUri().path); // ou si myscript.php/this/is/pathinfo?query
+	_cgi.addVarToEnv("PATH_INFO=" + _rqst->getUri().path);
 	_cgi.addVarToEnv("QUERY_STRING=" + _rqst->getUri().query);
 	_cgi.addVarToEnv("CONTENT_LENGTH=" + _rqst->getContentLength());
 	_cgi.addVarToEnv("CONTENT_TYPE=" + _rqst->getValForHdr("Content-Type"));
@@ -478,7 +480,16 @@ int		Response::readFromCgi(void)
 	{
 		_headers["Content-Type"] = raw.substr(content.size(), raw.find_first_of("\r\n\r\n") - content.size());
 	}
+	// TODO: THIS CAUSE SEGFAULT !!!!!'
+	try
+	{
 	_body.assign(findCRLF(raw.begin(), raw.end()) + 4, raw.end());
+	}
+	catch(const std::exception& e)
+	{
+		_code = std::make_pair(500, "Internal Server Error");
+		std::cerr << "5 "<< e.what() << '\n';
+	}
 	while (nbread == BUFFSIZE - 1)
 	{
 		nbread = read(fd, buf, BUFFSIZE - 1);

@@ -5,6 +5,7 @@
 #include <sys/wait.h> // waitpid()
 #include <unistd.h> // pipe()
 #include <cstdlib> // malloc
+#include <stdexcept>
 
 CGI::CGI(void) : _env(), _fileIn(-1), _fileOut(-1), _pid(-1)
 {
