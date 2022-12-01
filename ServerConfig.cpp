@@ -88,29 +88,17 @@ LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 				return &(locs->second);
 		}
 	}
-//	std::cout << "URL to found = \'" << url << "\'" << std::endl;
-	std::string::size_type found;
 	std::string::size_type start_search = url.size();
-	std::string		url_trunc = url;
 	while (start_search != std::string::npos)
 	{
-		std::cout << "\tURL with start_search = \'" << url_trunc << "\'" << std::endl;
 		for (map_locs::iterator locs = _location.begin(); locs != _location.end(); ++locs)
 		{
-			std::string		loc;
-			if (ends_with(locs->first, '/') == true)
-				loc.assign
-			std::cout << "Compared with loc = \'" << loc << "\'" << std::endl;
-			if (url_trunc.compare(loc) == 0)
-			{
-				std::cout << "Selected loc = \'" << loc << "\'" << std::endl;
+			if (url.compare(0, start_search, locs->first) == 0
+			|| (ends_with(locs->first, '/') && locs->first.compare(0, locs->first.size() - 1, url, 0, start_search) == 0))
 				return &(locs->second);
-			}
 		}
-		start_search = url_trunc.find_last_of('/', start_search - 1);
-		url_trunc.assign(url, 0, start_search);
+		start_search = url.find_last_of('/', start_search - 1);
 	}
-	std::cout << "FOUND NONE" << std::endl;
 	//TODO: FillConf check if is loc "/" (else error)
 	return &(_location["/"]);
 }
