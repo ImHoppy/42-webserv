@@ -37,13 +37,18 @@ void	WebServ::StartLoop(void)
 	std::signal(SIGINT, sig_handler);
 	while (WebServ::_isRunning)
 	{
-		nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, -1);
+		nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, 5000);
 		if (nfds < 0)
 		{
 //			throw std::runtime_error("epoll_wait failed");
 			perror("WebServ: epoll_wait failed");
 			WebServ::_isRunning = false;
 			continue ;
+		}
+		for (vec_servers::iterator it = _servers.begin(); it != _servers.end(); ++it)
+		{
+			Server*	server = *it;
+			server->checkTimeout();
 		}
 		for (int i = 0; i < nfds; ++i)
 		{
@@ -70,8 +75,9 @@ void	WebServ::StartLoop(void)
 				{
 					std::cout << "POLLRDHUP on socket " << client->getSocket()  <<std::endl;
 				}
-				if (client->hasError())
+				if (client->hasTimeout() || client->hasError())
 				{
+					Logger::Error("crash");
 					try
 					{
 						client->getServer()->respond(client);

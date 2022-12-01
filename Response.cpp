@@ -38,8 +38,9 @@ Response &	Response::operator=(const Response& src)
 }
 
 /* Parametric constructor */
-Response::Response(Request* rqst) :
+Response::Response(Request* rqst, Client *client) :
 	_rqst(rqst),
+	_client(client),
 	_cgi(),
 	_code(std::make_pair(501, "Not Implemented")),
 	_headers(),
@@ -48,34 +49,29 @@ Response::Response(Request* rqst) :
 	_readData()
 {
 	_headers["Connection"] = "keep-alive";
-	if (_rqst == NULL)
+	_headers["Server"] = "WebServ/1.0";
+	if (_rqst == NULL || _rqst->getValForHdr("Host").empty())
 	{
 		_code = std::make_pair(400, "Bad Request");
-		return ;
 	}
-	if (_rqst->getUri().path.size() + _rqst->getUri().query.size() > 1024)
+	else if (_rqst->getUri().path.size() + _rqst->getUri().query.size() > 1024)
 	{
 		_code = std::make_pair(414, "Request-URI Too Long");
-		return ;
 	}
-	if (checkHost() == false)
-	{
-		_code = std::make_pair(400, "Bad Request");
-		return ;
-	}
-	if (not _rqst->getLocation()->getRedirUrl().empty())
+	else if (not _rqst->getLocation()->getRedirUrl().empty())
 	{
 		_code = std::make_pair(302, "Found");
 		Logger::Info("Redirection to " + _rqst->getLocation()->getRedirUrl());
 		_headers["Location"] = _rqst->getLocation()->getRedirUrl();
-		return ;
 	}
-	if (checkMethod() == false)
+	else if (_client->hasTimeout())
+		_code = std::make_pair(408, "Request Timeout");
+	else if (checkMethod() == false)
 	{
 		setAllowHeader();
-		return ;
 	}
-	doMethod();
+	else
+		doMethod();
 }
 
 bool	Response::checkBodySize(void)
@@ -99,14 +95,15 @@ void	Response::doMethod(void)
 	}
 	else if (_rqst->getMethod() == "POST")
 	{
-		if (checkBodySize() == false)
-		{
-			_code = std::make_pair(413, "Request Entity Too Large");
-			return ;
-		}
-		doPOST();
-	}
+		int32_t		length = StrToInt(_rqst->getContentLength());
 
+		if (length <= 0)
+			_code = std::make_pair(411, "Length Required");
+		else if (length > _rqst->getConfig()->getMaxBodySize())
+			_code = std::make_pair(413, "Request Entity Too Large");
+		else
+			doPOST();
+	}
 }
 
 void	Response::setAllowHeader(void)
@@ -294,8 +291,8 @@ void Response::UploadMultipart(void)
 		else
 			content += line + '\n';
 	}
-	_code = std::make_pair(200, "OK");
-	_body = "Upload succeeded";
+	_code = std::make_pair(201, "OK");
+	_body = generateErrorBody(_code);
 }
 
 void	Response::doPOST(void)
@@ -303,13 +300,13 @@ void	Response::doPOST(void)
 	Logger::Info("doPOST() entered");
 	Request::headers_t	headers = _rqst->getHeaders();
 	Request::headers_t::const_iterator	type = headers.find("Content-Type");
-
+	
 	if (type == headers.end())
 	{
 		_code = std::make_pair(501, "Not Implemented Content-Type");
 		return ;
 	}
-	if (startsWith(type->second, "multipart/form-data"))
+	else if (startsWith(type->second, "multipart/form-data"))
 	{
 		Logger::Info("is multiform()");
 		UploadMultipart();
@@ -411,7 +408,7 @@ static int transformChar(int c)
 {
 	if (c == '-')
 		return '_';
-	return tolower(c);
+	return toupper(c);
 }
 
 /* Set le vector d'environnement variables (RFC 3875) */
@@ -529,13 +526,6 @@ void		Response::doGET(void)
 	}
 	else
 		_code = std::make_pair(404, "Not Found");
-}
-
-bool	Response::checkHost(void) const
-{
-	if (_rqst->getHost() == "UNDEFINED")
-		return false;
-	return true;
 }
 
 bool	Response::checkMethod(void) const

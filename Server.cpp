@@ -81,10 +81,11 @@ Return:
 */
 ServerConfig*	Server::getConfigForRequest(Request* rqst)
 {
-	std::string		host_header = rqst->getHost();
-	if (host_header == "UNDEFINED")
+	std::string		host_header = rqst->getValForHdr("Host");
+	if (host_header.empty())
 		return &_configs[0];
-	size_t		dotPort = host_header.find(':');
+	size_t			dotPort = host_header.find(':');
+
 	if (dotPort != std::string::npos)
 		host_header.erase(dotPort);
 	for (std::vector<ServerConfig>::iterator conf_it = _configs.begin(); conf_it != _configs.end(); ++conf_it)
@@ -194,6 +195,26 @@ void	Server::readyToRead(Client* client)
 	}
 }
 
+void	Server::checkTimeout(void)
+{
+	for (set_client::iterator it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		Client* client = *it;
+		if (client->hasTimeout())
+		{
+			try
+			{
+				this->respond(client);
+			}
+			catch(const std::exception& e)
+			{
+				Logger::Error("Problem client response: %s", e.what());
+			}
+			this->removeClient(client);
+			Logger::Info("Client %d timed out", client->getSocket());
+		}
+	}
+}
 
 /*	1) Find la bonne config grace au host header
 	2) Find la bonne location grace a l'URL
@@ -214,12 +235,12 @@ void	Server::respond(Client* client)
 			return ;
 		Logger::Info("Respond - Created");
 		try {
-			rep = new Response(rqst);
+			rep = new Response(rqst, client);
 			rep->generateResponse();
 		}
 		catch (std::exception& ex)
 		{
-			Logger::Error("KASJASJA");
+			Logger::Error("Response - %s", ex.what());
 
 		}
 		

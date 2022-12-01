@@ -54,7 +54,7 @@ class Server : public Base
 		/* Logs */
 		bool	isSameHostPort(int32_t host, int16_t port) const;
 		void	readyToRead(Client* client);
-
+		void	checkTimeout(void);
 };
 
 /* CGI:
