@@ -18,6 +18,8 @@
 
 #define SpaceChar " \t\n\r\f\v"
 
+std::string		UpperKey(std::string::iterator start, std::string::iterator end);
+
 char	generateChar(void);
 std::string	generateFileName(int seed);
 

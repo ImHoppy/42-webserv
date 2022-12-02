@@ -151,3 +151,12 @@ std::string::iterator	findCRLF(std::string::iterator start, std::string::iterato
 	}
 	return end;
 }
+
+std::string		UpperKey(std::string::iterator start, std::string::iterator end)
+{
+	std::string str(start, end);
+	*(str.begin()) = toupper(*(str.begin()));
+	std::string::iterator prevMinus = str.begin() + str.find('-');
+	*prevMinus = toupper(*prevMinus);
+	return str;
+}

@@ -376,7 +376,6 @@ bool	Response::tryFile(void)
 
 		if (_readData.file.eof())
 		{
-			Logger::Error("EOF1");
 			_readData.file.close();
 			_readData.status = EOF_FILE;
 		}
@@ -476,12 +475,28 @@ int		Response::readFromCgi(void)
 		return 0;
 	buf[nbread] = 0;
 	std::string		raw(buf, nbread);
-	std::string		content = "Content-type:";
-	if (raw.find(content) == 0)
+	Logger::Warning("hadhshdh raw=%s", raw.c_str());
+	std::string::size_type pos = raw.find("\r\n\r\n");
+	if (pos != std::string::npos) // thee is \r\n\r\n so headers
 	{
-		_headers["Content-Type"] = raw.substr(content.size(), raw.find_first_of("\r\n\r\n") - content.size());
+		std::string::iterator	hdrs_end = raw.begin() + pos;
+		std::string::iterator	new_hdr = raw.begin();
+		std::string::iterator	end_new_hdr;
+		while (new_hdr < hdrs_end)
+		{
+			end_new_hdr = findCRLF(new_hdr, hdrs_end);
+			std::string::iterator		name_end = find(new_hdr, end_new_hdr, ':');
+			std::string::iterator		value_start = name_end + 1;
+			while (value_start != end_new_hdr && std::isspace(*value_start))
+				++value_start;
+			std::cout << "KEY=\'" << UpperKey(new_hdr, name_end) << "\' val=\'" << std::string(value_start, end_new_hdr) << "\'" << std::endl;
+			_headers[UpperKey(new_hdr, name_end)] = std::string(value_start, end_new_hdr);
+			new_hdr = end_new_hdr + 2;
+		}
+		_body.assign(hdrs_end + 4, raw.end());
 	}
-	_body.assign(findCRLF(raw.begin(), raw.end()) + 4, raw.end());
+	else
+		_body = raw;
 	while (nbread == BUFFSIZE - 1)
 	{
 		nbread = read(fd, buf, BUFFSIZE - 1);
