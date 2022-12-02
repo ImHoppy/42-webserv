@@ -472,24 +472,16 @@ int		Response::readFromCgi(void)
 		Logger::Error("Response::phpCgiGet() read() failed");
 		return -1;
 	}
+	if (nbread == 0)
+		return 0;
 	buf[nbread] = 0;
-//	_body += buf;
 	std::string		raw(buf, nbread);
 	std::string		content = "Content-type:";
 	if (raw.find(content) == 0)
 	{
 		_headers["Content-Type"] = raw.substr(content.size(), raw.find_first_of("\r\n\r\n") - content.size());
 	}
-	// TODO: THIS CAUSE SEGFAULT !!!!!'
-	try
-	{
 	_body.assign(findCRLF(raw.begin(), raw.end()) + 4, raw.end());
-	}
-	catch(const std::exception& e)
-	{
-		_code = std::make_pair(500, "Internal Server Error");
-		std::cerr << "5 "<< e.what() << '\n';
-	}
 	while (nbread == BUFFSIZE - 1)
 	{
 		nbread = read(fd, buf, BUFFSIZE - 1);

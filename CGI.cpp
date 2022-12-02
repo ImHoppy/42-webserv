@@ -6,6 +6,7 @@
 #include <unistd.h> // pipe()
 #include <cstdlib> // malloc
 #include <stdexcept>
+#include <signal.h>
 
 CGI::CGI(void) : _env(), _fileIn(-1), _fileOut(-1), _pid(-1)
 {
@@ -122,6 +123,10 @@ int		CGI::launch(const std::string & cgi_cmd)
 		{
 			Logger::Error("Response::phpCgiGet() waitpid() failed");
 			return -1;
+		}
+		if (status != 0 && (WIFEXITED(status) || WIFSIGNALED(status)))
+		{
+			return (-1);
 		}
 	}
 	return _pid;
