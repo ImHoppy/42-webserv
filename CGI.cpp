@@ -78,7 +78,7 @@ void	CGI::CloseFiles(void)
 	2) Fork() et dup2 out dans _fileOut;
 	3) A la sortie du fork on oublis pas de wait (en non bloquant) pr zombie;
 */
-int		CGI::launch(const std::string & cgi_cmd)
+int		CGI::launch(const std::string & cgi_cmd, const std::string & script)
 {
 	_pid = fork();
 	if (_pid == -1)
@@ -106,30 +106,44 @@ int		CGI::launch(const std::string & cgi_cmd)
 			j++;
 		}
 		env[j] = NULL;
-		char * const * nil = NULL;	
-		execve(cgi_cmd.c_str(), nil, env);
+		//char * const * nil = NULL;	
+		char **argv = new char*[3];
+		argv[0] = const_cast<char*>(cgi_cmd.c_str());
+		argv[1] = const_cast<char*>(script.c_str());
+		argv[2] = NULL;
+
+		execve(cgi_cmd.c_str(), argv, env);
 		Logger::Error("Response::phpCgiGet() execve() failed");
 		for (size_t i = 0; env[i]; i++)
-			delete[] env[i];
-		delete[] env;
+			delete [] env[i];
+		delete [] argv;
+		delete [] env;
 		CloseFiles();
 		throw CGI::CGIError();
 	}
 	else
 	{
 		int		status = 0;
+		Logger::Info("Waiting CGI");
 		int w = waitpid(_pid, &status, 0);
+		Logger::Info("After wait CGI");
 		if (w == -1)
 		{
-			Logger::Error("Response::phpCgiGet() waitpid() failed");
+			Logger::Error("CGI: waitpid() failed");
 			return -1;
 		}
-		if (status != 0 && (WIFEXITED(status) || WIFSIGNALED(status)))
+		if (status != 0 && WIFEXITED(status))
 		{
-			return (-1);
+			Logger::Error("CGI: execve exited %d", WEXITSTATUS(status));
+			return WEXITSTATUS(status);
+		}
+		if (status != 0 && WIFSIGNALED(status))
+		{
+			Logger::Error("CGI: execve signaled %d", WTERMSIG(status));
+			return WTERMSIG(status);
 		}
 	}
-	return _pid;
+	return 1;
 }
 
 void	CGI::initEnv(void)

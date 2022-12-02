@@ -218,7 +218,7 @@ void	Response::phpCgiPost(void)
 	setCgiEnv();
 	_cgi.initFileIn(_rqst->getUploadFile());
 	_cgi.initFileOut();
-	if (_cgi.launch(_rqst->getLocation()->getCGICmd()) == -1)
+	if (_cgi.launch(_rqst->getLocation()->getCGICmd(), _rqst->getTargetPath()) != 1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
 		return ;
@@ -271,7 +271,6 @@ void Response::UploadMultipart(void)
 				if (!filename.empty())
 				{
 					filename.insert(0, _rqst->getLocation()->getRootPath());
-					std::cout << "File: " << filename << '\n';
 					std::ofstream ofs(filename.c_str());
 					if (not ofs.is_open())
 					{
@@ -446,7 +445,8 @@ void		Response::phpCgiGet(void)
 //	Logger::Error("Response GET here targetPath= %s", _rqst->getTargetPath().c_str());
 	setCgiEnv();
 	_cgi.initFileOut();
-	if (_cgi.launch(_rqst->getLocation()->getCGICmd()) == -1)
+
+	if (_cgi.launch(_rqst->getLocation()->getCGICmd(), _rqst->getTargetPath()) != 1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
 		return ;
@@ -489,7 +489,6 @@ int		Response::readFromCgi(void)
 			std::string::iterator		value_start = name_end + 1;
 			while (value_start != end_new_hdr && std::isspace(*value_start))
 				++value_start;
-			std::cout << "KEY=\'" << UpperKey(new_hdr, name_end) << "\' val=\'" << std::string(value_start, end_new_hdr) << "\'" << std::endl;
 			_headers[UpperKey(new_hdr, name_end)] = std::string(value_start, end_new_hdr);
 			new_hdr = end_new_hdr + 2;
 		}
@@ -497,6 +496,8 @@ int		Response::readFromCgi(void)
 	}
 	else
 		_body = raw;
+	if (_headers.find("Content-Type") == _headers.end())
+		_headers["Content-Type"] = "text/html; charset=UTF-8";
 	while (nbread == BUFFSIZE - 1)
 	{
 		nbread = read(fd, buf, BUFFSIZE - 1);

@@ -49,7 +49,7 @@ class CGI {
 		void		initFileIn(const std::string & inputFilename);
 		void	addVarToEnv(const std::string & varval);
 
-		int		launch(const std::string & gci_cmd);
+		int		launch(const std::string & gci_cmd, const std::string & script);
 		void	CloseFiles(void);
 
 };

@@ -118,8 +118,10 @@ void	Request::setTargetPath(void)
 	std::string		root = _loc->getRootPath();
 	if (ends_with(root, '/') == false)
 		root += '/';
-	_targetPath =  url.replace(0, _loc->getPath().size(), root);
-	// TODO: Only use url or _targetPath but not both
+	if (_loc->getPath()[0] == '.' && _uri.path.find_last_of('/') != std::string::npos)
+		_targetPath =  url.replace(0, _uri.path.find_last_of('/') + 1, root);
+	else
+		_targetPath =  url.replace(0, _loc->getPath().size(), root);
 	if (ends_with(url, '.'))
 		_targetPath += '/';
 	if (ends_with(_targetPath, '/'))
