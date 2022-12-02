@@ -92,10 +92,7 @@ LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 	for (map_locs::iterator locs = _location.begin(); locs != _location.end(); ++locs)
 	{
 		if (locs->first[0] == '.' && ends_with(url, locs->first))
-		{
-			std::cout << "CGI" << std::endl;
 			return &(locs->second);
-		}
 	}
 	std::string::size_type start_search = url.size();
 	while (start_search != std::string::npos)
