@@ -94,7 +94,7 @@ void	Response::doMethod(void)
 		if (doDELETE(_rqst->getTargetPath()) == 404)
 			_code = std::make_pair(404, "Not Found");
 		else
-			_code = std::make_pair(204, "No Content");
+			_code = std::make_pair(202, "Accepted");
 	}
 	else if (_rqst->getMethod() == "POST")
 	{
@@ -226,7 +226,16 @@ void	Response::phpCgiPost(void)
 	if (readFromCgi() == -1)
 		_code = std::make_pair(500, "Internal Server Error");
 	else
-		_code = std::make_pair(200, "OK");
+	{
+		if (_headers.find("Status") != _headers.end())
+		{
+			std::string::size_type pos = _headers["Status"].find(' ');
+			if (pos != std::string::npos)
+				_code = std::make_pair(StrToInt(_headers["Status"].substr(0, pos)), _headers["Status"].substr(pos + 1));
+		}
+		else
+			_code = std::make_pair(200, "OK");
+	}
 }
 
 void Response::UploadMultipart(void)
@@ -454,7 +463,16 @@ void		Response::phpCgiGet(void)
 	if (readFromCgi() == -1)
 		_code = std::make_pair(500, "Internal Server Error");
 	else
-		_code = std::make_pair(200, "OK");
+	{
+		if (_headers.find("Status") != _headers.end())
+		{
+			std::string::size_type pos = _headers["Status"].find(' ');
+			if (pos != std::string::npos)
+				_code = std::make_pair(StrToInt(_headers["Status"].substr(0, pos)), _headers["Status"].substr(pos + 1));
+		}
+		else
+			_code = std::make_pair(200, "OK");
+	}
 }
 
 /* Remplit le _body depuis les datas read from le pipe du CGI. */

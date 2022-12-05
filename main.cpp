@@ -7,28 +7,6 @@
 #define CONSTRUC
 
 
-//int main()
-//{
-//	std::cout << GenerateHtmlDirectory(".") << std::endl;
-//	return 0;
-//}
-
-#define hw "hi"
-void parseConf(GeneralConfig &, std::string const & path );
-/*class A {
-	public:
-	A(){std::cout << "A\n";};
-	~A(){std::cout << "~A\n";};
-};
-
-class B : public std::string {
-	public:
-	using std::string::basic_string;
-	void test() {
-		*this = ("new");
-	};
-};
- */
 int main(int ac, char **av)
 {
 	std::string		confFile;
