@@ -67,7 +67,7 @@ std::string	GenerateHtmlDirectory(std::string const & path)
 	htmlPage += "<style type=\"text/css\"> a {display: block; padding: .5em .75em; text-decoration: none; color: #363636; border-bottom: 1px solid #ededed;} a:hover { color: black; background-color: #a6a6a6;}</style>";
 	htmlPage += "</head><body bgcolor=\"white\">";
 	htmlPage += "<h1>Index of " + path + "</h1>";
-	htmlPage += "<a href=\"../\">Parent Directory</a>\n";
+	htmlPage += "<a id=\"parent\" href=\"../\">Parent Directory</a>\n";
 
 	for (it = vec_files.begin(); it != vec_files.end(); it++)
 	{

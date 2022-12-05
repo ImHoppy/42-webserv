@@ -30,6 +30,7 @@ class ParsingError : public std::exception
 };
 
 void	fillConfig(std::vector<std::pair<std::string, std::string> > key_value, GeneralConfig &);
+void	parseConf(GeneralConfig &, std::string const & path );
 
 #endif
 
