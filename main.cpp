@@ -21,13 +21,18 @@ int main(int ac, char **av)
 		
 		parseConf(generalConfig, "template.conf");
 	}
+	catch (std::bad_alloc &e)
+	{
+		Logger::Error("Memory allocation error");
+		return (1);
+	}
 	catch(ParsingError& e)
 	{
 		std::cerr << e.what() << '\n';
 		int line = e.whatLine();
 		if (line != -1)
-			std::cerr << "At line: " << line << '\n';
-		exit(1);
+			Logger::Error("%s. At line: %d", e.what(), line);
+		return (1);
 	}
 	WebServ webserv;
 	//TODO:: generalConf rename Servers en configs
