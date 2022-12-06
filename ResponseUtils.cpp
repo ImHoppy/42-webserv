@@ -19,7 +19,7 @@ std::string	generateErrorBody(std::pair<int, std::string> code)
 		"	background-color: #1c1b22;"
 		"}"
 		"</style>"
-		"<title>Error</title>"
+		"<title>Miaou</title>"
 		"</head>"
 		"<body>"
 		"<image src=\"https://http.cat/" + IntToStr(code.first) + "\">"
