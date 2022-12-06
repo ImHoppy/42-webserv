@@ -86,7 +86,6 @@ class Request
 		std::string					getValForHdr(const std::string & hdrToFind) const;
 
 		void			appendToBody(const std::string & more);
-		bool			targetIsCgi(void) const;
 		bool		targetIsFile(void) const;
 		bool		targetIsDir(void) const;
 		void			setTargetPath(void);

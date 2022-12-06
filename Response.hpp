@@ -53,7 +53,6 @@ class Response
 		void		setAllowHeader(void);
 		bool		targetIsDir(void) const;
 		bool		targetIsFile(void) const;
-		bool		targetIsCgi(void) const;
 		void		upload(void);
 		
 		bool	openPageError(std::string path);
@@ -61,8 +60,7 @@ class Response
 
 		/* CGI */
 		void		setCgiEnv(void);
-		void		phpCgiGet(void);
-		void		phpCgiPost(void);
+		void		doCGI(void);
 	public:
 
 		/* Coplien */

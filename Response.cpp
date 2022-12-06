@@ -213,17 +213,16 @@ int		Response::doDELETE(const std::string &path)
 }
 
 
-void	Response::phpCgiPost(void)
+void	Response::doCGI(void)
 {
 	setCgiEnv();
-	_cgi.initFileIn(_rqst->getUploadFile());
+	if (_rqst->getMethod() == "POST")
+		_cgi.initFileIn(_rqst->getUploadFile());
 	_cgi.initFileOut();
-	if (_cgi.launch(_rqst->getLocation()->getCGICmd(), _rqst->getTargetPath()) != 1)
-	{
-		_code = std::make_pair(500, "Internal Server Error");
-		return ;
-	}
-	if (readFromCgi() == -1)
+	int statusLaunch = _cgi.launch(_rqst->getLocation()->getCGICmd(), _rqst->getTargetPath());
+	if (statusLaunch == 2 || statusLaunch == 255)
+		_code = std::make_pair(404, "Not Found");
+	else if (statusLaunch != 0 || readFromCgi() == -1)
 		_code = std::make_pair(500, "Internal Server Error");
 	else
 	{
@@ -256,23 +255,27 @@ void Response::UploadMultipart(void)
 		_code = std::make_pair(500, "Internal Server Error");
 		return ;
 	}
-	std::string line;
-	std::string filename;
-	std::string content;
+	std::string		line;
+	std::string		filename;
+	std::string		content;
+	std::bitset<2>	headers;
 
 	while (std::getline(file, line))
 	{
-		// NOTE: Cause error if file contains Content-Disposition ?
-		if (startsWith(line, "Content-Disposition"))
+		if (not headers.test(1) && startsWith(line, "Content-Disposition"))
 		{
 			if (line.find("filename") != std::string::npos)
 			{
 				filename = line.substr(line.find("filename") + 10);
 				filename = filename.substr(0, filename.find("\""));
 			}
+			headers.set(1);
 		}
-		else if (startsWith(line, "Content-Type"))
+		else if (not headers.test(0) && startsWith(line, "Content-Type"))
+		{
+			headers.set(0);
 			continue;
+		}
 		else if (line == boundary + "\r" || line == boundary + "--\r")
 		{
 			if (!content.empty())
@@ -296,6 +299,7 @@ void Response::UploadMultipart(void)
 				}
 				filename.clear();
 				content.clear();
+				headers.reset();
 			}
 		}
 		else
@@ -325,7 +329,7 @@ void	Response::doPOST(void)
 	else if (_rqst->getLocation()->isCGIActive() && type->second == "application/x-www-form-urlencoded")
 	{
 		Logger::Info("is URL encoded");
-		phpCgiPost();
+		doCGI();
 		return ;
 	}
 	_code = std::make_pair(400, "Bad Request");
@@ -447,34 +451,6 @@ void		Response::setCgiEnv(void)
 	}
 }
 
-/* CGI GET quand par exemple html fomr pour submit une image qu'on veut afficher
-dans le navigateur */
-void		Response::phpCgiGet(void)
-{
-//	Logger::Error("Response GET here targetPath= %s", _rqst->getTargetPath().c_str());
-	setCgiEnv();
-	_cgi.initFileOut();
-
-	if (_cgi.launch(_rqst->getLocation()->getCGICmd(), _rqst->getTargetPath()) != 1)
-	{
-		_code = std::make_pair(500, "Internal Server Error");
-		return ;
-	}
-	if (readFromCgi() == -1)
-		_code = std::make_pair(500, "Internal Server Error");
-	else
-	{
-		if (_headers.find("Status") != _headers.end())
-		{
-			std::string::size_type pos = _headers["Status"].find(' ');
-			if (pos != std::string::npos)
-				_code = std::make_pair(StrToInt(_headers["Status"].substr(0, pos)), _headers["Status"].substr(pos + 1));
-		}
-		else
-			_code = std::make_pair(200, "OK");
-	}
-}
-
 /* Remplit le _body depuis les datas read from le pipe du CGI. */
 int		Response::readFromCgi(void)
 {
@@ -486,7 +462,7 @@ int		Response::readFromCgi(void)
 	nbread = read(fd, buf, BUFFSIZE - 1);
 	if (nbread == -1)
 	{
-		Logger::Error("Response::phpCgiGet() read() failed");
+		Logger::Error("Response::Cgi() read() failed");
 		return -1;
 	}
 	if (nbread == 0)
@@ -521,7 +497,7 @@ int		Response::readFromCgi(void)
 		nbread = read(fd, buf, BUFFSIZE - 1);
 		if (nbread == -1)
 		{
-			Logger::Error("Response::phpCgiGet() read() failed");
+			Logger::Error("Response::Cgi() read() failed");
 			return -1;
 		}
 		buf[nbread] = 0;
@@ -556,10 +532,9 @@ void		Response::doGET(void)
 			_code = std::make_pair(404, "Not Found");
 		return ;
 	}
-	else if (_rqst->getLocation()->isCGIActive()) // targetIsCgi()
+	else if (_rqst->getLocation()->isCGIActive())
 	{
-		// NOTE: Add _code = std::make_pair(200, "OK");
-		phpCgiGet();
+		doCGI();
 	}
 	else
 		_code = std::make_pair(404, "Not Found");

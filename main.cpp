@@ -18,16 +18,20 @@ int main(int ac, char **av)
 	GeneralConfig generalConfig; // NOTE: Maybe delete this class and put all vector<ServerConfig> in WebServ class or main
 	try
 	{
-		
 		parseConf(generalConfig, confFile);
+	}
+	catch (std::bad_alloc &e)
+	{
+		Logger::Error("%s", e.what());
+		return (1);
 	}
 	catch(ParsingError& e)
 	{
 		std::cerr << e.what() << '\n';
 		int line = e.whatLine();
 		if (line != -1)
-			std::cerr << "At line: " << line << '\n';
-		exit(1);
+			Logger::Error("%s. At line: %d", e.what(), line);
+		return (1);
 	}
 	WebServ webserv;
 	//TODO:: generalConf rename Servers en configs
@@ -61,7 +65,11 @@ int main(int ac, char **av)
 	catch (CGI::CGIError& ex)
 	{
 		Logger::Error("CGI execve failed");
-		return (-1);
+		return (-2);
+	}
+	catch (std::exception& ex)
+	{
+		Logger::Error("%s", ex.what());
 	}
 	Logger::Info("Server end");
 	return (0);

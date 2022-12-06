@@ -32,7 +32,7 @@ class CGI {
 			CGIError(const CGIError&){};
 			CGIError& operator=(const CGIError&){return *this;};
 			virtual ~CGIError(){};
-			virtual const char* what() const { return "CGI Error";} ;
+			virtual const char* what() const { return "CGI Error"; };
 		}; // end execveError
 		CGI(void);
 		~CGI(void);

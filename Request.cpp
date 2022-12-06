@@ -102,12 +102,7 @@ bool		Request::targetIsDir(void) const
 
 bool		Request::targetIsFile(void) const
 {
-	return !(targetIsDir() || targetIsCgi());
-}
-
-bool		Request::targetIsCgi(void) const
-{
-	return (ends_with(_targetPath, ".php"));
+	return !(targetIsDir() || _loc->isCGIActive());
 }
 
 /* Set le private attribut _targetPath en fonction du path de l'URI de la request et en

@@ -83,7 +83,7 @@ int		CGI::launch(const std::string & cgi_cmd, const std::string & script)
 	_pid = fork();
 	if (_pid == -1)
 	{
-		Logger::Error("Response::phpCgiGet() fork() failed");
+		Logger::Error("Response::CgiGet() fork() failed");
 		throw std::runtime_error("Fork() failed");
 		return -1;
 	}
@@ -106,14 +106,14 @@ int		CGI::launch(const std::string & cgi_cmd, const std::string & script)
 			j++;
 		}
 		env[j] = NULL;
-		//char * const * nil = NULL;	
+		//char * const * nil = NULL;
 		char **argv = new char*[3];
 		argv[0] = const_cast<char*>(cgi_cmd.c_str());
 		argv[1] = const_cast<char*>(script.c_str());
 		argv[2] = NULL;
 
 		execve(cgi_cmd.c_str(), argv, env);
-		Logger::Error("Response::phpCgiGet() execve() failed");
+		Logger::Error("Response::CgiGet() execve() failed");
 		for (size_t i = 0; env[i]; i++)
 			delete [] env[i];
 		delete [] argv;
@@ -143,7 +143,7 @@ int		CGI::launch(const std::string & cgi_cmd, const std::string & script)
 			return WTERMSIG(status);
 		}
 	}
-	return 1;
+	return 0;
 }
 
 void	CGI::initEnv(void)
