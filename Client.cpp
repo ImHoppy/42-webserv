@@ -1,7 +1,7 @@
 #include "Client.hpp"
 
 /* Default Constructor */
-Client::Client(void) : Base("Client"),
+Client::Client(void) : SocketHandler("Client"),
 	_csock(-1),
 	_myServer(),
 	_Rqst(),
@@ -34,14 +34,14 @@ Client::~Client(void)
 
 /* Copy Constructor */
 Client::Client(const Client& src) :
-	Base("Client")
+	SocketHandler("Client")
 {
 	*this = src;
 }
 
 /* Parametric Constructor (with empty pending requests) */
 Client::Client(socket_t csock, Server* serv) :
-	Base("Client"),
+	SocketHandler("Client"),
 	_csock(csock),
 	_myServer(serv),
 	_Rqst(),
@@ -126,7 +126,6 @@ void	Client::createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes)
 		if (content_length != _Rqst->getHeaders().end())
 		{
 			int32_t size = StrToInt(content_length->second);
-			std::cout << size << std::endl;
 			if (size < 0 || size > _Rqst->getConfig()->getMaxBodySize())
 			{
 				_error = true;

@@ -12,3 +12,6 @@ test.txt
 read_ifstream.cpp
 test_open.c
 upload_*
+lorem
+test_multipart.cpp
+bash-cgi

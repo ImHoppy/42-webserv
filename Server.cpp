@@ -12,7 +12,7 @@ bool	Server::isSameHostPort(int32_t host, int16_t port) const
 }
 
 /* Default Constructor */
-Server::Server(void) : Base("Server"), _socket(-1), _configs(),
+Server::Server(void) : SocketHandler("Server"), _socket(-1), _configs(),
 	_clients(), _epollInstance(-1)
 {
 	#ifdef CONSTRUC
@@ -21,7 +21,7 @@ Server::Server(void) : Base("Server"), _socket(-1), _configs(),
 }
 
 /* Copy Constructor */
-Server::Server(Server const & other) : Base("Server"), _socket(other._socket), 
+Server::Server(Server const & other) : SocketHandler("Server"), _socket(other._socket), 
 	_configs(other._configs), _clients(other._clients), 
 _epollInstance(other._epollInstance)
 {

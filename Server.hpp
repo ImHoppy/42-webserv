@@ -15,7 +15,7 @@
 # include <vector>
 # include <set>
 # include <errno.h>
-# include "Base.hpp"
+# include "SocketHandler.hpp"
 # include "Response.hpp"
 # include "Client.hpp"
 # include "Logger.hpp"
@@ -24,7 +24,9 @@
 
 typedef int socket_t;
 
-class Server : public Base
+class Client;
+
+class Server : public SocketHandler
 {
 	private:
 		typedef std::set<Client*>	set_client;

@@ -47,7 +47,7 @@ void	WebServ::StartLoop(void)
 		}
 		for (int i = 0; i < nfds; ++i)
 		{
-			Base *base = static_cast<Base*>(events[i].data.ptr);
+			SocketHandler *base = static_cast<SocketHandler*>(events[i].data.ptr);
 			if (base == NULL)
 			{
 				std::cout << "base is null" << std::endl;

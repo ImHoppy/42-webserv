@@ -4,7 +4,7 @@
 # include "Server.hpp"
 # include "Request.hpp"
 # include "Response.hpp"
-# include "Base.hpp"
+# include "SocketHandler.hpp"
 
 # include <iostream>
 # include <deque>
@@ -27,7 +27,7 @@ typedef int socket_t;
 class Server;
 class Response;
 
-class Client : public Base
+class Client : public SocketHandler
 {
 	private:
 		socket_t		_csock; // client socket, the one returned by accept() calls
