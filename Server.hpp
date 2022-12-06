@@ -47,6 +47,7 @@ class Server : public Base
 		void	addConfig(ServerConfig const & config);
 		void	setEpollInstance(int inst);
 		int		InitServer(void);
+		int		BindableHost();
 		/* HTTP fcts  */
 		void	removeClient(Client* client);
 		void	respond(Client* client);

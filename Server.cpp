@@ -5,12 +5,12 @@ bool	Server::isSameHostPort(int32_t host, int16_t port) const
 {
 	for (std::vector<ServerConfig>::const_iterator conf_it = _configs.begin(); conf_it != _configs.end(); ++conf_it)
 	{
-		if (conf_it->getPort() == port && conf_it->getHost() == host)
+		if (conf_it->getPort() == port && (conf_it->getHost() == host || host == 0 || conf_it->getHost() == 0))
 			return true;
 	}
 	return false;
 }
-	
+
 /* Default Constructor */
 Server::Server(void) : Base("Server"), _socket(-1), _configs(),
 	_clients(), _epollInstance(-1)
@@ -118,6 +118,16 @@ void	Server::removeClient(Client* client)
 	}
 }
 
+int	Server::BindableHost()
+{
+	for (std::vector<ServerConfig>::const_iterator conf_it = _configs.begin(); conf_it != _configs.end(); ++conf_it)
+	{
+		if (conf_it->getHost() == 0)
+			return 0;
+	}
+	return _configs[0].getHost();
+}
+
 /* Create, bind, and set in listen state its _socket. */
 int		Server::InitServer(void)
 {
@@ -139,7 +149,7 @@ int		Server::InitServer(void)
 	}
 	std::memset((char*)&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = htonl(_configs[0].getHost());
+	servaddr.sin_addr.s_addr = htonl(BindableHost());
 	servaddr.sin_port = htons(_configs[0].getPort());
 	// TODO: C'est normal de prendre congif[0] ???
 	if (bind(_socket, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0)

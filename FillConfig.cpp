@@ -164,8 +164,6 @@ void	CheckVirtualServer(GeneralConfig & config)
 					throw ParsingError("Duplicate virtual server");
 				if (it->getServerNames().empty() || it2->getServerNames().empty())
 					throw ParsingError("Duplicate port without server names");
-				if (it->getHost() != it2->getHost())
-					throw ParsingError("Host must be the same for virtual servers");
 			}
 			++it2;
 		}
