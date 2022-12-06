@@ -140,7 +140,7 @@ int		Server::InitServer(void)
 	}
 	//TODO: launch 2 webserv avec les meme host:port marche a cause de REUSE etc
 	int on = 1;
-	if (setsockopt(_socket, SOL_SOCKET,  SO_REUSEADDR | SO_REUSEPORT, &on, sizeof(int)) < 0)
+	if (setsockopt(_socket, SOL_SOCKET,  SO_REUSEADDR, &on, sizeof(int)) < 0)
 	{
 		Logger::Error("Server: setsockopt() failed: %s", strerror(errno));
 		close(_socket);
@@ -258,12 +258,6 @@ void	Server::respond(Client* client)
 
 		}
 		
-		// std::cout << "raw rqst:\n" << rqst->getRawRequest() << std::endl;
-//		std::cout << "Raw Body rqst:{" << rqst->getBody() << "}" << std::endl;
-//		std::ofstream out("output.txt");
-//		out << rqst->getBody();
-//		out.close();
-		// std::cout << "res to send:\n" << rep->getResponse() << std::endl; 
 		client->setResponse(rep);
 
 		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
