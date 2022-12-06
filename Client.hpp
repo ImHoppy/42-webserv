@@ -58,8 +58,6 @@ class Client : public Base
 		Response*	getResponse(void) const;
 		bool		hasError(void) const;
 
-		void		removeTmpFile(void);
-
 		bool		hasTimeout(void) const;
 
 		std::string const & getType() const;

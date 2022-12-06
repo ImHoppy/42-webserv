@@ -62,14 +62,6 @@ void	LocationConfig::setCGICmd(const std::string &CGICmd)
 {
 	_CGICmd = CGICmd;
 }
-void	LocationConfig::setMethods(const std::bitset<3> &methods)
-{
-	_methods = methods;
-}
-void	LocationConfig::setMethod(http_methods method, bool value)
-{
-	_methods.set(method, value);
-}
 void	LocationConfig::addMethod(http_methods method)
 {
 	_methods.set(method, true);

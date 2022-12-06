@@ -256,23 +256,27 @@ void Response::UploadMultipart(void)
 		_code = std::make_pair(500, "Internal Server Error");
 		return ;
 	}
-	std::string line;
-	std::string filename;
-	std::string content;
+	std::string		line;
+	std::string		filename;
+	std::string		content;
+	std::bitset<2>	headers;
 
 	while (std::getline(file, line))
 	{
-		// NOTE: Cause error if file contains Content-Disposition ?
-		if (startsWith(line, "Content-Disposition"))
+		if (not headers.test(1) && startsWith(line, "Content-Disposition"))
 		{
 			if (line.find("filename") != std::string::npos)
 			{
 				filename = line.substr(line.find("filename") + 10);
 				filename = filename.substr(0, filename.find("\""));
 			}
+			headers.set(1);
 		}
-		else if (startsWith(line, "Content-Type"))
+		else if (not headers.test(0) && startsWith(line, "Content-Type"))
+		{
+			headers.set(0);
 			continue;
+		}
 		else if (line == boundary + "\r" || line == boundary + "--\r")
 		{
 			if (!content.empty())
@@ -296,6 +300,7 @@ void Response::UploadMultipart(void)
 				}
 				filename.clear();
 				content.clear();
+				headers.reset();
 			}
 		}
 		else

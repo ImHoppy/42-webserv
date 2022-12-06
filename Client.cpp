@@ -194,13 +194,6 @@ int		Client::recvRequest(void)
 	}
 }
 
-// TODO: Unused
-void		Client::removeTmpFile(void)
-{
-	if (_file.is_open())
-		_file.close();
-}
-
 Server*		Client::getServer(void)
 {
 	return _myServer;
