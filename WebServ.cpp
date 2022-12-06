@@ -50,7 +50,7 @@ void	WebServ::StartLoop(void)
 			SocketHandler *base = static_cast<SocketHandler*>(events[i].data.ptr);
 			if (base == NULL)
 			{
-				std::cout << "base is null" << std::endl;
+				Logger::Error("Base is NULL");
 				continue ;
 			}
 			if (base->getType() == "Server")
@@ -63,22 +63,7 @@ void	WebServ::StartLoop(void)
 				Client*	client = dynamic_cast<Client*>(base);
 				if (events[i].events & EPOLLERR)
 				{
-					std::cout << "ERROR on socket "  << client->getSocket() << strerror(errno) << std::endl;
-				}
-				if (events[i].events & EPOLLRDHUP)
-				{
-					std::cout << "POLLRDHUP on socket " << client->getSocket()  <<std::endl;
-				}
-				if (client->hasTimeout() || client->hasError())
-				{
-					try
-					{
-						client->getServer()->respond(client);
-					}
-					catch(const std::exception& e)
-					{
-						Logger::Error("Problem client response: %s", e.what());
-					}
+					Logger::Error("ERROR on socket %d", client->getSocket());
 					client->getServer()->removeClient(client);
 				}
 				else if (events[i].events & EPOLLIN)
@@ -86,15 +71,14 @@ void	WebServ::StartLoop(void)
 					int	readSize;
 					try {
 						readSize = client->recvRequest();
-						if (readSize == 0)
-							client->getServer()->removeClient(client);
 					}
 					catch (std::exception& exc)
 					{
 						Logger::Error("%s", exc.what());
-						client->getServer()->removeClient(client);
+						readSize = 0;
 					}
-
+					if (readSize == 0)
+						client->getServer()->removeClient(client);
 				}
 				else if (events[i].events & EPOLLOUT)
 				{
@@ -106,8 +90,10 @@ void	WebServ::StartLoop(void)
 					{
 						Logger::Error("Problem client response: %s", e.what());
 						client->getServer()->removeClient(client);
+						client = NULL;
 					}
-					
+					if (client != NULL && (client->hasTimeout() || client->hasError()))
+						client->getServer()->removeClient(client);
 				}
 			} 
 		}

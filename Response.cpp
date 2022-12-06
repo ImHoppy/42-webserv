@@ -282,7 +282,10 @@ void Response::UploadMultipart(void)
 			{
 				if (!filename.empty())
 				{
+					if (not ends_with(_rqst->getLocation()->getRootPath(), '/'))
+						filename.insert(0, "/");
 					filename.insert(0, _rqst->getLocation()->getRootPath());
+
 					std::ofstream ofs(filename.c_str());
 					if (not ofs.is_open())
 					{
@@ -322,13 +325,11 @@ void	Response::doPOST(void)
 	}
 	else if (startsWith(type->second, "multipart/form-data"))
 	{
-		Logger::Info("is multiform()");
 		UploadMultipart();
 		return ;
 	}
 	else if (_rqst->getLocation()->isCGIActive() && type->second == "application/x-www-form-urlencoded")
 	{
-		Logger::Info("is URL encoded");
 		doCGI();
 		return ;
 	}
@@ -469,7 +470,7 @@ int		Response::readFromCgi(void)
 		return 0;
 	buf[nbread] = 0;
 	std::string		raw(buf, nbread);
-	Logger::Warning("hadhshdh raw=%s", raw.c_str());
+
 	std::string::size_type pos = raw.find("\r\n\r\n");
 	if (pos != std::string::npos) // thee is \r\n\r\n so headers
 	{
