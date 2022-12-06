@@ -13,13 +13,13 @@ int main(int ac, char **av)
 	if (ac == 1)
 		confFile = "template.conf";
 	else
-		confFile = av[0];
+		confFile = av[1];
 		
 	GeneralConfig generalConfig; // NOTE: Maybe delete this class and put all vector<ServerConfig> in WebServ class or main
 	try
 	{
 		
-		parseConf(generalConfig, "template.conf");
+		parseConf(generalConfig, confFile);
 	}
 	catch(ParsingError& e)
 	{
@@ -36,7 +36,7 @@ int main(int ac, char **av)
 	for (std::vector<ServerConfig>::const_iterator confs = configs.begin(); confs != configs.end(); ++confs)
 	{
 		std::vector<Server*>::iterator	checkForSamePort = webserv.checkIpPort(*confs);
-		if (webserv.getServers().empty() == true || checkForSamePort == webserv.getServers().end()) // pas trouve
+		if (webserv.getServers().empty() || checkForSamePort == webserv.getServers().end()) // pas trouve
 		{
 			Server* serv = new Server;
 			serv->addConfig(*confs);
