@@ -56,7 +56,6 @@ void	WebServ::StartLoop(void)
 			if (base->getType() == "Server")
 			{
 				Server*	server = dynamic_cast<Server*>(base);
-				//TODO: check is POLLIN ou POLLER
 				server->AcceptNewClient();
 			}
 			else if (base->getType() == "Client")

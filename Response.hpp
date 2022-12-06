@@ -41,7 +41,6 @@ class Response
 	private:
 		/* Attributs */
 		Request*					_rqst;
-		// TODO: Move cgi to client
 		Client						*_client;
 		CGI							_cgi;
 		std::pair<int, std::string>	_code;
@@ -52,7 +51,6 @@ class Response
 
 		/* Private member fcts */
 		void		setAllowHeader(void);
-		//TODO: ameliorer avec des private static bitset<3> file dit cgi ?
 		bool		targetIsDir(void) const;
 		bool		targetIsFile(void) const;
 		bool		targetIsCgi(void) const;

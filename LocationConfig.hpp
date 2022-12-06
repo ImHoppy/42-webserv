@@ -41,7 +41,6 @@ class LocationConfig {
 	void	setRedirUrl(const std::string &url);
 	void	setCGICmd(const std::string &CGICmd);
 	void	setMethods(const std::bitset<3> &methods);
-	// TODO(mbraets): Check if used
 	void	setMethod(http_methods method, bool value);
 	void	addMethod(http_methods method);
 	

@@ -151,7 +151,6 @@ int		Server::InitServer(void)
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(BindableHost());
 	servaddr.sin_port = htons(_configs[0].getPort());
-	// TODO: C'est normal de prendre congif[0] ???
 	if (bind(_socket, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0)
 	{
 		Logger::Error("Server: bind() failed: %s", strerror(errno));

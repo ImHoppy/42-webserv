@@ -15,7 +15,6 @@ class LocationConfig;
 
 class ServerConfig {
 	private:
-	//TODO: map inutile, puisque key = LocationConfig.getPath() (remplacer par vector)
 	typedef std::map<std::string, LocationConfig> map_locs;
 	
 	int32_t						_host;
