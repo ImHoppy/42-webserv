@@ -1,5 +1,8 @@
 #include "Server.hpp"
 
+#include <netdb.h> // getaddrinfo
+#include <list>
+
 /* Return true if one of the _configs has the same HOST::PORT pairs. */
 bool	Server::isSameHostPort(int32_t host, int16_t port) const
 {
@@ -75,29 +78,68 @@ lequel a le meme server_name que le Host header de la requete.
 Return:
 	1) Si aucun Host header n'est present, on return le VServer par default (en
 	gros le premier). Celui-ci se chargera de respond 400 bad request.
-	2) Return le bon VServer qui a un server_names == host header value.
-	3) Si la requete a bien un Host header, mais qu'aucun VServer name ne 
-	correpond a celui-ci, le default VServer se chargera de servir la rqst.
+	2) Fait la liste de tous les host:port qui matchent l'ip requested
+	3) Check les server_names pour chaque match, si un est ok return celui-ci.
+	Si aucun VServer name ne correpond, le default VServer (le premier match)
+	se chargera de servir la rqst.
 */
 ServerConfig*	Server::getConfigForRequest(Request* rqst)
 {
-	std::string		host_header = rqst->getValForHdr("Host");
-	if (host_header.empty())
+	//TODO: check if this constructor when ret getVal.. is empty doesnt crash
+	std::string		host_header(rqst->getValForHdr("Host"), 0, rqst->getValForHdr("Host").find(':'));
+	if (host_header.empty()) // Bad request
 		return &_configs[0];
-	size_t			dotPort = host_header.find(':');
+	std::string		authority = rqst->getUri().authority;
+	std::string		rqsted_ip(authority, 0, authority.find(':'));
+	//TODO: get port (int16_t) en string
+	std::string		port("8084");
+//	std::cout << "X=" << static_cast<char*>(8084) << std::endl;
+//	std::cout << "LQLQLQ" << rqst->getRawRequest() << std::endl;
 
-	if (dotPort != std::string::npos)
-		host_header.erase(dotPort);
-	for (std::vector<ServerConfig>::iterator conf_it = _configs.begin(); conf_it != _configs.end(); ++conf_it)
+	struct addrinfo	hints;
+	struct addrinfo	*res;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_CANONNAME;
+	hints.ai_protocol = 6; // tcp number protocol
+	hints.ai_canonname = NULL;
+	hints.ai_addr = NULL;
+	hints.ai_next = NULL;
+
+	if (getaddrinfo(rqsted_ip.c_str(), port.c_str(), &hints, &res) == -1
+	|| res == NULL)
 	{
-		std::vector<std::string>	names = conf_it->getServerNames();
+		Logger::Error("getaddrinfo failed %s", strerror(errno));
+		return &(_configs[0]);
+	}
+	sockaddr_in *x = reinterpret_cast<sockaddr_in*>(res->ai_addr);
+	int32_t	ip = ntohl(x->sin_addr.s_addr);
+
+	/* On fait une liste des tous les blocks qui matchent l'ip requested */
+	std::list<ServerConfig*>	matchs;
+	for (std::vector<ServerConfig>::iterator it = _configs.begin(); it != _configs.end(); ++it)
+	{
+		if (ip == it->getHost())
+			matchs.push_back(&(*it));
+	}
+	/* Dans la liste des match ip:port on check si l'un d'eux a un servername qui
+	correspond au Host header. Si aucun, on return le premier de la liste. */
+	for (std::list<ServerConfig*>::iterator it = matchs.begin(); it != matchs.end(); ++it)
+	{
+		std::vector<std::string>	names = (*it)->getServerNames();
 		for (std::vector<std::string>::iterator names_it = names.begin(); names_it != names.end(); ++names_it)
 		{
 			if (*names_it == host_header)
-				return &(*conf_it);
+			{
+				Logger::Error("Found name %s for ip %d", names_it->c_str(), (*it)->getHost());
+				return *it;
+			}
 		}
 	}
-	return &_configs[0];
+	Logger::Error("No name found, selected default which is %d", matchs.front()->getHost());
+	return matchs.front();
 }
 
 /* Terminates connection with the 'client': deletes it frome the epoll fds,
