@@ -85,16 +85,12 @@ Return:
 */
 ServerConfig*	Server::getConfigForRequest(Request* rqst)
 {
-	//TODO: check if this constructor when ret getVal.. is empty doesnt crash
 	std::string		host_header(rqst->getValForHdr("Host"), 0, rqst->getValForHdr("Host").find(':'));
 	if (host_header.empty()) // Bad request
 		return &_configs[0];
 	std::string		authority = rqst->getUri().authority;
 	std::string		rqsted_ip(authority, 0, authority.find(':'));
-	//TODO: get port (int16_t) en string
-	std::string		port("8084");
-//	std::cout << "X=" << static_cast<char*>(8084) << std::endl;
-//	std::cout << "LQLQLQ" << rqst->getRawRequest() << std::endl;
+	std::string		port = IntToStr(_configs[0].getPort());
 
 	struct addrinfo	hints;
 	struct addrinfo	*res;
