@@ -27,10 +27,11 @@ int main(int ac, char **av)
 	}
 	catch(ParsingError& e)
 	{
-		std::cerr << e.what() << '\n';
 		int line = e.whatLine();
 		if (line != -1)
 			Logger::Error("%s. At line: %d", e.what(), line);
+		else
+			Logger::Error("%s.", e.what());
 		return (1);
 	}
 	WebServ webserv;
