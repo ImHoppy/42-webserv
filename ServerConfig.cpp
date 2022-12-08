@@ -70,7 +70,7 @@ void	ServerConfig::setServerNames(const std::vector<std::string> &server_names) 
 int32_t			ServerConfig::getHost() const {
 	return _host;
 }
-int16_t			ServerConfig::getPort() const {
+uint16_t			ServerConfig::getPort() const {
 	return _port;
 }
 int32_t			ServerConfig::getMaxBodySize() const {
