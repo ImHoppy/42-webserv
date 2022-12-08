@@ -295,15 +295,8 @@ void	Server::respond(Client* client)
 		if (rqst == NULL)
 			return ;
 		Logger::Info("Respond - Created");
-		try {
-			rep = new Response(rqst, client);
-			rep->generateResponse();
-		}
-		catch (std::exception& ex)
-		{
-			Logger::Error("Response - %s", ex.what());
-
-		}
+		rep = new Response(rqst, client);
+		rep->generateResponse();
 		
 		client->setResponse(rep);
 
@@ -331,7 +324,7 @@ void	Server::respond(Client* client)
 		}
 	}
 
-	if (bytes == -1)
+	if (bytes == 0 || bytes == -1)
 	{
 		throw std::runtime_error("send failed");
 	}
