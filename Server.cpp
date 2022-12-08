@@ -107,8 +107,9 @@ ServerConfig*	Server::getConfigForRequest(Request* rqst)
 		Logger::Error("getaddrinfo failed %s", strerror(errno));
 		return &(_configs[0]);
 	}
-	sockaddr_in *x = reinterpret_cast<sockaddr_in*>(res->ai_addr);
-	int32_t	ip = ntohl(x->sin_addr.s_addr);
+	sockaddr_in *socket_data = reinterpret_cast<sockaddr_in*>(res->ai_addr);
+	int32_t	ip = ntohl(socket_data->sin_addr.s_addr);
+	freeaddrinfo(res);
 
 	/* On fait une liste des tous les blocks qui matchent l'ip requested */
 	std::list<ServerConfig*>	matchs;
@@ -137,6 +138,7 @@ ServerConfig*	Server::getConfigForRequest(Request* rqst)
 				return *it;
 		}
 	}
+	
 	return matchs.front();
 }
 
@@ -307,7 +309,7 @@ void	Server::respond(Client* client)
 		bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
 	}
 
-	if (rep->getReadData().status == Response::EOF_FILE || rep->getReadData().status == Response::NONE)
+	if (rep->getReadData().status != Response::IMCOMPLETE_READ)
 	{
 		client->popOutRequest();
 		client->popOutResponse();
