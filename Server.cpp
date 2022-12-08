@@ -285,16 +285,11 @@ void	Server::respond(Client* client)
 	if (rep == NULL)
 	{
 		Request*	rqst = client->getRequest();
-		if (rqst == NULL) return;
-
-		try {
-			rep = new Response(rqst, client);
-			rep->generateResponse();
-		}
-		catch (std::exception& ex)
-		{
-			Logger::Error("Response - %s", ex.what());
-		}
+		if (rqst == NULL)
+			return ;
+		Logger::Info("Respond - Created");
+		rep = new Response(rqst, client);
+		rep->generateResponse();
 		
 		client->setResponse(rep);
 
@@ -317,7 +312,7 @@ void	Server::respond(Client* client)
 		client->popOutRequest();
 		client->popOutResponse();
 	}
-	if (bytes == -1 || bytes == -1)
+	if (bytes == 0 || bytes == -1)
 	{
 		throw std::runtime_error("send failed");
 	}

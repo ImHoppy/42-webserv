@@ -379,7 +379,7 @@ bool	Response::tryFile(void)
 		// get length of _readData.file:
 		_readData.file.seekg(0, _readData.file.end);
 		if (not _readData.file.good())
-			return false; // TODO: error : _readData.file is directory
+			return false;
 		int length = _readData.file.tellg();
 		_headers["Content-Length"] = IntToStr(length);
 		_readData.file.seekg(0, _readData.file.beg);
@@ -388,36 +388,29 @@ bool	Response::tryFile(void)
 		bzero(_readData.buffer, BUFFSIZE_RES);
 
 		_readData.file.read(_readData.buffer, BUFFSIZE_RES);
+		if (not _readData.file.eof() && _readData.file.fail())
+			throw std::runtime_error("read file failed");
 		_readData.read_bytes = _readData.file.gcount();
 
 		_body.assign(_readData.buffer, _readData.read_bytes);
-
-		if (_readData.file.eof())
-		{
-			_readData.file.close();
-			_readData.status = EOF_FILE;
-		}
-		else
-			_readData.status = READY_READ;
 	}
 	else
 	{
-		// if (not _readData.file.is_open()) return true;
-		// Logger::Info("Respond - Read Data");
+		if (not _readData.file.is_open()) return false;
 		bzero(_readData.buffer, BUFFSIZE_RES);
 		_readData.file.read(_readData.buffer, BUFFSIZE_RES);
 		_readData.read_bytes = _readData.file.gcount();
-		if (_readData.file.eof())
-		{
-			_readData.file.close();
-			_readData.status = EOF_FILE;
-		}
-		else
-		{
-			if (_readData.file.fail())
-				throw std::runtime_error("read file failed");
-			_readData.status = READY_SEND;
-		}
+	}
+	if (_readData.file.eof())
+	{
+		_readData.file.close();
+		_readData.status = NONE;
+	}
+	else
+	{
+		if (_readData.file.fail())
+			throw std::runtime_error("read file chunk failed");
+		_readData.status = IMCOMPLETE_READ;
 	}
 	return true;
 }

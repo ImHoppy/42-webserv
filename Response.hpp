@@ -24,16 +24,13 @@ class Client;
 class Response
 {
 	public:
-		enum StatusCode { // NOTE: Unused struct
+		enum StatusCode {
 			NONE = 0,
-			READY_READ,
-			READY_SEND,
-			EOF_FILE,
-			FAILED
+			IMCOMPLETE_READ
 		};
 		struct ReadData {
 			char			*buffer;
-			StatusCode		status; // NOTE: Unused
+			StatusCode		status;
 			unsigned int	read_bytes;
 			std::ifstream	file;
 		};
