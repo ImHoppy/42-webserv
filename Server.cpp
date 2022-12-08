@@ -121,6 +121,7 @@ ServerConfig*	Server::getConfigForRequest(Request* rqst, int client_socket)
 				matchs.push_back(&(*it));
 		}
 	}
+	// TODO: Check si les 0.0.0.0 a un server_name qui match le host header. Sinon retourne le premier des matchs. Peut etre enlever le if (matchs.empty()) plus haut.
 	/* Dans la liste des match ip:port on check si l'un d'eux a un servername qui
 	correspond au Host header. Si aucun, on return le premier de la liste. */
 	for (std::list<ServerConfig*>::iterator it = matchs.begin(); it != matchs.end(); ++it)
