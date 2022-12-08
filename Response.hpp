@@ -74,6 +74,7 @@ class Response
 		std::string			getResponse(void) const;
 		ReadData const &	getReadData(void) const;
 		const std::string &	getBody(void) const;
+		const std::pair<int, std::string> &	getCode(void) const;
 
 		/* Public Member functions */
 		bool	checkHost(void) const;

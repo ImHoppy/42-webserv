@@ -6,6 +6,9 @@
 #include <stdarg.h>
 #include <iomanip>
 
+#define BLUE "\033[0;34m"
+#define GREEN "\033[0;32m"
+
 #define LogFunc(stdout, fd, color, type) \
 { \
 	va_list args; \
@@ -47,7 +50,7 @@ namespace Logger
 	}
 
 	void	Info(std::string const message, ...)
-	LogFunc(std::cout, 1, "\033[92m", "INFO")
+	LogFunc(std::cout, 1, BLUE, "INFO")
 
 	void	Warning(std::string const message, ...)
 	LogFunc(std::cerr, 2, "\033[93m", "WARNING")

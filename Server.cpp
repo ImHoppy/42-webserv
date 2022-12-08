@@ -100,9 +100,6 @@ ServerConfig*	Server::getConfigForRequest(Request* rqst)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_CANONNAME;
 	hints.ai_protocol = 6; // tcp number protocol
-	hints.ai_canonname = NULL;
-	hints.ai_addr = NULL;
-	hints.ai_next = NULL;
 
 	if (getaddrinfo(rqsted_ip.c_str(), port.c_str(), &hints, &res) == -1
 	|| res == NULL)
@@ -137,13 +134,9 @@ ServerConfig*	Server::getConfigForRequest(Request* rqst)
 		for (std::vector<std::string>::iterator names_it = names.begin(); names_it != names.end(); ++names_it)
 		{
 			if (*names_it == host_header)
-			{
-				Logger::Error("Found name %s for ip %d", names_it->c_str(), (*it)->getHost());
 				return *it;
-			}
 		}
 	}
-	Logger::Error("No name found, selected default which is %d", matchs.front()->getHost());
 	return matchs.front();
 }
 
@@ -203,7 +196,7 @@ int		Server::InitServer(void)
 		Logger::Error("Server: bind() failed: %s", strerror(errno));
 		return (-1);
 	}
-	if (listen(_socket, std::numeric_limits<short>::max()/2) < 0)
+	if (listen(_socket, std::numeric_limits<short>::max()/8) < 0)
 	{
 		perror("Server: Listen failed");
 		return (-1);
@@ -292,9 +285,8 @@ void	Server::respond(Client* client)
 	if (rep == NULL)
 	{
 		Request*	rqst = client->getRequest();
-		if (rqst == NULL)
-			return ;
-		Logger::Info("Respond - Created");
+		if (rqst == NULL) return;
+
 		try {
 			rep = new Response(rqst, client);
 			rep->generateResponse();
@@ -302,18 +294,12 @@ void	Server::respond(Client* client)
 		catch (std::exception& ex)
 		{
 			Logger::Error("Response - %s", ex.what());
-
 		}
 		
 		client->setResponse(rep);
 
 		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
-		Logger::Info("Respond - Send Response");
-		if (rep->getReadData().status == Response::EOF_FILE || rep->getReadData().status == Response::NONE)
-		{
-			client->popOutRequest();
-			client->popOutResponse();
-		}
+		Logger::Info("%d %s", rep->getCode().first, rep->getCode().second.c_str());
 	}
 	else
 	{
@@ -324,14 +310,14 @@ void	Server::respond(Client* client)
 
 		// Logger::Info("Respond - Send Buffer");
 		bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
-		if (data.status == Response::EOF_FILE)
-		{
-			client->popOutRequest();
-			client->popOutResponse();
-		}
 	}
 
-	if (bytes == -1)
+	if (rep->getReadData().status == Response::EOF_FILE || rep->getReadData().status == Response::NONE)
+	{
+		client->popOutRequest();
+		client->popOutResponse();
+	}
+	if (bytes == -1 || bytes == -1)
 	{
 		throw std::runtime_error("send failed");
 	}

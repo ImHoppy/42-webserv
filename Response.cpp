@@ -356,6 +356,11 @@ const std::string &		Response::getBody(void) const
 {
 	return _body;
 }
+const std::pair<int, std::string> &	Response::getCode(void) const
+{
+	return _code;
+}
+
 
 #define BUFFSIZE_RES 8192
 /*
@@ -404,7 +409,6 @@ bool	Response::tryFile(void)
 		_readData.read_bytes = _readData.file.gcount();
 		if (_readData.file.eof())
 		{
-			Logger::Error("EOF2");
 			_readData.file.close();
 			_readData.status = EOF_FILE;
 		}

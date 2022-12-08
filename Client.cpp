@@ -101,7 +101,6 @@ enum {
 
 void	Client::createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes)
 {
-	Logger::Info("Client: new Request received from client %d", _csock);
 	_Rqst = new Request(buf, start_buf, bytes);
 
 	ServerConfig* chosen_conf = _myServer->getConfigForRequest(_Rqst);
@@ -148,14 +147,11 @@ int		Client::recvRequest(void)
 {
 	char buf[BUFFSIZE];
 	memset(buf, 0, sizeof(buf));
-	Logger::Info("Client: waiting for request from client %d", _csock);
 	ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
-	Logger::Info("Client: recvRequest() - bytes received = %d", bytes);
 	if (bytes < 0)
 		throw std::runtime_error("recv failed");
 	else if (bytes == 0)
 	{
-		Logger::Info("Client: EOF received from client %d", _csock);
 		return (0);
 	}
 	else
