@@ -103,7 +103,7 @@ void	Client::createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes)
 {
 	_Rqst = new Request(buf, start_buf, bytes);
 
-	ServerConfig* chosen_conf = _myServer->getConfigForRequest(_Rqst);
+	ServerConfig* chosen_conf = _myServer->getConfigForRequest(_Rqst, _csock);
 	if (chosen_conf == NULL)
 	{
 		Logger::Error("Request: - CONFIG NULL");

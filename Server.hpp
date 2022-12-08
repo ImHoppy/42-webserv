@@ -44,7 +44,7 @@ class Server : public SocketHandler
 		std::string const &						getType(void) const;
 		socket_t								getSocket() const;
 		std::vector<ServerConfig> const &		getConf(void) const;
-		ServerConfig*			getConfigForRequest(Request* rqst);
+		ServerConfig*			getConfigForRequest(Request* rqst, int client_socket);
 		/* Init fcts */
 		void	addConfig(ServerConfig const & config);
 		void	setEpollInstance(int inst);

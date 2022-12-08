@@ -133,7 +133,7 @@ void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
 		throw ParsingError("Server must have a port");
 	if (server.getRootPath().empty())
 		throw ParsingError("Server must have a root");
-	if (server.getMaxBodySize() < 1024)// TODO: Need to check if 8e+6 is a valid size and accept 1G 1M 1K ? 
+	if (server.getMaxBodySize() < 1)
 		throw ParsingError("Server must have a max body size");
 	config.addServer(server);
 }

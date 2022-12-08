@@ -83,33 +83,27 @@ Return:
 	Si aucun VServer name ne correpond, le default VServer (le premier match)
 	se chargera de servir la rqst.
 */
-ServerConfig*	Server::getConfigForRequest(Request* rqst)
+ServerConfig*	Server::getConfigForRequest(Request* rqst, int client_socket)
 {
 	std::string		host_header(rqst->getValForHdr("Host"), 0, rqst->getValForHdr("Host").find(':'));
 	if (host_header.empty()) // Bad request
 		return &_configs[0];
-	std::string		authority = rqst->getUri().authority;
-	std::string		rqsted_ip(authority, 0, authority.find(':'));
-	std::string		port = IntToStr(_configs[0].getPort());
 
-	struct addrinfo	hints;
-	struct addrinfo	*res;
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_CANONNAME;
-	hints.ai_protocol = 6; // tcp number protocol
-
-	if (getaddrinfo(rqsted_ip.c_str(), port.c_str(), &hints, &res) == -1
-	|| res == NULL)
+	// Determine the actual interface address from server socket
+	struct sockaddr_in server_addr = {};
+	socklen_t server_addr_len = sizeof(server_addr);
+	if (getsockname(client_socket, (struct sockaddr *)&server_addr, &server_addr_len) < 0)
 	{
-		Logger::Error("getaddrinfo failed %s", strerror(errno));
-		return &(_configs[0]);
+		Logger::Error("getsockname() failed");
+		for (std::vector<ServerConfig>::iterator it = _configs.begin(); it != _configs.end(); ++it)
+		{
+			if (it->getHost() == 0)
+				return &(*it);
+		}
+		return &_configs[0];
 	}
-	sockaddr_in *socket_data = reinterpret_cast<sockaddr_in*>(res->ai_addr);
-	int32_t	ip = ntohl(socket_data->sin_addr.s_addr);
-	freeaddrinfo(res);
+
+	int32_t	ip = ntohl(server_addr.sin_addr.s_addr);
 
 	/* On fait une liste des tous les blocks qui matchent l'ip requested */
 	std::list<ServerConfig*>	matchs;
@@ -132,13 +126,9 @@ ServerConfig*	Server::getConfigForRequest(Request* rqst)
 	for (std::list<ServerConfig*>::iterator it = matchs.begin(); it != matchs.end(); ++it)
 	{
 		std::vector<std::string>	names = (*it)->getServerNames();
-		for (std::vector<std::string>::iterator names_it = names.begin(); names_it != names.end(); ++names_it)
-		{
-			if (*names_it == host_header)
-				return *it;
-		}
+		if ((*it)->hasSeverName(host_header))
+			return *it;
 	}
-	
 	return matchs.front();
 }
 
@@ -180,7 +170,6 @@ int		Server::InitServer(void)
 		Logger::Error("Server: socket() failed: %s", strerror(errno));
 		return (-1);
 	}
-	//TODO: launch 2 webserv avec les meme host:port marche a cause de REUSE etc
 	int on = 1;
 	if (setsockopt(_socket, SOL_SOCKET,  SO_REUSEADDR, &on, sizeof(int)) < 0)
 	{

@@ -117,6 +117,15 @@ std::vector<std::string> const & ServerConfig::getServerNames() const {
 	return _server_names;
 }
 
+bool	ServerConfig::hasSeverName(const std::string &name) const
+{
+	for (std::vector<std::string>::const_iterator it = _server_names.begin(); it != _server_names.end(); it++) {
+		if (*it == name)
+			return true;
+	}
+	return false;
+}
+
 std::ostream&	operator<<(std::ostream& o, const ServerConfig& me)
 {
 	o << "Host: " << me.getHost() << std::endl;

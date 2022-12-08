@@ -431,7 +431,6 @@ void		Response::setCgiEnv(void)
 	_cgi.addVarToEnv("QUERY_STRING=" + _rqst->getUri().query);
 	_cgi.addVarToEnv("CONTENT_LENGTH=" + _rqst->getContentLength());
 	_cgi.addVarToEnv("CONTENT_TYPE=" + _rqst->getValForHdr("Content-Type"));
-//	_cgi.addVarToEnv("REMOTE_ADDR=" + inet_ntoa(client->addr())); //IP
 	_cgi.addVarToEnv("REQUEST_METHOD=" + _rqst->getMethod());
 	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _rqst->getLocation()->getRootPath() + _rqst->getUri().path);
 	_cgi.addVarToEnv("SCRIPT_NAME=" + _rqst->getUri().path);

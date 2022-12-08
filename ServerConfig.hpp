@@ -49,6 +49,7 @@ class ServerConfig {
 	map_locs	const &						getLocations() const;
 	std::map<int, std::string>	const &		getErrorPaths() const;
 	std::vector<std::string> const &		getServerNames() const;
+	bool									hasSeverName(const std::string &name) const;
 
 	LocationConfig*	getLocationFromUrl(const std::string &url);
 };
