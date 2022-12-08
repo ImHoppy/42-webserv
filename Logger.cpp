@@ -50,7 +50,7 @@ namespace Logger
 	}
 
 	void	Info(std::string const message, ...)
-	LogFunc(std::cout, 1, BLUE, "INFO")
+	LogFunc(std::cout, 1, GREEN, "INFO")
 
 	void	Warning(std::string const message, ...)
 	LogFunc(std::cerr, 2, "\033[93m", "WARNING")

@@ -5,6 +5,8 @@ function DeleteFile(file) {
 		method: "DELETE"
 	}).then(function(response) {
 		// Reload the page
+		if (response.status == 404)
+			alert("File not found");
 		location.reload();
 	});
 }
