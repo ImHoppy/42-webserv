@@ -77,10 +77,12 @@ void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
 		}
 		else if (it->first == "port")
 		{
-			if (isDigit(it->second))
-				server.setPort(StrToInt(it->second));
-			else
+			if (not isDigit(it->second))
 				throw ParsingError("Port must be a number");
+			int port = StrToInt(it->second);
+			if (port < 0 || port > 65535)
+				throw ParsingError("Server must have a valid port");
+			server.setPort(port);
 		}
 		else if (it->first == "server_names")
 		{
@@ -116,7 +118,7 @@ void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
 		}
 		else {
 			std::cout << it->first << std::endl;
-			throw ParsingError("Invalid server key");
+			throw ParsingError(std::string("Invalid server key "+it->first).c_str());
 		}
 		++it;
 	}
