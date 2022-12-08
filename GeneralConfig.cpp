@@ -7,17 +7,17 @@ GeneralConfig::GeneralConfig(const GeneralConfig &other) {
 }
 GeneralConfig &GeneralConfig::operator=(const GeneralConfig &other) {
 	if (this != &other) {
-		_servers = other._servers;
+		_configs = other._configs;
 	}
 	return *this;
 }
 GeneralConfig::~GeneralConfig() {
 }
 
-void	GeneralConfig::addServer(const ServerConfig &server) {
-	_servers.push_back(server);
+void	GeneralConfig::addServer(const ServerConfig &config) {
+	_configs.push_back(config);
 }
 
-std::vector<ServerConfig> const &	GeneralConfig::getServers() const {
-	return _servers;
+std::vector<ServerConfig> const &	GeneralConfig::getConfigs() const {
+	return _configs;
 }

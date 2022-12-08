@@ -35,7 +35,7 @@ int main(int ac, char **av)
 	}
 	WebServ webserv;
 	//TODO:: generalConf rename Servers en configs
-	std::vector<ServerConfig>	configs = generalConfig.getServers();
+	std::vector<ServerConfig>	configs = generalConfig.getConfigs();
 	// check for HOST::PORT pairs (dispatching virtual servers en gros)
 	for (std::vector<ServerConfig>::const_iterator confs = configs.begin(); confs != configs.end(); ++confs)
 	{

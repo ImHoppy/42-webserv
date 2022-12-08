@@ -150,13 +150,13 @@ bool	ServerNamesIsEqual(std::vector<std::string> const & a, std::vector<std::str
 
 void	CheckVirtualServer(GeneralConfig & config)
 {
-	std::vector<ServerConfig> servers = config.getServers();
-	std::vector<ServerConfig>::iterator it = servers.begin();
-	std::vector<ServerConfig>::iterator it2 = servers.begin();
-	while (it != servers.end())
+	std::vector<ServerConfig> configs = config.getConfigs();
+	std::vector<ServerConfig>::iterator it = configs.begin();
+	std::vector<ServerConfig>::iterator it2 = configs.begin();
+	while (it != configs.end())
 	{
 		it2 = it + 1;
-		while (it2 != servers.end())
+		while (it2 != configs.end())
 		{
 			if (it->getPort() == it2->getPort())
 			{

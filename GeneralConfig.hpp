@@ -14,7 +14,7 @@ class ServerConfig;
 
 class GeneralConfig {
 	private:
-	std::vector<ServerConfig>			_servers;
+	std::vector<ServerConfig>			_configs;
 
 	public:
 	GeneralConfig();
@@ -22,8 +22,8 @@ class GeneralConfig {
 	GeneralConfig &operator=(const GeneralConfig &other);
 	~GeneralConfig();
 
-	void	addServer(const ServerConfig &server);
-	std::vector<ServerConfig> const &	getServers() const;
+	void	addServer(const ServerConfig &config);
+	std::vector<ServerConfig> const &	getConfigs() const;
 };
 
 #endif
