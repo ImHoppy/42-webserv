@@ -121,28 +121,31 @@ int		CGI::launch(const std::string & cgi_cmd, const std::string & script)
 		CloseFiles();
 		throw CGI::CGIError();
 	}
-	else
+	return 0;
+}
+
+int	CGI::waitCGI(void)
+{
+	int		status = 0;
+	int w = waitpid(_pid, &status, WNOHANG);
+	if (w == -1)
 	{
-		int		status = 0;
-		Logger::Info("Waiting CGI");
-		int w = waitpid(_pid, &status, 0);
-		Logger::Info("After wait CGI");
-		if (w == -1)
-		{
-			Logger::Error("CGI: waitpid() failed");
-			return -1;
-		}
-		if (status != 0 && WIFEXITED(status))
-		{
-			Logger::Error("CGI: execve exited %d", WEXITSTATUS(status));
-			return WEXITSTATUS(status);
-		}
-		if (status != 0 && WIFSIGNALED(status))
-		{
-			Logger::Error("CGI: execve signaled %d", WTERMSIG(status));
-			return WTERMSIG(status);
-		}
+		Logger::Error("CGI: waitpid() failed");
+		return -1;
 	}
+	if (WIFEXITED(status))
+	{
+		Logger::Error("CGI: execve exited %d", WEXITSTATUS(status));
+		if (WEXITSTATUS(status) == 2 || WEXITSTATUS(status) == 255)
+			return 404;
+		return 1;
+	}
+	if (WIFSIGNALED(status))
+	{
+		Logger::Error("CGI: execve signaled %d", WTERMSIG(status));
+		return -1;
+	}
+	Logger::Info("CGI: execve SIGNAL %d", w);
 	return 0;
 }
 

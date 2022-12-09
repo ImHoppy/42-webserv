@@ -113,15 +113,11 @@ ServerConfig*	Server::getConfigForRequest(Request* rqst, int client_socket)
 			matchs.push_back(&(*it));
 	}
 	/* Si matchs is empty c'est qu'il y a forcement un 0.0.0.0, a retourner. */
-	if (matchs.empty())
+	for (std::vector<ServerConfig>::iterator it = _configs.begin(); it != _configs.end(); ++it)
 	{
-		for (std::vector<ServerConfig>::iterator it = _configs.begin(); it != _configs.end(); ++it)
-		{
-			if (it->getHost() == 0)
-				matchs.push_back(&(*it));
-		}
+		if (it->getHost() == 0)
+			matchs.push_back(&(*it));
 	}
-	// TODO: Check si les 0.0.0.0 a un server_name qui match le host header. Sinon retourne le premier des matchs. Peut etre enlever le if (matchs.empty()) plus haut.
 	/* Dans la liste des match ip:port on check si l'un d'eux a un servername qui
 	correspond au Host header. Si aucun, on return le premier de la liste. */
 	for (std::list<ServerConfig*>::iterator it = matchs.begin(); it != matchs.end(); ++it)
@@ -281,22 +277,48 @@ void	Server::respond(Client* client)
 			return ;
 		Logger::Info("Respond - Created");
 		rep = new Response(rqst, client);
-		rep->generateResponse();
-		
 		client->setResponse(rep);
 
-		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
-		Logger::Info("%d %s", rep->getCode().first, rep->getCode().second.c_str());
+		if (rep->cgiStatus == CGI::READY_TO_LAUNCH)
+		{
+			rep->doCGI();
+		}
+		if (rep->cgiStatus == CGI::FINISH || rep->cgiStatus == CGI::NOT_CGI)
+		{
+			rep->generateResponse();
+			bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
+			Logger::Info("%d %s", rep->getCode().first, rep->getCode().second.c_str());
+		}
 	}
 	else
 	{
-		Response::ReadData const & data = rep->getReadData();
-		if (data.buffer == NULL) return ;
+		if (rep->cgiStatus == CGI::FINISH)
+		{
+			rep->generateResponse();
+			bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
+			Logger::Info("%d %s", rep->getCode().first, rep->getCode().second.c_str());
+		}
+		else if (rep->cgiStatus == CGI::IN_PROGRESS)
+		{
+			rep->waitCGI();
+			if (rep->cgiStatus == CGI::FINISH || rep->cgiStatus == CGI::NOT_CGI)
+			{
+				rep->generateResponse();
+				bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
+				Logger::Info("%d %s", rep->getCode().first, rep->getCode().second.c_str());
+			}
+			return ;
+		}
+		else if (rep->cgiStatus == CGI::NOT_CGI)
+		{
+			Response::ReadData const & data = rep->getReadData();
+			if (data.buffer == NULL) return ;
 
-		rep->tryFile();
+			rep->tryFile();
 
-		// Logger::Info("Respond - Send Buffer");
-		bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
+			// Logger::Info("Respond - Send Buffer");
+			bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
+		}
 	}
 
 	if (rep->getReadData().status != Response::IMCOMPLETE_READ)

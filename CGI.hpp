@@ -25,6 +25,13 @@ class CGI {
 		pid_t						_pid;
 
 	public:
+	enum StatusCGI {
+		NOT_CGI = 0,
+		READY_TO_LAUNCH,
+		IN_PROGRESS,
+		FINISH,
+		FAILED
+	};
 		class CGIError
 		{
 			public:
@@ -51,5 +58,6 @@ class CGI {
 
 		int		launch(const std::string & gci_cmd, const std::string & script);
 		void	CloseFiles(void);
+		int		waitCGI(void);
 
 };

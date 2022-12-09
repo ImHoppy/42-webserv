@@ -24,6 +24,7 @@ class Client;
 class Response
 {
 	public:
+
 		enum StatusCode {
 			NONE = 0,
 			IMCOMPLETE_READ
@@ -35,6 +36,8 @@ class Response
 			std::ifstream	file;
 		};
 		typedef std::map<std::string, std::string>		headers_t;
+
+		CGI::StatusCGI	cgiStatus;
 	private:
 		/* Attributs */
 		Request*					_rqst;
@@ -57,7 +60,6 @@ class Response
 
 		/* CGI */
 		void		setCgiEnv(void);
-		void		doCGI(void);
 	public:
 
 		/* Coplien */
@@ -74,17 +76,18 @@ class Response
 		const std::pair<int, std::string> &	getCode(void) const;
 
 		/* Public Member functions */
-		bool	checkHost(void) const;
 		bool	checkMethod(void) const;
 		void	doDirectoryListening(void);
 		void	doGET(void);
 		int		doDELETE(const std::string &path);
 		void	doPOST(void);
+		void	doCGI(void);
 		bool	tryFile(void);
-		int		readFromCgi(void);
-		void	handleError(int error);
 		void	generateResponse(void);
 		void	doMethod(void);
+
+		int		readFromCgi(void);
+		void	waitCGI(void);
 		
 		void	UploadMultipart(void);
 		bool	checkBodySize(void);

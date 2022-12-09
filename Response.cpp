@@ -212,20 +212,24 @@ int		Response::doDELETE(const std::string &path)
 	return 204;
 }
 
-
-void	Response::doCGI(void)
+void	Response::waitCGI()
 {
-	setCgiEnv();
-	if (_rqst->getMethod() == "POST")
-		_cgi.initFileIn(_rqst->getUploadFile());
-	_cgi.initFileOut();
-	int statusLaunch = _cgi.launch(_rqst->getLocation()->getCGICmd(), _rqst->getTargetPath());
-	if (statusLaunch == 2 || statusLaunch == 255)
+	int		statusPid;
+
+	statusPid = _cgi.waitCGI();
+	if (statusPid == 404)
 		_code = std::make_pair(404, "Not Found");
-	else if (statusLaunch != 0 || readFromCgi() == -1)
+	else if (statusPid == -1)
 		_code = std::make_pair(500, "Internal Server Error");
+	else if (statusPid == 0)
+	{
+		cgiStatus = CGI::IN_PROGRESS;
+		return;
+	}
 	else
 	{
+		if (readFromCgi() == -1)
+			_code = std::make_pair(500, "Internal Server Error");
 		if (_headers.find("Status") != _headers.end())
 		{
 			std::string::size_type pos = _headers["Status"].find(' ');
@@ -235,6 +239,26 @@ void	Response::doCGI(void)
 		else
 			_code = std::make_pair(200, "OK");
 	}
+	cgiStatus = CGI::FINISH;
+}
+
+void	Response::doCGI(void)
+{
+	cgiStatus = CGI::IN_PROGRESS;
+	setCgiEnv();
+	if (_rqst->getMethod() == "POST")
+		_cgi.initFileIn(_rqst->getUploadFile());
+	_cgi.initFileOut();
+	int statusLaunch = _cgi.launch(_rqst->getLocation()->getCGICmd(), _rqst->getTargetPath());
+	if (statusLaunch == -1)
+	{
+		_code = std::make_pair(500, "Internal Server Error");
+		cgiStatus = CGI::FINISH;
+	}
+	else if (statusLaunch == 0)
+		waitCGI();
+	else
+		_code = std::make_pair(404, "Not Found");
 }
 
 void Response::UploadMultipart(void)
@@ -330,7 +354,8 @@ void	Response::doPOST(void)
 	}
 	else if (_rqst->getLocation()->isCGIActive() && type->second == "application/x-www-form-urlencoded")
 	{
-		doCGI();
+		cgiStatus = CGI::READY_TO_LAUNCH;
+		// doCGI();
 		return ;
 	}
 	_code = std::make_pair(400, "Bad Request");
@@ -531,7 +556,8 @@ void		Response::doGET(void)
 	}
 	else if (_rqst->getLocation()->isCGIActive())
 	{
-		doCGI();
+		cgiStatus = CGI::READY_TO_LAUNCH;
+		// doCGI();
 	}
 	else
 		_code = std::make_pair(404, "Not Found");
