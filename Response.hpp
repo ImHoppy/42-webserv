@@ -16,6 +16,7 @@
 # include "Request.hpp"
 
 #define CLRF "\r\n"
+#define BUFFSIZE_RES 8192
 
 # include "Client.hpp"
 

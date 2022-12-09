@@ -33,12 +33,14 @@ Response &	Response::operator=(const Response& src)
 		_headers = src._headers;
 		_body = src._body;
 		_response = src._response;
+		cgiStatus = src.cgiStatus;
 	}
 	return *this;
 }
 
 /* Parametric constructor */
 Response::Response(Request* rqst, Client *client) :
+	cgiStatus(CGI::NOT_CGI),
 	_rqst(rqst),
 	_client(client),
 	_cgi(),
@@ -154,6 +156,14 @@ void	Response::generateBodyError()
 
 void	Response::generateResponse(void)
 {
+	if (_client->hasTimeout())
+	{
+		if (_rqst->getHeaders().find("User-Agent") != _rqst->getHeaders().end() && _rqst->getHeaders().find("User-Agent")->second.find("Firefox") != std::string::npos)
+			_code = std::make_pair(503, "Service Unavailable");
+		else
+			_code = std::make_pair(408, "Request Timeout");
+	}
+
 	generateBodyError();
 	if (_headers.find("Content-Length") == _headers.end())
 		_headers["Content-Length"] = IntToStr(_body.size());
@@ -230,7 +240,7 @@ void	Response::waitCGI()
 	{
 		if (readFromCgi() == -1)
 			_code = std::make_pair(500, "Internal Server Error");
-		if (_headers.find("Status") != _headers.end())
+		else if (_headers.find("Status") != _headers.end())
 		{
 			std::string::size_type pos = _headers["Status"].find(' ');
 			if (pos != std::string::npos)
@@ -249,16 +259,12 @@ void	Response::doCGI(void)
 	if (_rqst->getMethod() == "POST")
 		_cgi.initFileIn(_rqst->getUploadFile());
 	_cgi.initFileOut();
-	int statusLaunch = _cgi.launch(_rqst->getLocation()->getCGICmd(), _rqst->getTargetPath());
+	int statusLaunch = _cgi.launch(_rqst->getCGILocation()->getCGICmd(), _rqst->getTargetPath());
 	if (statusLaunch == -1)
 	{
 		_code = std::make_pair(500, "Internal Server Error");
 		cgiStatus = CGI::FINISH;
 	}
-	else if (statusLaunch == 0)
-		waitCGI();
-	else
-		_code = std::make_pair(404, "Not Found");
 }
 
 void Response::UploadMultipart(void)
@@ -352,7 +358,7 @@ void	Response::doPOST(void)
 		UploadMultipart();
 		return ;
 	}
-	else if (_rqst->getLocation()->isCGIActive() && type->second == "application/x-www-form-urlencoded")
+	else if (_rqst->getCGILocation() && type->second == "application/x-www-form-urlencoded")
 	{
 		cgiStatus = CGI::READY_TO_LAUNCH;
 		// doCGI();
@@ -361,33 +367,6 @@ void	Response::doPOST(void)
 	_code = std::make_pair(400, "Bad Request");
 }
 
-std::string	Response::getResponse(void) const
-{
-	return _response;
-}
-
-Response::ReadData const & Response::getReadData(void) const
-{
-	return _readData;
-}
-
-std::ostream&	operator<<(std::ostream& o, const Response& me)
-{
-	o << me.getResponse();
-	return o;
-}
-
-const std::string &		Response::getBody(void) const
-{
-	return _body;
-}
-const std::pair<int, std::string> &	Response::getCode(void) const
-{
-	return _code;
-}
-
-
-#define BUFFSIZE_RES 8192
 /*
 	1) Essai d'ouvrir le fichier : return false si fail (file not found)
 	2) Remplit le _response body avec le contenu du fichier, et set le bon Content-Lenght
@@ -457,7 +436,7 @@ void		Response::setCgiEnv(void)
 	_cgi.addVarToEnv("CONTENT_LENGTH=" + _rqst->getContentLength());
 	_cgi.addVarToEnv("CONTENT_TYPE=" + _rqst->getValForHdr("Content-Type"));
 	_cgi.addVarToEnv("REQUEST_METHOD=" + _rqst->getMethod());
-	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _rqst->getLocation()->getRootPath() + _rqst->getUri().path);
+	_cgi.addVarToEnv("SCRIPT_FILENAME=" + _rqst->getTargetPath());
 	_cgi.addVarToEnv("SCRIPT_NAME=" + _rqst->getUri().path);
 	_cgi.addVarToEnv("SERVER_NAME=" + _rqst->getConfig()->getServerNames()[0]);
 	_cgi.addVarToEnv("SERVER_PORT=" + IntToStr(_rqst->getConfig()->getPort()));
@@ -554,7 +533,7 @@ void		Response::doGET(void)
 			_code = std::make_pair(404, "Not Found");
 		return ;
 	}
-	else if (_rqst->getLocation()->isCGIActive())
+	else if (_rqst->getCGILocation())
 	{
 		cgiStatus = CGI::READY_TO_LAUNCH;
 		// doCGI();
@@ -568,3 +547,27 @@ bool	Response::checkMethod(void) const
 	return _rqst->getLocation()->methodIsAllowed(_rqst->getMethod());
 }
 
+std::string	Response::getResponse(void) const
+{
+	return _response;
+}
+
+Response::ReadData const & Response::getReadData(void) const
+{
+	return _readData;
+}
+
+std::ostream&	operator<<(std::ostream& o, const Response& me)
+{
+	o << me.getResponse();
+	return o;
+}
+
+const std::string &		Response::getBody(void) const
+{
+	return _body;
+}
+const std::pair<int, std::string> &	Response::getCode(void) const
+{
+	return _code;
+}

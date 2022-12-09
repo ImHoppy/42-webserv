@@ -119,6 +119,9 @@ void	Client::createNewRequest(char * buf, size_t & start_buf, ssize_t & bytes)
 	_Rqst->setConfig(chosen_conf);
 	_Rqst->setLocation(chosen_loc);
 	_Rqst->setTargetPath();
+	_Rqst->setCGILocation();
+
+	// _Rqst->setCGILoc(CGILoc);
 	if (_Rqst->getMethod() == "POST")
 	{
 		Request::headers_t::const_iterator		content_length = _Rqst->getHeaders().find("Content-Length");

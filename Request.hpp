@@ -53,6 +53,7 @@ class Request
 		std::string		_body;
 		ServerConfig*	_conf;
 		LocationConfig*	_loc;
+		LocationConfig*	_CGIloc;
 		std::string		_uploadFileName;
 
 		/* Private default constructor */
@@ -65,6 +66,7 @@ class Request
 		/* Parametric constructor */
 		Request(char * buf, size_t & start_buf, ssize_t & bytes);
 		/* Public Setteurs */
+		void	setCGILocation(void);
 		void	setLocation(LocationConfig* loc);
 		void	setConfig(ServerConfig* conf);
 
@@ -82,6 +84,7 @@ class Request
 		const std::string &			getBody(void) const;
 		ServerConfig*				getConfig(void) const;
 		LocationConfig*				getLocation(void) const;
+		LocationConfig*				getCGILocation(void) const;
 		std::string					getContentLength(void) const;
 		std::string					getValForHdr(const std::string & hdrToFind) const;
 

@@ -279,49 +279,45 @@ void	Server::respond(Client* client)
 		rep = new Response(rqst, client);
 		client->setResponse(rep);
 
-		if (rep->cgiStatus == CGI::READY_TO_LAUNCH)
-		{
-			rep->doCGI();
-		}
-		if (rep->cgiStatus == CGI::FINISH || rep->cgiStatus == CGI::NOT_CGI)
+		if (rep->cgiStatus == CGI::NOT_CGI)
 		{
 			rep->generateResponse();
 			bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
 			Logger::Info("%d %s", rep->getCode().first, rep->getCode().second.c_str());
 		}
 	}
-	else
+	else if (rep->cgiStatus == CGI::NOT_CGI) // Chunk get methods
 	{
-		if (rep->cgiStatus == CGI::FINISH)
-		{
-			rep->generateResponse();
-			bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
-			Logger::Info("%d %s", rep->getCode().first, rep->getCode().second.c_str());
-		}
-		else if (rep->cgiStatus == CGI::IN_PROGRESS)
-		{
-			rep->waitCGI();
-			if (rep->cgiStatus == CGI::FINISH || rep->cgiStatus == CGI::NOT_CGI)
-			{
-				rep->generateResponse();
-				bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
-				Logger::Info("%d %s", rep->getCode().first, rep->getCode().second.c_str());
-			}
+		Response::ReadData const & data = rep->getReadData();
+		if (data.buffer == NULL) return ;
+
+		rep->tryFile();
+
+		// Logger::Info("Respond - Send Buffer");
+		bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
+	}
+	if (client->hasTimeout())
+	{
+		rep->cgiStatus = CGI::FINISH;
+	}
+	if (rep->cgiStatus == CGI::READY_TO_LAUNCH)
+	{
+		rep->doCGI();
+	}
+	if (rep->cgiStatus == CGI::IN_PROGRESS)
+	{
+		rep->waitCGI();
+		if (rep->cgiStatus == CGI::IN_PROGRESS)
 			return ;
-		}
-		else if (rep->cgiStatus == CGI::NOT_CGI)
-		{
-			Response::ReadData const & data = rep->getReadData();
-			if (data.buffer == NULL) return ;
-
-			rep->tryFile();
-
-			// Logger::Info("Respond - Send Buffer");
-			bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
-		}
+	}
+	if (client->hasTimeout() || rep->cgiStatus == CGI::FINISH)
+	{
+		rep->generateResponse();
+		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
+		Logger::Info("CGI %d %s", rep->getCode().first, rep->getCode().second.c_str());
 	}
 
-	if (rep->getReadData().status != Response::IMCOMPLETE_READ)
+	if (rep->cgiStatus == CGI::FINISH || rep->getReadData().status == Response::NONE)
 	{
 		client->popOutRequest();
 		client->popOutResponse();

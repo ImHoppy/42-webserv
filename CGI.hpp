@@ -51,7 +51,6 @@ class CGI {
 		/* SET */
 		void	setEnv(std::vector<std::string> & env);
 		void	initEnv(void);
-		int		initFiles(const std::string & inputFilename);
 		void		initFileOut(void);
 		void		initFileIn(const std::string & inputFilename);
 		void	addVarToEnv(const std::string & varval);

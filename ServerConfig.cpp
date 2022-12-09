@@ -89,11 +89,6 @@ std::string	const &	ServerConfig::getRootPath() const {
 	3) Si Rien ne match, return NULL.*/
 LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 {
-	for (map_locs::iterator locs = _location.begin(); locs != _location.end(); ++locs)
-	{
-		if (locs->first[0] == '.' && ends_with(url, locs->first))
-			return &(locs->second);
-	}
 	std::string::size_type start_search = url.size();
 	while (start_search != std::string::npos)
 	{
@@ -105,7 +100,7 @@ LocationConfig*	ServerConfig::getLocationFromUrl(const std::string &url)
 		}
 		start_search = url.find_last_of('/', start_search - 1);
 	}
-	return &(_location["/"]);
+	return (NULL);
 }
 ServerConfig::map_locs	const & ServerConfig::getLocations() const {
 	return _location;

@@ -16,6 +16,11 @@ CGI::CGI(void) : _env(), _fileIn(-1), _fileOut(-1), _pid(-1)
 /* Destructor */
 CGI::~CGI(void) {
 	CloseFiles();
+	if (_pid != -1)
+	{
+		kill(_pid, SIGKILL);
+		waitpid(_pid, NULL, 0);
+	}
 }
 
 CGI::CGI(const CGI & src)
@@ -89,6 +94,7 @@ int		CGI::launch(const std::string & cgi_cmd, const std::string & script)
 	}
 	if (_pid == 0) // child
 	{
+		_pid = -1;
 		if (_fileIn != -1 && dup2(_fileIn, 0) == -1)
 			throw std::runtime_error("CGI dup2 read file failed");
 		if (dup2(_fileOut, 1) == -1)
@@ -112,13 +118,13 @@ int		CGI::launch(const std::string & cgi_cmd, const std::string & script)
 		argv[1] = const_cast<char*>(script.c_str());
 		argv[2] = NULL;
 
+		Logger::Error("CGI script %s", script.c_str());
 		execve(cgi_cmd.c_str(), argv, env);
 		Logger::Error("Response::CgiGet() execve() failed");
 		for (size_t i = 0; env[i]; i++)
 			delete [] env[i];
 		delete [] argv;
 		delete [] env;
-		CloseFiles();
 		throw CGI::CGIError();
 	}
 	return 0;
@@ -126,6 +132,8 @@ int		CGI::launch(const std::string & cgi_cmd, const std::string & script)
 
 int	CGI::waitCGI(void)
 {
+	if (_pid == -1) return -1;
+
 	int		status = 0;
 	int w = waitpid(_pid, &status, WNOHANG);
 	if (w == -1)
@@ -133,19 +141,20 @@ int	CGI::waitCGI(void)
 		Logger::Error("CGI: waitpid() failed");
 		return -1;
 	}
-	if (WIFEXITED(status))
+	if (w != 0 && WIFEXITED(status))
 	{
-		Logger::Error("CGI: execve exited %d", WEXITSTATUS(status));
-		if (WEXITSTATUS(status) == 2 || WEXITSTATUS(status) == 255)
+		Logger::Error("CGI: execve exited %d %d", w,  WEXITSTATUS(status));
+		_pid = -1;
+		if (WEXITSTATUS(status) == 2)
 			return 404;
 		return 1;
 	}
-	if (WIFSIGNALED(status))
+	if (w != 0 && WIFSIGNALED(status))
 	{
+		_pid = -1;
 		Logger::Error("CGI: execve signaled %d", WTERMSIG(status));
 		return -1;
 	}
-	Logger::Info("CGI: execve SIGNAL %d", w);
 	return 0;
 }
 

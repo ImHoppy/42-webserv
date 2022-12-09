@@ -1,4 +1,5 @@
-# include "Request.hpp"
+#include "Request.hpp"
+#include <cstring>
 
 void			Request::appendToBody(const std::string & more)
 {
@@ -35,15 +36,16 @@ Request::~Request(void) {
 }
 
 /* Copy constructor */
-Request::Request(const Request& src) : 
-_rawRqst(src._rawRqst), _rqstLine(src._rqstLine), _method(src._method),
-_target(src._target), _targetPath(src._targetPath),
-_uri(src._uri), _headers(src._headers), _body(src._body), _uploadFileName(src._uploadFileName) {}
-
+Request::Request(const Request& src) 
+{
+	*this = src;
+}
 
 /* Assignment operator */
 Request&	Request::operator=(const Request& src)
 {
+	if (this == &src)
+		return *this;
 	_rawRqst.assign(src._rawRqst);
 	_rqstLine.assign(src._rqstLine);
 	_method.assign(src._method);
@@ -56,13 +58,14 @@ Request&	Request::operator=(const Request& src)
 	_headers = src._headers;
 	_body.assign(src._body);
 	_uploadFileName = src._uploadFileName;
+	_loc = src._loc;
+	_CGIloc = src._CGIloc;
 	return *this;
 }
 
-#include <cstring>
 /* ATTENTION: str MUST NOT be empty! */
 /* Parametric construcotr */
-Request::Request(char * buf, size_t & start_buf, ssize_t & bytes)
+Request::Request(char * buf, size_t & start_buf, ssize_t & bytes) : _loc(NULL), _CGIloc(NULL)
 {
 	ssize_t i;
 	for (i = 0; i < bytes - 4 ; ++i)
@@ -102,7 +105,7 @@ bool		Request::targetIsDir(void) const
 
 bool		Request::targetIsFile(void) const
 {
-	return !(targetIsDir() || _loc->isCGIActive());
+	return !(targetIsDir() || _CGIloc != NULL);
 }
 
 /* Set le private attribut _targetPath en fonction du path de l'URI de la request et en
@@ -347,6 +350,18 @@ std::ostream&	operator<<(std::ostream& o, const Request& me)
 void	Request::setLocation(LocationConfig* loc)
 {
 	this->_loc = loc;
+	
+}
+void	Request::setCGILocation(void)
+{
+	std::size_t pos = _targetPath.find_last_of(".");
+	if (pos != std::string::npos)
+	{
+		std::string extension = _targetPath.substr(pos);
+		LocationConfig * CGILoc = _conf->getLocationFromUrl(extension);
+		std::cout << "File Extension: " << extension << std::endl;
+		this->_CGIloc = CGILoc;
+	}
 }
 void	Request::setConfig(ServerConfig* conf)
 {
@@ -361,6 +376,11 @@ ServerConfig*	Request::getConfig(void) const
 LocationConfig*	Request::getLocation(void) const
 {
 	return _loc;
+}
+
+LocationConfig*	Request::getCGILocation(void) const
+{
+	return _CGIloc;
 }
 
 void	Request::setUploadFile(const std::string& path)
