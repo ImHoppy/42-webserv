@@ -118,7 +118,6 @@ int		CGI::launch(const std::string & cgi_cmd, const std::string & script)
 		argv[1] = const_cast<char*>(script.c_str());
 		argv[2] = NULL;
 
-		Logger::Info("CGI script %s", script.c_str());
 		execve(cgi_cmd.c_str(), argv, env);
 		Logger::Error("Response::CgiGet() execve() failed");
 		for (size_t i = 0; env[i]; i++)

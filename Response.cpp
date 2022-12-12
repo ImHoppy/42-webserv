@@ -351,20 +351,17 @@ void	Response::doPOST(void)
 	if (type == headers.end())
 	{
 		_code = std::make_pair(501, "Not Implemented Content-Type");
-		return ;
 	}
 	else if (startsWith(type->second, "multipart/form-data"))
 	{
 		UploadMultipart();
-		return ;
 	}
 	else if (_rqst->getCGILocation() && type->second == "application/x-www-form-urlencoded")
 	{
 		cgiStatus = CGI::READY_TO_LAUNCH;
-		// doCGI();
-		return ;
 	}
-	_code = std::make_pair(400, "Bad Request");
+	else
+		_code = std::make_pair(400, "Bad Request");
 }
 
 /*
@@ -525,18 +522,13 @@ void		Response::doGET(void)
 		doDirectoryListening();
 		return ;
 	}
-	else if (_rqst->targetIsFile())
+	else if (_rqst->targetIsFile() && tryFile())
 	{
-		if (tryFile())
-			_code = std::make_pair(200, "OK");
-		else
-			_code = std::make_pair(404, "Not Found");
-		return ;
+		_code = std::make_pair(200, "OK");
 	}
 	else if (_rqst->getCGILocation())
 	{
 		cgiStatus = CGI::READY_TO_LAUNCH;
-		// doCGI();
 	}
 	else
 		_code = std::make_pair(404, "Not Found");

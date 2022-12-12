@@ -155,6 +155,7 @@ std::string pathExpand(std::string const & path)
 			expandedPath = "/" + pathStack.top() + expandedPath;
 		pathStack.pop();
 	}
+	expandedPath += (ends_with(path, "/") ? "/" : "");
 	return expandedPath;
 }
 
