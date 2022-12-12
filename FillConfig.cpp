@@ -118,7 +118,7 @@ void	serverBlock(GeneralConfig & config, key_value_t::iterator & it)
 		}
 		else {
 			std::cout << it->first << std::endl;
-			throw ParsingError(std::string("Invalid server key "+it->first).c_str());
+			throw ParsingError("Invalid server key");
 		}
 		++it;
 	}

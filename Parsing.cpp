@@ -1,6 +1,6 @@
 
 #include "Parsing.hpp"
-
+#include <stack>
 
 ParsingError::ParsingError() : message("Error on parsing."), line(-1) {}
 ParsingError::ParsingError(const char *msg) : message(msg), line(-1) {}
@@ -88,6 +88,7 @@ static void	remove_comment(std::string & s)
 	if (pos != std::string::npos)
 		s = s.substr(0, pos);
 }
+
 void	parseConf(GeneralConfig & config, std::string const & path )
 {
 	std::vector<std::pair<std::string, std::string> > key_value;
@@ -95,15 +96,12 @@ void	parseConf(GeneralConfig & config, std::string const & path )
 
 	ifs.open(path.c_str());
 	if (ifs.is_open() == false)
-	{
-		std::cerr << "File could not be open." << std::endl;
-		return ;
-	}
+		throw ParsingError("File could not be open");
 	std::string line;
 	int32_t	lineNumber = 0;
 	int	depth = 0;
-	std::vector<std::string> parents;
-	parents.push_back("head");
+	std::stack<std::string> parents;
+	parents.push("head");
 	while (std::getline(ifs, line))
 	{
 		lineNumber++;
@@ -140,19 +138,19 @@ void	parseConf(GeneralConfig & config, std::string const & path )
 			throw ParsingError( "} can't have value", lineNumber);
 		if (value == "{")
 		{
-			checkParentObject(parents.back(), key, lineNumber);
-			parents.push_back(key);
+			checkParentObject(parents.top(), key, lineNumber);
+			parents.push(key);
 		}
 		else if (key == "}")
 		{
 			if (parents.size() > 1)
-				parents.pop_back();
+				parents.pop();
 		}
 		else
-			check_key(key, parents.back(), lineNumber);
+			check_key(key, parents.top(), lineNumber);
 		key_value.push_back(std::make_pair(key, value));
 	}
-	if (depth != 0 || parents.back() != "head")
+	if (depth != 0 || parents.top() != "head")
 		throw ParsingError("Bracket not closed");
 	ifs.close();
 	fillConfig(key_value, config);

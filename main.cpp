@@ -23,7 +23,7 @@ int main(int ac, char **av)
 {
 	std::string		confFile;
 	if (ac == 1)
-		confFile = "template.conf";
+		confFile = "default.conf";
 	else
 		confFile = av[1];
 		
@@ -99,7 +99,7 @@ int main(int ac, char **av)
 		if ((*servers)->InitServer() == -1)
 			return (-1);
 	}
-	Logger::Info("Server started");
+	Logger::Info("WebServer started");
 	try {
 		webserv.StartLoop();
 	}
@@ -112,7 +112,7 @@ int main(int ac, char **av)
 	{
 		Logger::Error("%s", ex.what());
 	}
-	Logger::Info("Server end");
+	Logger::Info("WebServer exited");
 	return (0);
 }
 
