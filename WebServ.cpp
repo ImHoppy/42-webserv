@@ -85,15 +85,16 @@ void	WebServ::StartLoop(void)
 					try
 					{
 						client->getServer()->respond(client);
+						if (client->hasTimeout() || client->hasError())
+						{
+							client->getServer()->removeClient(client);
+						}
 					}
 					catch(const std::exception& e)
 					{
 						Logger::Error("Problem client response: %s", e.what());
 						client->getServer()->removeClient(client);
-						client = NULL;
 					}
-					if (client != NULL && (client->hasTimeout() || client->hasError()))
-						client->getServer()->removeClient(client);
 				}
 			} 
 		}

@@ -207,6 +207,11 @@ bool	Client::hasError(void) const
 	return _error;
 }
 
+void	Client::setError(bool error)
+{
+	_error = error;
+}
+
 bool	Client::hasTimeout(void) const
 {
 	return _keepAlive.isTimeOut();

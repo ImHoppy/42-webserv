@@ -57,6 +57,7 @@ class Client : public SocketHandler
 		void		setResponse(Response* resp);
 		Response*	getResponse(void) const;
 		bool		hasError(void) const;
+		void		setError(bool error);
 
 		bool		hasTimeout(void) const;
 

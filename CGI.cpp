@@ -142,7 +142,6 @@ int	CGI::waitCGI(void)
 	}
 	if (w != 0 && WIFEXITED(status))
 	{
-		Logger::Error("CGI: execve exited %d %d", w,  WEXITSTATUS(status));
 		_pid = -1;
 		if (WEXITSTATUS(status) == 2)
 			return 404;
@@ -151,7 +150,6 @@ int	CGI::waitCGI(void)
 	if (w != 0 && WIFSIGNALED(status))
 	{
 		_pid = -1;
-		Logger::Error("CGI: execve signaled %d", WTERMSIG(status));
 		return -1;
 	}
 	return 0;

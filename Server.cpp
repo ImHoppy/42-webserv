@@ -320,7 +320,7 @@ void	Server::respond(Client* client)
 		Response::headers_t::const_iterator connectionIt = rep->getHeaders().find("Connection");
 		if (connectionIt != rep->getHeaders().end() && connectionIt->second == "close")
 		{
-			this->removeClient(client);
+			client->setError(true);	
 		}
 		else {
 			client->popOutRequest();
