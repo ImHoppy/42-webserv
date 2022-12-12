@@ -375,13 +375,25 @@ bool	Response::tryFile(void)
 		Logger::Info("GET - Opening %s", _rqst->getTargetPath().c_str());
 		_readData.file.open(_rqst->getTargetPath().c_str());
 		if (_readData.file.is_open() == false)
+		{
+			std::cout << "Failed \n";
 			return false;
+		}
 
 		// get length of _readData.file:
 		_readData.file.seekg(0, _readData.file.end);
-		if (not _readData.file.good())
-			return false;
+		// Print bitset of _readData.file.rdstate()
 		int length = _readData.file.tellg();
+		std::cout << "File state: " << std::bitset<4>(_readData.file.rdstate()) << std::endl;
+		if (not _readData.file.good())
+		{
+			// if (ends_with(_rqst->getTargetPath(), "/")) return false;
+			std::cout << "Target path: " << _rqst->getTargetPath() << std::endl;
+			std::cout << "Uri: " << _rqst->getUri().path << std::endl;
+			// _code = std::make_pair(301, "Moved Permanently");
+			// _headers["Location"] = _rqst->getLocation()->getRedirection();
+			return false;
+		}
 		_headers["Content-Length"] = IntToStr(length);
 		_readData.file.seekg(0, _readData.file.beg);
 
@@ -517,27 +529,24 @@ void		Response::doDirectoryListening(void)
 
 void		Response::doGET(void)
 {
-	if (_rqst->targetIsDir() && _rqst->getLocation()->isDirList() == true)
+	std::string const & uriPath = _rqst->getUri().path;
+	std::string locationPath = _rqst->getLocation()->getPath();
+	if (locationPath[locationPath.size() - 1] == '/')
+		locationPath = locationPath.substr(0, locationPath.size() - 1);
+	if (not ends_with(uriPath, "/") && uriPath == locationPath)
+	{
+		_code = std::make_pair(301, "Moved Permanently");
+		_headers["Location"] = _rqst->getUri().path + "/";
+		_headers["Location"] += (_rqst->getUri().query.empty() ? "" : "?") + _rqst->getUri().query;
+	}
+	else if (_rqst->targetIsDir() && _rqst->getLocation()->isDirList() == true)
 	{
 		doDirectoryListening();
 		return ;
 	}
-	else if (_rqst->targetIsFile())
+	else if (_rqst->targetIsFile() && tryFile())
 	{
-		std::string const & uriPath = _rqst->getUri().path;
-		std::string locationPath = _rqst->getLocation()->getPath();
-		if (locationPath[locationPath.size() - 1] == '/')
-			locationPath = locationPath.substr(0, locationPath.size() - 1);
-		if (not ends_with(uriPath, "/") && uriPath == locationPath)
-		{
-			_code = std::make_pair(301, "Moved Permanently");
-			_headers["Location"] = _rqst->getUri().path + "/";
-			_headers["Location"] += (_rqst->getUri().query.empty() ? "" : "?") + _rqst->getUri().query;
-		}
-		else if (tryFile())
-			_code = std::make_pair(200, "OK");
-		else
-			_code = std::make_pair(404, "Not Found");
+		_code = std::make_pair(200, "OK");
 	}
 	else if (_rqst->getCGILocation())
 	{
