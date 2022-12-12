@@ -359,7 +359,6 @@ void	Request::setCGILocation(void)
 	{
 		std::string extension = _targetPath.substr(pos);
 		LocationConfig * CGILoc = _conf->getLocationFromUrl(extension);
-		std::cout << "File Extension: " << extension << std::endl;
 		this->_CGIloc = CGILoc;
 	}
 }

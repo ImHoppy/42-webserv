@@ -275,7 +275,6 @@ void	Server::respond(Client* client)
 		Request*	rqst = client->getRequest();
 		if (rqst == NULL)
 			return ;
-		Logger::Info("Respond - Created");
 		rep = new Response(rqst, client);
 		client->setResponse(rep);
 
@@ -293,7 +292,6 @@ void	Server::respond(Client* client)
 
 		rep->tryFile();
 
-		// Logger::Info("Respond - Send Buffer");
 		bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
 	}
 	if (client->hasTimeout())

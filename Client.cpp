@@ -18,10 +18,7 @@ Client::Client(void) : SocketHandler("Client"),
 /* Destructor */
 Client::~Client(void)
 {
-	#ifdef CONSTRUC
-	std::cerr << "Client Destructor" << std::endl;
-	#endif
-	Logger::Warning("Client destructor");
+	Logger::Warning("Client disconnected");
 	if (_Rqst != NULL)
 		delete _Rqst;
 	if (_Resp != NULL)
@@ -50,9 +47,8 @@ Client::Client(socket_t csock, Server* serv) :
 	_error(false)
 {
 	_keepAlive = TIMEOUT;
-	#ifdef CONSTRUC
-	std::cerr << "Client Parametric constructor" << std::endl;
-	#endif
+
+	Logger::Warning("Client connected");
 }
 
 /* Assignement operator */
