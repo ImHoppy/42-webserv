@@ -189,6 +189,7 @@ int		Server::InitServer(void)
 		Logger::Error("Server: listen() failed: %s", strerror(errno));
 		return (-1);
 	}
+	Logger::Info("Server: listening on %s:%d", IpToStr(servaddr.sin_addr.s_addr).c_str(), ntohs(servaddr.sin_port));
 	return (0);
 }
 
@@ -216,7 +217,6 @@ socket_t	 Server::AcceptNewClient(void)
 		throw std::runtime_error("epoll_ctl failed");
 	}
 	_clients.insert(client);
-	Logger::Info("Server %d accepted new client on fd %d", _socket, client_socket);
 	return (client_socket);
 }
 

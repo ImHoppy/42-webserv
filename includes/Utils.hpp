@@ -34,6 +34,7 @@ std::string	GenerateHtmlDirectory(std::string const & path);
 std::string	IntToStr(int nb);
 int32_t		StrToInt(std::string const & str);
 int32_t		StrToIp(std::string const & ip);
+std::string	IpToStr(int32_t ip);
 bool		isIpv4(std::string const & s);
 bool		isDigit(std::string const & s);
 

@@ -160,7 +160,7 @@ void	CheckVirtualServer(GeneralConfig & config)
 		it2 = it + 1;
 		while (it2 != configs.end())
 		{
-			if (it->getPort() == it2->getPort())
+			if (it->getPort() == it2->getPort() && (it->getHost() == it2->getHost() || it->getHost() == 0 || it2->getHost() == 0))
 			{
 				if (ServerNamesIsEqual(it->getServerNames(), it2->getServerNames()))
 					throw ParsingError("Duplicate virtual server");

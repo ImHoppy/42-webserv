@@ -78,6 +78,12 @@ int32_t		StrToIp(std::string const & ip)
 	s >> a >> ch >> b >> ch >> c >> ch >> d;
 	return (a << 24) + (b << 16) + (c << 8) + d;
 }
+std::string	IpToStr(int32_t ip)
+{
+	std::stringstream s;
+	s << ((ip) & 0xFF) << "." << ((ip >> 8) & 0xFF) << "." << ((ip >> 16) & 0xFF) << "." << (ip >> 24 & 0xFF);
+	return s.str();
+}
 
 bool	isIpv4(std::string const & s)
 {

@@ -99,7 +99,6 @@ int main(int ac, char **av)
 		if ((*servers)->InitServer() == -1)
 			return (-1);
 	}
-	Logger::Info("WebServer started");
 	try {
 		webserv.StartLoop();
 	}
