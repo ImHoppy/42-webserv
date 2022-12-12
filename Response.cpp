@@ -547,6 +547,11 @@ bool	Response::checkMethod(void) const
 	return _rqst->getLocation()->methodIsAllowed(_rqst->getMethod());
 }
 
+const Response::headers_t &	Response::getHeaders(void) const
+{
+	return _headers;
+}
+
 std::string	Response::getResponse(void) const
 {
 	return _response;

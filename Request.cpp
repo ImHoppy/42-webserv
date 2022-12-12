@@ -190,6 +190,7 @@ int		Request::setURI(void)
 			return (-1);
 		}
 	}
+	_uri.path = pathExpand(_uri.path);
 	return (0);
 }
 

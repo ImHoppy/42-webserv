@@ -1,4 +1,5 @@
 #include "Utils.hpp"
+#include <stack>
 
 char	generateChar(void)
 {
@@ -127,6 +128,34 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
 		elems.push_back(item);
 	}
 	return elems;
+}
+
+std::string pathExpand(std::string const & path)
+{
+	std::stack<std::string>	pathStack;
+
+	std::vector<std::string> paths;
+	split(path, '/', paths);
+
+	for (std::vector<std::string>::iterator it = paths.begin(); it != paths.end(); ++it)
+	{
+		if (*it == "..")
+		{
+			if (not pathStack.empty())
+				pathStack.pop();
+		}
+		else if (*it != ".")
+			pathStack.push(*it);
+	}
+	
+	std::string	expandedPath;
+	while (pathStack.empty() == false)
+	{
+		if (not pathStack.top().empty())
+			expandedPath = "/" + pathStack.top() + expandedPath;
+		pathStack.pop();
+	}
+	return expandedPath;
 }
 
 std::string getExtension(std::string const & filename)

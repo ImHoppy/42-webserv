@@ -317,8 +317,15 @@ void	Server::respond(Client* client)
 
 	if (rep->cgiStatus == CGI::FINISH || rep->getReadData().status == Response::NONE)
 	{
-		client->popOutRequest();
-		client->popOutResponse();
+		Response::headers_t::const_iterator connectionIt = rep->getHeaders().find("Connection");
+		if (connectionIt != rep->getHeaders().end() && connectionIt->second == "close")
+		{
+			this->removeClient(client);
+		}
+		else {
+			client->popOutRequest();
+			client->popOutResponse();
+		}
 	}
 	if (bytes == 0 || bytes == -1)
 	{

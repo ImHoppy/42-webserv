@@ -71,6 +71,7 @@ class Response
 		Response(Request* rqst, Client* client);
 		
 		/* Getteurs */
+		const headers_t &	getHeaders(void) const;
 		std::string			getResponse(void) const;
 		ReadData const &	getReadData(void) const;
 		const std::string &	getBody(void) const;
