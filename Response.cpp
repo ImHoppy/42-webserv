@@ -522,9 +522,22 @@ void		Response::doGET(void)
 		doDirectoryListening();
 		return ;
 	}
-	else if (_rqst->targetIsFile() && tryFile())
+	else if (_rqst->targetIsFile())
 	{
-		_code = std::make_pair(200, "OK");
+		std::string const & uriPath = _rqst->getUri().path;
+		std::string locationPath = _rqst->getLocation()->getPath();
+		if (locationPath[locationPath.size() - 1] == '/')
+			locationPath = locationPath.substr(0, locationPath.size() - 1);
+		if (not ends_with(uriPath, "/") && uriPath == locationPath)
+		{
+			_code = std::make_pair(301, "Moved Permanently");
+			_headers["Location"] = _rqst->getUri().path + "/";
+			_headers["Location"] += (_rqst->getUri().query.empty() ? "" : "?") + _rqst->getUri().query;
+		}
+		else if (tryFile())
+			_code = std::make_pair(200, "OK");
+		else
+			_code = std::make_pair(404, "Not Found");
 	}
 	else if (_rqst->getCGILocation())
 	{
