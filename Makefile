@@ -7,16 +7,20 @@ ifeq ($(DEBUG), 1)
 	CFLAGS		+= -g3 -DDEBUG_LOG=1
 endif
 
-SRCS		=	main.cpp GeneralConfig.cpp ServerConfig.cpp \
+SRCS_DIR	=	srcs/
+INCS_DIR	=	-Iincludes/
+OBJS_DIR	=	obj/
+
+SRCS		:=	main.cpp GeneralConfig.cpp ServerConfig.cpp \
 				LocationConfig.cpp Parsing.cpp FillConfig.cpp Server.cpp \
 				Utils.cpp Trim.cpp Client.cpp Request.cpp Response.cpp \
 				Logger.cpp ResponseUtils.cpp CGI.cpp WebServ.cpp Time.cpp
-
-OBJS_DIR	=	obj/
-OBJS		=	$(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))
+SRCS		:=	$(addprefix $(SRCS_DIR), $(SRCS))
+OBJS		=	$(patsubst $(SRCS_DIR)%.cpp, $(OBJS_DIR)%.o, $(SRCS))
 DEPS		=	$(OBJS:.o=.d)
 
 I = 0
+
 ifndef MAX_I
 MAX_I := $(shell $(MAKE) $(MAKECMDGOALS) --no-print-directory \
 		-nrRf $(firstword $(MAKEFILE_LIST)) MAX_I=1 compil="echo $(CC)" | grep -c '$(CC)')
@@ -35,9 +39,9 @@ define compil
 	$(eval I = $(shell echo $$(($(I)+1))))
 endef
 
-$(OBJS_DIR)%.o :		%.cpp
+$(OBJS_DIR)%.o :		$(SRCS_DIR)%.cpp
 			@mkdir -p $(OBJS_DIR)
-			$(call compil,$(CC) $(CFLAGS) -MMD -MP -c $< -o $@,Compiling, $<)
+			$(call compil,$(CC) $(CFLAGS) -MMD -MP -c $< -o $@ $(INCS_DIR),Compiling, $<)
 				
 
 $(NAME)		:	$(OBJS)
