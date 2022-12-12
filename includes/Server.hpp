@@ -8,7 +8,6 @@
 # include <limits>
 # include <stdlib.h>
 # include <sys/epoll.h>
-# include <stdio.h> // perror
 # include <ctime> //time
 # include <iomanip>
 # include <unistd.h>

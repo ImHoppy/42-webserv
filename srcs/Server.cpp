@@ -186,7 +186,7 @@ int		Server::InitServer(void)
 	}
 	if (listen(_socket, std::numeric_limits<short>::max()/8) < 0)
 	{
-		perror("Server: Listen failed");
+		Logger::Error("Server: listen() failed: %s", strerror(errno));
 		return (-1);
 	}
 	return (0);
@@ -206,7 +206,7 @@ socket_t	 Server::AcceptNewClient(void)
 	}
 	else if (client_socket < 0)
 	{
-		perror("accept() failed");
+		Logger::Error("Server: accept() failed: %s", strerror(errno));
 		return (-1);
 	}
 	Client * client = new Client(client_socket, this);

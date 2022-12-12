@@ -40,8 +40,6 @@ void	WebServ::StartLoop(void)
 		nfds = epoll_wait(_epollInstance, events, MAX_EVENTS, 5000);
 		if (nfds < 0)
 		{
-//			throw std::runtime_error("epoll_wait failed");
-			perror("WebServ: epoll_wait failed");
 			WebServ::_isRunning = false;
 			continue ;
 		}

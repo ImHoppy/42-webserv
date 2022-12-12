@@ -185,10 +185,7 @@ int		Request::setURI(void)
 	{
 		parse_absolute_form();
 		if (_uri.authority != _headers["Host"])
-		{
-			perror("Request: uri authority mismatch Host header field");
 			return (-1);
-		}
 	}
 	_uri.path = pathExpand(_uri.path);
 	return (0);
@@ -202,10 +199,10 @@ int		Request::parse_absolute_form(void)
 {
 	_uri.scheme.assign(_target.begin(), _target.begin() + 7);
 	if (_uri.scheme != "http://")
-		return (perror("Request: wrong scheme"), -1);
+		return (-1);
 	std::string::size_type		auth_end = _target.find('/', 7);
 	if (auth_end == std::string::npos || auth_end == 7)
-		return (perror("Request: wrong Request _target"), -1);
+		return (-1);
 	_uri.authority.assign(_target.begin() + 7, _target.begin() + auth_end);
 	std::string::size_type	path_end = _target.find('?', auth_end);
 	if (path_end == std::string::npos)
@@ -257,24 +254,15 @@ int	Request::splitHeaders(siterator_t start, siterator_t end)
 		return (0);
 	siterator_t		name_end = find(start, end, ':');
 	if (name_end == end || name_end == start || std::isspace(*(name_end-1)) == true)
-	{
-		perror("Request: split_header error (missing name or missing \':\'");
 		return (-1);
-	}
 	siterator_t		value_start = name_end + 1;
 	while (value_start != end && *value_start == ' ')
 		++value_start;
 	std::string		name(start, name_end);
 	if (_headers.find("Host") != _headers.end() && name == "Host")
-	{
-		perror("Request: double Host header fields found");
 		return (-1);
-	}
 	if (end - value_start > HEADER_VALUE_MAX_LENGTH)
-	{
-		perror("Request: value field too long");
 		return (-1);
-	}
 	_headers[UpperKey(start, name_end)] = std::string(value_start, end);
 	return (0);
 }
@@ -293,10 +281,7 @@ Request::siterator_t		Request::setHeaders(void)
 	{
 		siterator_t		hdr_end = findCRLF(start, eof);
 		if (hdr_end == eof) // CRLF pas trouve
-		{
-			perror("Request: missing CRLF to end message field");
 			return (eof);
-		}
 		else if (hdr_end == start) // fin header field
 			return (start + 2);
 		else if (splitHeaders(start, hdr_end) == -1)

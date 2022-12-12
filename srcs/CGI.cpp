@@ -54,7 +54,7 @@ void	CGI::initFileIn(const std::string & inputFilename)
 	_fileIn = open(inputFilename.c_str(), O_RDONLY);
 	if (_fileIn == -1)
 	{
-		Logger::Error("CGI init files read failed errno = %d, %s", errno, strerror(errno));
+		Logger::Error("CGI init files read failed %s", strerror(errno));
 	}
 }
 
@@ -63,7 +63,7 @@ void		CGI::initFileOut(void)
 	_fileOut = open("/tmp/", O_RDWR | O_TMPFILE );
 	if (_fileOut == -1)
 	{
-		Logger::Error("CGI init files write failed errno = %d, %s", errno, strerror(errno));
+		Logger::Error("CGI init files write failed %s", strerror(errno));
 	}
 }
 

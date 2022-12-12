@@ -6,8 +6,6 @@
 # include <iostream>
 # include <string>
 # include <map>
-# include <stdio.h> // perror
-# include <errno.h> // perror
 # include <cctype> // isspace
 # include "Utils.hpp" // pour findCRLF
 # include "Logger.hpp"
