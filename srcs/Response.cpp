@@ -66,8 +66,9 @@ Response::Response(Request* rqst, Client *client) :
 	else if (not _rqst->getLocation()->getRedirUrl().empty())
 	{
 		_code = std::make_pair(302, "Found");
-		Logger::Info("Redirection to " + _rqst->getLocation()->getRedirUrl());
-		_headers["Location"] = _rqst->getLocation()->getRedirUrl();
+		std::string		redir = (_rqst->getLocation()->getRedirUrl()[0] == '/' ? ""  : "/") + _rqst->getLocation()->getRedirUrl();
+		Logger::Info("Redirection to " + redir);
+		_headers["Location"] = redir;
 	}
 	else if (_client->hasTimeout())
 		_code = std::make_pair(408, "Request Timeout");
