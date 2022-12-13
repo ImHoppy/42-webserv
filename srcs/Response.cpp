@@ -398,7 +398,7 @@ bool	Response::tryFile(void)
 		_readData.file.seekg(0, _readData.file.beg);
 
 		_readData.buffer = new char [BUFFSIZE_RES];
-		bzero(_readData.buffer, BUFFSIZE_RES);
+		std::memset(_readData.buffer, 0, BUFFSIZE_RES);
 
 		_readData.file.read(_readData.buffer, BUFFSIZE_RES);
 		if (not _readData.file.eof() && _readData.file.fail())
@@ -410,7 +410,7 @@ bool	Response::tryFile(void)
 	else
 	{
 		if (not _readData.file.is_open()) return false;
-		bzero(_readData.buffer, BUFFSIZE_RES);
+		std::memset(_readData.buffer, 0, BUFFSIZE_RES);
 		_readData.file.read(_readData.buffer, BUFFSIZE_RES);
 		_readData.read_bytes = _readData.file.gcount();
 	}
@@ -432,7 +432,7 @@ static int transformChar(int c)
 {
 	if (c == '-')
 		return '_';
-	return toupper(c);
+	return std::toupper(c);
 }
 
 /* Set le vector d'environnement variables (RFC 3875) */
@@ -513,7 +513,6 @@ int		Response::readFromCgi(void)
 		buf[nbread] = 0;
 		_body += buf;
 	}
-//	_cgi.CloseFiles();
 	return (nbread);
 }
 

@@ -5,7 +5,6 @@
 # include <string>
 # include <map>
 # include <cstdio> // std::remove (file/dir)
-# include <strings.h> // bzero
 # include <unistd.h> // lseek
 
 # include "Utils.hpp"

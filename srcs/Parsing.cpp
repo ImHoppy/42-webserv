@@ -1,6 +1,7 @@
 
 #include "Parsing.hpp"
 #include <stack>
+#include <cctype>
 
 ParsingError::ParsingError() : message("Error on parsing."), line(-1) {}
 ParsingError::ParsingError(const char *msg) : message(msg), line(-1) {}
@@ -25,7 +26,7 @@ bool	is_in_array(std::string const & s, char const ** array, int size)
 bool	is_only_digits(std::string const & s)
 {
 	for (std::string::const_iterator it = s.begin(); it < s.end(); it++)
-		if (!isdigit(*it))
+		if (!std::isdigit(*it))
 			return false;
 	return true;
 }

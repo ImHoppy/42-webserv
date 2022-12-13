@@ -70,7 +70,7 @@ Request::Request(char * buf, size_t & start_buf, ssize_t & bytes) : _loc(NULL), 
 	ssize_t i;
 	for (i = 0; i < bytes - 4 ; ++i)
 	{
-		if (strncmp(buf + i,"\r\n\r\n", 4) == 0)
+		if (std::strncmp(buf + i,"\r\n\r\n", 4) == 0)
 			break;
 	}
 	i += 4;

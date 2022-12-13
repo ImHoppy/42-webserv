@@ -145,7 +145,7 @@ create a Request object with the buf received, and add it int its queued request
 int		Client::recvRequest(void)
 {
 	char buf[BUFFSIZE];
-	memset(buf, 0, sizeof(buf));
+	std::memset(buf, 0, sizeof(buf));
 	ssize_t bytes = recv(_csock, buf, BUFFSIZE - 1, 0);
 	if (bytes < 0)
 		throw std::runtime_error("recv failed");

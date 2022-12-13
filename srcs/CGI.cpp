@@ -108,7 +108,7 @@ int		CGI::launch(const std::string & cgi_cmd, const std::string & script)
 		int	j = 0;
 		for (std::vector<std::string>::const_iterator i = this->_env.begin(); i != this->_env.end(); i++) {
 			env[j] = new char[i->size() + 1];
-			env[j] = strcpy(env[j], (const char*)i->c_str());
+			env[j] = std::strcpy(env[j], (const char*)i->c_str());
 			j++;
 		}
 		env[j] = NULL;
