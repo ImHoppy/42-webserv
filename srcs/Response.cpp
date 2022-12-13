@@ -66,7 +66,9 @@ Response::Response(Request* rqst, Client *client) :
 	else if (not _rqst->getLocation()->getRedirUrl().empty())
 	{
 		_code = std::make_pair(302, "Found");
-		std::string		redir = (_rqst->getLocation()->getRedirUrl()[0] == '/' ? ""  : "/") + _rqst->getLocation()->getRedirUrl();
+		std::string		redir = _rqst->getLocation()->getRedirUrl();
+		if (not startsWith(redir, "http"))
+			redir.insert(0, _rqst->getLocation()->getRedirUrl()[0] == '/' ? "" : "/");
 		Logger::Info("Redirection to " + redir);
 		_headers["Location"] = redir;
 	}
@@ -376,10 +378,7 @@ bool	Response::tryFile(void)
 		Logger::Info("GET - Opening %s", _rqst->getTargetPath().c_str());
 		_readData.file.open(_rqst->getTargetPath().c_str());
 		if (_readData.file.is_open() == false)
-		{
-			std::cout << "Failed \n";
 			return false;
-		}
 
 		// get length of _readData.file:
 		_readData.file.seekg(0, _readData.file.end);
@@ -387,11 +386,10 @@ bool	Response::tryFile(void)
 		int length = _readData.file.tellg();
 		if (not _readData.file.good())
 		{
-			// if (ends_with(_rqst->getTargetPath(), "/")) return false;
-			std::cout << "Target path: " << _rqst->getTargetPath() << std::endl;
-			std::cout << "Uri: " << _rqst->getUri().path << std::endl;
-			// _code = std::make_pair(301, "Moved Permanently");
-			// _headers["Location"] = _rqst->getLocation()->getRedirection();
+			if (ends_with(_rqst->getTargetPath(), "/")) return false;
+			_code = std::make_pair(301, "Moved Permanently");
+			_headers["Location"] = _rqst->getUri().path + "/";
+			_headers["Location"] += (_rqst->getUri().query.empty() ? "" : "?") + _rqst->getUri().query;
 			return false;
 		}
 		_headers["Content-Length"] = IntToStr(length);
@@ -552,7 +550,10 @@ void		Response::doGET(void)
 		cgiStatus = CGI::READY_TO_LAUNCH;
 	}
 	else
-		_code = std::make_pair(404, "Not Found");
+	{
+		if (_code.first == 501)
+			_code = std::make_pair(404, "Not Found");
+	}
 }
 
 bool	Response::checkMethod(void) const
