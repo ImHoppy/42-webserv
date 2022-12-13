@@ -1,7 +1,7 @@
 var popup = false;
 function DeleteFile(file) {
 	// Delete the file
-	fetch("/api/delete/" + file, {
+	fetch("/api/" + file, {
 		method: "DELETE"
 	}).then(function(response) {
 		// Reload the page
@@ -21,10 +21,12 @@ function UploadFile(file) {
 	form.addEventListener("submit", function(e) {
 		e.preventDefault();
 		var formData = new FormData(form);
-		fetch("/api/upload/" + (file == "/" ? "" : file), {
+		fetch("/api/" + (file == "/" ? "" : file), {
 			method: "POST",
 			body: formData
 		}).then(function(response) {
+			if (response.status == 413)
+				alert("Body Too Large");
 			location.reload();
 		});
 		document.getElementById("popup").remove();
@@ -61,7 +63,7 @@ function GenerateFileDiv(file)
 	div.appendChild(button);
 	return div;
 }
-fetch('/api/list/')
+fetch('/api/')
 	.then(function(response) {
 		// When the page is loaded convert it to text
 		return response.text()

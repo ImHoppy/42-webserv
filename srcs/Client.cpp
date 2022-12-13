@@ -169,7 +169,6 @@ int		Client::recvRequest(void)
 			Request::headers_t hed = _Rqst->getHeaders();
 			if (_file.is_open())
 				_file.write(buf, bytes);
-			Logger::Info("Client: got new Chunk %d/%s", (long)_file.tellp(), hed["Content-Length"].c_str());
 		}
  		Request::headers_t::const_iterator		content_length = _Rqst->getHeaders().find("Content-Length");
 		if (content_length != _Rqst->getHeaders().end())

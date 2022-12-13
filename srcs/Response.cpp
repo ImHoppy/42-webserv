@@ -385,7 +385,6 @@ bool	Response::tryFile(void)
 		_readData.file.seekg(0, _readData.file.end);
 		// Print bitset of _readData.file.rdstate()
 		int length = _readData.file.tellg();
-		std::cout << "File state: " << std::bitset<4>(_readData.file.rdstate()) << std::endl;
 		if (not _readData.file.good())
 		{
 			// if (ends_with(_rqst->getTargetPath(), "/")) return false;
