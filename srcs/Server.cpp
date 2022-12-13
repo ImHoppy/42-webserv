@@ -309,7 +309,7 @@ void	Server::respond(Client* client)
 				return ;
 		}
 
-		if (rep->cgiStatus == CGI::FINISH)
+		if (client->hasTimeout() || rep->cgiStatus == CGI::FINISH)
 		{
 			rep->generateResponse();
 			bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
