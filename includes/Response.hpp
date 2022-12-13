@@ -80,7 +80,7 @@ class Response
 		bool	checkMethod(void) const;
 		void	doDirectoryListening(void);
 		void	doGET(void);
-		int		doDELETE(const std::string &path);
+		void	doDELETE();
 		void	doPOST(void);
 		void	doCGI(void);
 		bool	tryFile(void);

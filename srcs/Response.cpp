@@ -96,10 +96,7 @@ void	Response::doMethod(void)
 	}
 	else if (_rqst->getMethod() == "DELETE")
 	{
-		if (doDELETE(_rqst->getTargetPath()) == 404)
-			_code = std::make_pair(404, "Not Found");
-		else
-			_code = std::make_pair(202, "Accepted");
+		doDELETE();
 	}
 	else if (_rqst->getMethod() == "POST")
 	{
@@ -188,41 +185,40 @@ void	Response::generateResponse(void)
 	_response += _body;
 }
 
+static int	deleteDir(const std::string &path)
+{
+	typedef std::vector<std::string>	strVec;
+	strVec		files = listFiles(path, false);
+	strVec::const_iterator	it;
+	for (it = files.begin(); it != files.end(); it++)
+	{
+		std::string target = path + "/" + *it;
+		if (ends_with(*it, '/'))
+			deleteDir(target);
+		else
+			std::remove(target.c_str());
+		
+	}
+	return (std::remove(path.c_str()));
+}
 
 /* Delete a file, or if its a directy: delete all elements in it before rmdir. 
 Returns a status code wether access one file failed (breaks the whole operation, 
 404) or entire operation succeeded (204)*/
-int		Response::doDELETE(const std::string &path)
+void	Response::doDELETE()
 {
-	typedef std::vector<std::string>	strVec;
-	if (path == "./" || path == "../" || path.find("../") != std::string::npos)
-		return 204;
-	if (ends_with(path, '/') == false) // si is file, remove it and stop.
+	if (_rqst->getCGILocation())
+		doCGI();
+	else
 	{
-		if (std::remove(path.c_str()) != 0)
+		if (deleteDir(_rqst->getTargetPath()) == -1)
+			_code = std::make_pair(404, "Not Found");
+		else
 		{
-			Logger::Error("Response::doDELETE(): remove file '%s' failed", path.c_str());
-			return 404;
+			_code = std::make_pair(200, "OK");
+			_body = generateErrorBody(_code);
 		}
-		Logger::Info("Response::doDELETE(): file '%s' deleted", path.c_str());
-		return 204;
 	}
-	strVec	contains = listFiles(path, false);
-	for (strVec::iterator it = contains.begin(); it != contains.end(); ++it)
-		it->insert(0, path);
-	for (strVec::iterator it = contains.begin(); it != contains.end(); ++it)
-	{
-		if (doDELETE(*it) == 404)
-			return 404;
-	}
-	std::string		dirPath(path.begin(), path.end() - 1);
-	if (std::remove(dirPath.c_str()) != 0)
-	{
-		Logger::Error("Response::doDELETE(): remove directory '%s' failed", dirPath.c_str());
-		return 404;
-	}
-	Logger::Info("Response::doDELETE(): directory '%s' deleted", dirPath.c_str());
-	return 204;
 }
 
 void	Response::waitCGI()
