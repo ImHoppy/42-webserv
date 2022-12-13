@@ -294,39 +294,40 @@ void	Server::respond(Client* client)
 
 		bytes = send(client->getSocket(), data.buffer, data.read_bytes, 0);
 	}
-	if (client->hasTimeout())
+	if (rep->cgiStatus != CGI::NOT_CGI)
 	{
-		rep->cgiStatus = CGI::FINISH;
-	}
-	if (rep->cgiStatus == CGI::READY_TO_LAUNCH)
-	{
-		rep->doCGI();
-	}
-	if (rep->cgiStatus == CGI::IN_PROGRESS)
-	{
-		rep->waitCGI();
-		if (rep->cgiStatus == CGI::IN_PROGRESS)
-			return ;
-	}
-	if (client->hasTimeout() || rep->cgiStatus == CGI::FINISH)
-	{
-		rep->generateResponse();
-		bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
-		Logger::Info("CGI %d %s", rep->getCode().first, rep->getCode().second.c_str());
-	}
+		if (client->hasTimeout())
+			rep->cgiStatus = CGI::FINISH;
 
+		if (rep->cgiStatus == CGI::READY_TO_LAUNCH)
+			rep->doCGI();
+
+		if (rep->cgiStatus == CGI::IN_PROGRESS)
+		{
+			rep->waitCGI();
+			if (rep->cgiStatus == CGI::IN_PROGRESS)
+				return ;
+		}
+
+		if (rep->cgiStatus == CGI::FINISH)
+		{
+			rep->generateResponse();
+			bytes = send(client->getSocket(), rep->getResponse().c_str(), rep->getResponse().size(), 0);
+			Logger::Info("CGI %d %s", rep->getCode().first, rep->getCode().second.c_str());
+		}
+	}
 	if (rep->cgiStatus == CGI::FINISH || rep->getReadData().status == Response::NONE)
 	{
 		Response::headers_t::const_iterator connectionIt = rep->getHeaders().find("Connection");
 		if (connectionIt != rep->getHeaders().end() && connectionIt->second == "close")
-		{
 			client->setError(true);	
-		}
-		else {
+		else
+		{
 			client->popOutRequest();
 			client->popOutResponse();
 		}
 	}
+
 	if (bytes == 0 || bytes == -1)
 	{
 		throw std::runtime_error("send failed");
