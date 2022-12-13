@@ -19,8 +19,22 @@
 	<title>g</title>
 </head>
 <body>
-	<div>
+	<div id="main">
 		Hello <?php echo $_SESSION['username']; ?>
+		<input id="logoutButton" type="submit" value="Logout"/>
 	</div>
 </body>
+<script>
+	var logoutButton = document.getElementById('logoutButton');
+	logoutButton.addEventListener('click', function() {
+		fetch("logout.php", {
+			method: "DELETE"
+		}).then(function(response) {
+			if (response.status == 200) {
+				document.getElementById('main').innerHTML = "Succesfully logged out.";
+			}
+		})
+	});
+	
+</script>
 </html>
