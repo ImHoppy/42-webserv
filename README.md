@@ -12,7 +12,7 @@ WebServ is a project developed as part of the 42 curriculum. The goal of this pr
 
 The server configuration is defined in a `.conf` file. Below is an example configuration:
 
-**server**: Defines a server block.
+- **server**: Defines a server block.
    - **host**: IP address of the server.
    - **port**: Port number the server listens on.
    - **server_names**: List of server names.
